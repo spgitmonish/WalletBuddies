@@ -36,24 +36,24 @@ angular.module('starter.controllers', [])
     //For accessing the device's contacts
 
 
-	$scope.data = {
-            selectedContacts : []
-        };
+    $scope.data = {
+        selectedContacts: []
+    };
 
-        $scope.pickContact = function() {
+    $scope.pickContact = function() {
 
-            ContactsService.pickContact().then(
-                function(contact) {
-                    $scope.data.selectedContacts.push(contact);
-                    console.log(contact);
+        ContactsService.pickContact().then(
+            function(contact) {
+                $scope.data.selectedContacts.push(contact);
+                console.log(contact);
 
-                },
-                function(failure) {
-                    console.log("Bummer.  Failed to pick a contact");
-                }
-            );
+            },
+            function(failure) {
+                console.log("Bummer.  Failed to pick a contact");
+            }
+        );
 
-        }
+    }
 
     //ends here
 
@@ -64,8 +64,8 @@ angular.module('starter.controllers', [])
 
 
     $scope.addGroup = function(user) {
-	   
-        
+
+
         $scope.group.$add({
             //console.log("Inside group");
             //picture:user.picture,
@@ -73,17 +73,17 @@ angular.module('starter.controllers', [])
             plan: user.plan,
             amount: user.amount,
             groupMessage: user.groupMessage,
-			contacts:$scope.data.selectedContacts
+            contacts: $scope.data.selectedContacts
         });
-        
-        
+
+
         //user.picture="";
         user.groupName = "";
         user.plan = "weekly";
         user.amount = 0;
         user.groupMessage = "";
         //user.checked= "";
-		
+
 
     };
 
@@ -254,6 +254,4 @@ angular.module('starter.controllers', [])
         enableFriends: true
     };
 
-})
-
-;
+});
