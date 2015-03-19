@@ -31,12 +31,38 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
   // Each state's controller can be found in controllers.js
   $stateProvider
 
-// .state('socialcircle', {
-//    url: "/socialcircle",
-//    templateUrl: "templates/socialcircle-form.html"
-//  })
   
-   
+  // State definition for Launch page
+  
+  	.state('launch', {
+	 url: '/launch',
+	 //abstract: true,
+	 templateUrl: 'templates/launchpage.html'
+  })
+  
+  // States for signin and signup
+  
+  	.state('signin', {
+	 url: '/signin',
+	 views: {
+		 'launchpage': {
+			 templateUrl: 'templates/signin.html',
+			 controller: 'SignInCtrl'
+		 }
+	 }
+  })
+  
+  
+  	.state('signup', {
+	 url: '/signup',
+	 views: {
+		 'signup': {
+			 templateUrl: 'templates/signup.html',
+			 controller: 'SignUpCtrl'
+		 }
+	 }
+  })
+
 
   // setup an abstract state for the tabs directive
     .state('tab', {
@@ -131,7 +157,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
    ;
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/tab/dash');
+  $urlRouterProvider.otherwise('/launch');
 
 
 

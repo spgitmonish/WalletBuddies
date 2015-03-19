@@ -228,6 +228,100 @@ angular.module('starter.controllers', [])
 //Plaid ConnectCTRL ends
 
 
+//Sign up and Sign in controllers
+
+.controller('SignInCtrl', ['$scope', '$state', '$rootScope',
+    function ($scope, $state, $rootScope) {
+        var ref = new Firebase("https://walletbuddies.firebaseio.com/");
+
+        $scope.user = {
+            email: "",
+            password: ""
+        };
+
+        $scope.validateUser = function () {
+            var email = this.user.email;
+            var password = this.user.password;
+
+            if (!email || !password) {
+                console.log("Please enter valid credentials");
+                alert("Please enter valid credentials.");
+                return false;
+            }
+
+            ref.authWithPassword({
+                email: email,
+                password: password
+            },
+            function(error, authData) {
+                if (error) {
+                    console.log("Login Error!");
+                    alert("Login Error! Try again.");
+                }
+                else {
+                    console.log("Sign In successful");
+                    $state.go('tab.dash');
+                }
+            }); 
+        }
+        //$state.go('tab.dash'); 
+    }
+])
+
+.controller('SignUpCtrl', ['$scope', '$rootScope', '$state',
+    function ($scope, $rootScope, $state) {
+        var ref = new Firebase("https://walletbuddies.firebaseio.com/");
+
+        $scope.user = {
+            email: "",
+            password: ""
+        };
+
+        $scope.signUp = function () {
+            var email = this.user.email;
+            var password = this.user.password;
+
+            if (!email || !password) {
+                console.log("Please enter valid credentials");
+                alert("Please enter valid credentials");
+                return false;
+            }
+
+            ref.createUser({
+                email: email,
+                password: password
+            },
+            function(error, userData) {
+                if (error) {
+                    switch (error.code) {
+                        case "EMAIL_TAKEN":
+                            console.log("The new user account cannot be created because the email is already in use.");
+                            alert("The new user account cannot be created because the email is already in use.");
+                            break;
+                        case "INVALID_EMAIL":
+                            console.log("The specified email is not a valid email.");
+                            alert("The specified email is not a valid email.");
+                            break;
+                        default:
+                            console.log("Error creating user.");
+                            alert("Error creating user.");
+                    }
+                }
+                else {
+                    console.log("User Created Successfully!");
+                    alert("User Created Successfully!");
+                    $state.go('tab.dash');
+                }
+                
+            });
+
+        }
+
+    }
+])
+
+//Sign up and Sign in controllers ends
+
 .controller('ChatsCtrl', function($scope, Chats) {
     $scope.chats = Chats.all();
     $scope.remove = function(chat) {
