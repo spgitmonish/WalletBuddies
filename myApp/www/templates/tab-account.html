@@ -1,36 +1,40 @@
 <ion-view view-title="Settings">
-    <ion-content padding="true">
+  <ion-content padding="true">
 
-        <div class="card">
-            <div class="item item-divider-ios">
-                Link your account
-            </div>
+		<div class="card">
+			<div class="item item-divider-ios">
+				Link your account
+			</div>
+			<div class="item">
 
-            <div class="item">
-                <form ng-submit="connect(user)">
-                    <label class="item item-input item-select">
-                        <div class="input-label">
-                            Select your bank
-                        </div>
-                        <select ng-model="user.type" ng-required="true">
-                            <option ng-repeat="inst in institutions" ng-selected="inst.type == user.type" value="{{inst.type}}">{{inst.name}}</option>
-                        </select>
-                    </label>
+				<form ng-submit="connect(user)">
+					<label class="item item-input item-select">
+						<div class="input-label">
+							Select your bank
+						</div>
+						<select ng-model="user.type" ng-required="true">
+							<option ng-repeat="inst in institutions" ng-selected="inst.type == user.type" value="{{inst.type}}">{{inst.name}}</option>
+						</select>
+					</label>
 
-                    <label class="item item-input item-floating-label">
-                        <span class="input-label">Username</span>
-                        <input type="text" placeholder="Username" ng-model="user.username" ng-required="true">
-                    </label>
+					<label class="item item-input item-floating-label">
+						<span class="input-label">Username</span>
+						<input type="text" placeholder="Username" ng-model="user.username" ng-required="true">
+					</label>
 
-                    <label class="item item-input item-floating-label">
-                        <span class="input-label">Password</span>
-                        <input type="text" placeholder="Password" ng-model="user.password" ng-required="true">
-                    </label>
+					<label class="item item-input item-floating-label">
+						<span class="input-label">Password</span>
+						<input type="text" placeholder="Password" ng-model="user.password" ng-required="true">
+					</label>
 
-                    <button type="submit" class="button button-block button-balanced">CONNECT</button>
-                </form>
-            </div>
-        </div>
+					<button type="submit" class="button button-block button-balanced">CONNECT</button>
 
-    </ion-content>
+				</form>
+
+
+			</div>
+		</div>
+
+
+	</ion-content>
 </ion-view>

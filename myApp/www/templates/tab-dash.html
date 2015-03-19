@@ -1,57 +1,72 @@
 <ion-view view-title="Account Creation">
-    <ion-content class="padding">
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Name</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.name' type="text" placeholder="John Doe">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Email</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.email' type="text" placeholder="example@email.com">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Phone Number</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.phone' type="tel" placeholder="2025557777">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Password</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.password' type="password" placeholder="********">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Security Question: How old are you?</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.security' type="tel" placeholder="5">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list class="padding">
-            <!-- create controller for submitting the form-->
-            <div class="list">
-                <button class="button button-block button-balanced" ng-click="addAccount(account)">Create Account</button>
-            </div>
-        </ion-list>
-
-    </ion-content>
+  <ion-content class="padding">
+    <ion-list>
+			<div class="list list-inset">
+				
+				<p><b>Name</b></p>
+				
+				<label class="item item-input">
+					<input ng-model='account.name' type="text" placeholder="John Doe">
+				</label>
+						
+			</div>
+	</ion-list>
+	<ion-list>
+			<div class="list list-inset">
+				
+				<p><b>Email</b></p>
+				
+				<label class="item item-input">
+					<input ng-model='account.email' type="text" placeholder="example@email.com">
+				</label>
+						
+			</div>
+			
+	</ion-list>
+	<ion-list>
+			<div class="list list-inset">
+				
+				<p><b>Phone Number</b></p>
+				
+				<label class="item item-input">
+					<input ng-model='account.phone' type="tel" placeholder="2025557777">
+				</label>
+						
+			</div>
+			
+	</ion-list>
+	<ion-list>
+			<div class="list list-inset">
+				
+				<p><b>Password</b></p>
+				
+				<label class="item item-input">
+					<input ng-model='account.password' type="password" placeholder="********">
+				</label>
+						
+			</div>
+			
+	</ion-list>
+	<ion-list>
+			<div class="list list-inset">
+				
+				<p><b>Security Question: How old are you?</b></p>
+				
+				<label class="item item-input">
+					<input ng-model='account.security' type="tel" placeholder="5">
+				</label>
+						
+			</div>
+			
+	</ion-list>
+	<ion-list class="padding"> <!-- create controller for submitting the form-->
+		
+		<div class="list">
+		
+		    <button class="button button-block button-balanced" ng-click="addAccount(account)">Create Account</button>
+		
+		</div>
+	</ion-list>
+		
+  </ion-content>
 </ion-view>
