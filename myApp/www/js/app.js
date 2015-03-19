@@ -34,49 +34,40 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
   
   // State definition for Launch page
   
-  	.state('launch', {
-	 url: '/launch',
-	 //abstract: true,
-	 templateUrl: 'templates/launchpage.html'
+  .state('launch', {
+	  url: '/launch',
+	templateUrl: 'templates/launchpage.html'
   })
   
   // States for signin and signup
   
-  	.state('signin', {
-	 url: '/signin',
-	 views: {
-		 'launchpage': {
-			 templateUrl: 'templates/signin.html',
-			 controller: 'SignInCtrl'
-		 }
-	 }
+  .state('signin', {
+	  url: '/signin',
+	  templateUrl: 'templates/signin.html',
+	  controller: 'SignInCtrl'
   })
   
   
-  	.state('signup', {
-	 url: '/signup',
-	 views: {
-		 'signup': {
-			 templateUrl: 'templates/signup.html',
-			 controller: 'SignUpCtrl'
-		 }
-	 }
+  .state('signup', {
+	  url: '/signup',
+	  templateUrl: 'templates/signup.html',
+	  controller: 'SignUpCtrl'
   })
 
 
   // setup an abstract state for the tabs directive
-    .state('tab', {
-    url: "/tab",
-    abstract: true,
-    templateUrl: "templates/tabs.html"
+  .state('tab', {
+      url: "/tab",
+      abstract: true,
+      templateUrl: "templates/tabs.html"
   })
 
 
   // Each tab has its own nav history stack:
 
   .state('tab.dash', {
-    url: '/dash',
-    views: {
+      url: '/dash',
+      views: {
       'tab-dash': {
         templateUrl: 'templates/tab-dash.html',
         controller: 'AccountCtrl'
