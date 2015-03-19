@@ -36,24 +36,24 @@ angular.module('starter.controllers', [])
     //For accessing the device's contacts
 
 
-	$scope.data = {
-            selectedContacts : []
-        };
+    $scope.data = {
+        selectedContacts: []
+    };
 
-        $scope.pickContact = function() {
+    $scope.pickContact = function() {
 
-            ContactsService.pickContact().then(
-                function(contact) {
-                    $scope.data.selectedContacts.push(contact);
-                    console.log(contact);
+        ContactsService.pickContact().then(
+            function(contact) {
+                $scope.data.selectedContacts.push(contact);
+                console.log(contact);
 
-                },
-                function(failure) {
-                    console.log("Bummer.  Failed to pick a contact");
-                }
-            );
+            },
+            function(failure) {
+                console.log("Bummer.  Failed to pick a contact");
+            }
+        );
 
-        }
+    }
 
     //ends here
 
@@ -64,8 +64,8 @@ angular.module('starter.controllers', [])
 
 
     $scope.addGroup = function(user) {
-	   
-        
+
+
         $scope.group.$add({
             //console.log("Inside group");
             //picture:user.picture,
@@ -73,17 +73,17 @@ angular.module('starter.controllers', [])
             plan: user.plan,
             amount: user.amount,
             groupMessage: user.groupMessage,
-			contacts:$scope.data.selectedContacts
+            contacts: $scope.data.selectedContacts
         });
-        
-        
+
+
         //user.picture="";
         user.groupName = "";
         user.plan = "weekly";
         user.amount = 0;
         user.groupMessage = "";
         //user.checked= "";
-		
+
 
     };
 
@@ -231,7 +231,7 @@ angular.module('starter.controllers', [])
 //Sign up and Sign in controllers
 
 .controller('SignInCtrl', ['$scope', '$state', '$rootScope',
-    function ($scope, $state, $rootScope) {
+    function($scope, $state, $rootScope) {
         var ref = new Firebase("https://walletbuddies.firebaseio.com/");
 
         $scope.user = {
@@ -239,37 +239,36 @@ angular.module('starter.controllers', [])
             password: ""
         };
 
-        $scope.validateUser = function () {
-            var email = this.user.email;
-            var password = this.user.password;
+        $scope.validateUser = function() {
+                var email = this.user.email;
+                var password = this.user.password;
 
-            if (!email || !password) {
-                console.log("Please enter valid credentials");
-                alert("Please enter valid credentials.");
-                return false;
+                if (!email || !password) {
+                    console.log("Please enter valid credentials");
+                    alert("Please enter valid credentials.");
+                    return false;
+                }
+
+                ref.authWithPassword({
+                        email: email,
+                        password: password
+                    },
+                    function(error, authData) {
+                        if (error) {
+                            console.log("Login Error!");
+                            alert("Login Error! Try again.");
+                        } else {
+                            console.log("Sign In successful");
+                            $state.go('tab.dash');
+                        }
+                    });
             }
-
-            ref.authWithPassword({
-                email: email,
-                password: password
-            },
-            function(error, authData) {
-                if (error) {
-                    console.log("Login Error!");
-                    alert("Login Error! Try again.");
-                }
-                else {
-                    console.log("Sign In successful");
-                    $state.go('tab.dash');
-                }
-            }); 
-        }
-        //$state.go('tab.dash'); 
+            //$state.go('tab.dash');
     }
 ])
 
 .controller('SignUpCtrl', ['$scope', '$rootScope', '$state',
-    function ($scope, $rootScope, $state) {
+    function($scope, $rootScope, $state) {
         var ref = new Firebase("https://walletbuddies.firebaseio.com/");
 
         $scope.user = {
@@ -277,7 +276,7 @@ angular.module('starter.controllers', [])
             password: ""
         };
 
-        $scope.signUp = function () {
+        $scope.signUp = function() {
             var email = this.user.email;
             var password = this.user.password;
 
@@ -288,32 +287,31 @@ angular.module('starter.controllers', [])
             }
 
             ref.createUser({
-                email: email,
-                password: password
-            },
-            function(error, userData) {
-                if (error) {
-                    switch (error.code) {
-                        case "EMAIL_TAKEN":
-                            console.log("The new user account cannot be created because the email is already in use.");
-                            alert("The new user account cannot be created because the email is already in use.");
-                            break;
-                        case "INVALID_EMAIL":
-                            console.log("The specified email is not a valid email.");
-                            alert("The specified email is not a valid email.");
-                            break;
-                        default:
-                            console.log("Error creating user.");
-                            alert("Error creating user.");
+                    email: email,
+                    password: password
+                },
+                function(error, userData) {
+                    if (error) {
+                        switch (error.code) {
+                            case "EMAIL_TAKEN":
+                                console.log("The new user account cannot be created because the email is already in use.");
+                                alert("The new user account cannot be created because the email is already in use.");
+                                break;
+                            case "INVALID_EMAIL":
+                                console.log("The specified email is not a valid email.");
+                                alert("The specified email is not a valid email.");
+                                break;
+                            default:
+                                console.log("Error creating user.");
+                                alert("Error creating user.");
+                        }
+                    } else {
+                        console.log("User Created Successfully!");
+                        alert("User Created Successfully!");
+                        $state.go('tab.dash');
                     }
-                }
-                else {
-                    console.log("User Created Successfully!");
-                    alert("User Created Successfully!");
-                    $state.go('tab.dash');
-                }
-                
-            });
+
+                });
 
         }
 
@@ -348,6 +346,4 @@ angular.module('starter.controllers', [])
         enableFriends: true
     };
 
-})
-
-;
+});

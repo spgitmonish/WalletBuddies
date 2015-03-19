@@ -71,20 +71,20 @@
 
         <ion-list>
 
-<!-- Picking contacts -->
-	
+            <!-- Picking contacts -->
+
             <button class="button button-block button-balanced" ng-click="pickContact()">Contacts</button>
-		<div class="list">
+            <div class="list">
 
-            <a class="item" ng-repeat="contact in data.selectedContacts">
-                <h2>{{contact.displayName}}</h2>
-                <p ng-if="contact.emails.length > 0">{{contact.emails[0].type}} : {{contact.emails[0].value}}</p>
-                <p ng-if="contact.phones.length > 0">{{contact.phones[0].type}} : {{contact.phones[0].value}}</p>
-            </a>
+                <a class="item" ng-repeat="contact in data.selectedContacts">
+                    <h2>{{contact.displayName}}</h2>
+                    <p ng-if="contact.emails.length > 0">{{contact.emails[0].type}} : {{contact.emails[0].value}}</p>
+                    <p ng-if="contact.phones.length > 0">{{contact.phones[0].type}} : {{contact.phones[0].value}}</p>
+                </a>
 
-        </div>
-            
-<!-- Picking contacts ends here -->
+            </div>
+
+            <!-- Picking contacts ends here -->
 
             <div class="list">
                 <button class="button button-block button-balanced" ng-click="addGroup(user)">Invite your wallet buddies</button>
