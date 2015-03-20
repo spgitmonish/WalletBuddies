@@ -2,25 +2,19 @@
 
     <ion-content>
         <ion-list class="padding">
-
             <div class="list">
-
                 <!-- <label ng-model='user.picture' class="button button-block button-balanced" ng-click="takePicture()">Upload Circle Photo</label> -->
-
-
                 <label class="item item-input">
                     <input ng-model='user.groupName' type="text" placeholder="Circle Name">
                 </label>
             </div>
-
         </ion-list>
 
         <hr size="1" width="90%" noshade>
         <br>
+
         <ion-list>
-
             <div class="list">
-
                 <label class="item item-input item-select">
                     <div class="input-label">
                         <p><b>Pick your plan</b></p>
@@ -31,65 +25,50 @@
                         <option>monthly</option>
                     </select>
                 </label>
-
             </div>
         </ion-list>
-
 
         <br>
         <hr size="1" width="90%" noshade>
 
         <ion-list>
             <div class="list list-inset">
-
                 <p><b>Set your payment amount</b></p>
-
                 <label class="item item-input">
                     <input ng-model='user.amount' type="tel" placeholder="$ 50.00">
                 </label>
-
             </div>
-
         </ion-list>
+
         <br>
         <hr size="1" width="90%" noshade>
 
         <ion-list>
             <div class="list list-inset">
-
                 <p><b>Say something to your buddies</b></p>
-
                 <label class="item item-input">
                     <textarea ng-model='user.groupMessage' placeholder="Brunch was fun last sunday we should do this more often. Join away!"></textarea>
                 </label>
-
             </div>
-
         </ion-list>
+
         <br>
         <hr size="1" width="90%" noshade>
 
         <ion-list>
-
             <!-- Picking contacts -->
-
             <button class="button button-block button-balanced" ng-click="pickContact()">Contacts</button>
             <div class="list">
-
                 <a class="item" ng-repeat="contact in data.selectedContacts">
                     <h2>{{contact.displayName}}</h2>
                     <p ng-if="contact.emails.length > 0">{{contact.emails[0].type}} : {{contact.emails[0].value}}</p>
                     <p ng-if="contact.phones.length > 0">{{contact.phones[0].type}} : {{contact.phones[0].value}}</p>
                 </a>
-
             </div>
-
             <!-- Picking contacts ends here -->
-
             <div class="list">
                 <button class="button button-block button-balanced" ng-click="addGroup(user)">Invite your wallet buddies</button>
             </div>
-
         </ion-list>
     </ion-content>
 </ion-view>
