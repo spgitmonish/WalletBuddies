@@ -20,6 +20,7 @@ angular.module('starter.controllers', [])
         // Array to keep in sync with the data on Firebase
         var fbArr = $firebase(fbUser).$asArray();
 
+        // Monitors any activity on the Firebase data
         fbUser.on('value', function(snapshot) {
             var data = snapshot.val();
 
