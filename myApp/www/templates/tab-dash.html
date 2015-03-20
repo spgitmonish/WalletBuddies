@@ -1,38 +1,12 @@
-<ion-view view-title="Account Creation">
+<ion-view view-title="Dashboard">
     <ion-content class="padding">
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>First Name</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.firstname' type="text" placeholder="John">
-                </label>
+        <div class="list card">
+            <div class="item item-divider">Recent Updates</div>
+            <div class="item item-body">
+                <div>
+                    Your account has been created
+                </div>
             </div>
-        </ion-list>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Last Name</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.lastname' type="text" placeholder="Ramalingappa">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Phone Number</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.phone' type="tel" placeholder="2025557777">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list class="padding">
-            <!-- create controller for submitting the form-->
-            <div class="list">
-                <button class="button button-block button-balanced" ng-click="addAccount(account)">Create Account</button>
-            </div>
-        </ion-list>
-
+        </div>
     </ion-content>
 </ion-view>

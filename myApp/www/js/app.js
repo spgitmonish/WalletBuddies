@@ -48,7 +48,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     .state('signup', {
         url: '/signup',
         templateUrl: 'templates/signup.html',
-        controller: 'SignUpCtrl'
+        controller: 'AccountCtrl'
     })
 
 
@@ -65,7 +65,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         views: {
             'tab-dash': {
                 templateUrl: 'templates/tab-dash.html',
-                controller: 'AccountCtrl'
+                controller: 'DashCtrl'
             }
         }
     })
@@ -99,7 +99,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-
 
     .state('tab.friends', {
         url: '/friends',
