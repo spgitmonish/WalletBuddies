@@ -51,7 +51,7 @@ angular.module('starter.controllers', [])
                             firstname: account.firstname,
                             lastbame: account.lastname
                         });
-                        $state.go('tab.socialcircle');
+                        $state.go('tab.chats');
                     }
                 }
             });
@@ -255,7 +255,7 @@ angular.module('starter.controllers', [])
                         alert("Login Error! Try again.");
                     } else {
                         console.log("Sign In successful");
-                        $state.go('tab.socialcircle');
+                        $state.go('tab.chats');
                     }
                 }
             );
