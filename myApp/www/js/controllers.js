@@ -40,17 +40,17 @@ angular.module('starter.controllers', [])
 
                     // Validate that the user has signed into a Firebase account
                     if(fbAuth){
-                        // Create a new link for the user
-                        var fbUser = new Firebase(fbRef.child('Users') + "/" + fbAuth.uid);
+                        // Create a new link for the user based on the email id
+                        var fbUser = new Firebase(fbRef.child('Users') + "/" + escapeEmailAddress(account.email));
+                        $scope.user = $firebase(fbUser);
 
-                        // Array to keep in sync with the data on Firebase
-                        var fbArr = $firebase(fbUser).$asArray();
-
-                        // Add the items
-                        fbArr.$add({
+                        // Try and write the data($update doesn't overwrite the data which exists)
+                        $scope.user.$update({
                             firstname: account.firstname,
-                            lastbame: account.lastname
+                            lastname: account.lastname
                         });
+
+                        // Go to the chats tab
                         $state.go('tab.chats');
                     }
                 }
@@ -176,15 +176,11 @@ angular.module('starter.controllers', [])
 
 // Controller for Connection Details
 .controller('ConnectDetailCtrl', function($scope, $state, fireBaseData, $firebase, $stateParams, Plaid, ConnectStore) {
-
-
     $scope.connection = ConnectStore.get();
-
 
     console.log($scope.connection);
 
     $scope.connectPlaid = $firebase(fireBaseData.refPlaid()).$asArray();
-
 
     $scope.connect = function(user) {
         //last working point
@@ -196,9 +192,7 @@ angular.module('starter.controllers', [])
             if (result.status == 200) {
                 ConnectStore.save(result.data);
                 $scope.connectPlaid.$add({
-
                     results: result.data
-
                 });
 
                 result.data = "No data";
@@ -210,11 +204,8 @@ angular.module('starter.controllers', [])
                 //alert("MFA required");
                 ConnectStore.save(result.data);
                 $scope.connectPlaid.$add({
-
                     results: result.data
-
                 });
-
                 result.data = "No data";
 
                 // $state.go('tab.bank-auth');
@@ -289,4 +280,13 @@ angular.module('starter.controllers', [])
         enableFriends: true
     };
 
-});
+})
+
+// Function to modify the email address to create a unique link based on the user
+function escapeEmailAddress(email) {
+  if (!email) return false
+  // Replace '.' (not allowed in a Firebase key) with ','
+  email = email.toLowerCase();
+  email = email.replace(/\./g, ',');
+  return email.trim();
+};

@@ -259,7 +259,6 @@ angular.module('starter.services', [])
 // Place holder function to access any data in the app
 .factory('fireBaseData', function($firebase) {
     var ref = new Firebase("https://walletbuddies.firebaseio.com/"),
-        refSocialcircle = new Firebase("https://walletbuddies.firebaseio.com/Socialcircle"),
         refUsers = new Firebase("https://walletbuddies.firebaseio.com/Users"),
         refPlaid = new Firebase("https://walletbuddies.firebaseio.com/Users/Plaid");
 

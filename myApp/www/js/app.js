@@ -20,8 +20,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     });
 })
 
-
-
 .config(function($stateProvider, $urlRouterProvider) {
 
     // Ionic uses AngularUI Router which uses the concept of states
@@ -29,7 +27,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     // Set up the various states which the app can be in.
     // Each state's controller can be found in controllers.js
     $stateProvider
-
 
     // State definition for Launch page
     .state('launch', {
@@ -44,13 +41,11 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         controller: 'SignInCtrl'
     })
 
-
     .state('signup', {
         url: '/signup',
         templateUrl: 'templates/signup.html',
         controller: 'AccountCtrl'
     })
-
 
     // setup an abstract state for the tabs directive
     .state('tab', {
