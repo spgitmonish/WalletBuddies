@@ -60,14 +60,7 @@ angular.module('starter.controllers', [])
                         var name = account.name;
                         
                         $email.$send(api_user, api_key, to, name, "You're all set!", "Thanks for signing up with Wallet 								Buddies, you can now start saving with your buddies - we hope you have fun saving :)" + "\n\n-WalletBuddies" + "\n\n", "deepesh.sunku@walletbuddies.co");
-                        if(success){
-	                        console.log(status);
-                        }
-                        if(error){
-	                        console.log(status + data);
-	                        alert("Please enter a valid email.");
-                        }
-                        //$state.go('tab.chats');
+                        $state.go('tab.chats');
                     }
                 }
             });
