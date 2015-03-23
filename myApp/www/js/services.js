@@ -220,40 +220,31 @@ angular.module('starter.services', [])
 
 //Service for picking contacts
 .factory("ContactsService", ['$q', function($q) {
-
-        var formatContact = function(contact) {
-
-            return {
-                "displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
-                "emails": contact.emails || [],
-                "phones": contact.phoneNumbers || [],
-                "photos": contact.photos || []
-            };
-
-        };
-
-        var pickContact = function() {
-
-            var deferred = $q.defer();
-
-            if (navigator && navigator.contacts) {
-
-                navigator.contacts.pickContact(function(contact) {
-
-                    deferred.resolve(formatContact(contact));
-                });
-
-            } else {
-                deferred.reject("Bummer.  No contacts in desktop browser");
-            }
-
-            return deferred.promise;
-        };
-
+    var formatContact = function(contact) {
         return {
-            pickContact: pickContact
+            //"displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
+            //"phones": contact.phoneNumbers || [],
+            //"photos": contact.photos || [],
+            "emails": contact.emails || []
         };
-    }])
+
+    };
+
+    var pickContact = function() {
+        var deferred = $q.defer();
+        if (navigator && navigator.contacts) {
+            navigator.contacts.pickContact(function(contact) {
+                deferred.resolve(formatContact(contact));
+            });
+        } else {
+            deferred.reject("Bummer.  No contacts in desktop browser");
+        }
+        return deferred.promise;
+    };
+    return {
+        pickContact: pickContact
+    };
+}])
     //Contacts service ends here
 
 // Place holder function to access any data in the app

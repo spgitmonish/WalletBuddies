@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, fireBaseData, $firebase, $state) {
+.controller('AccountCtrl', function($scope, fireBaseData, $firebase, $state, $rootScope) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -34,7 +34,7 @@ angular.module('starter.controllers', [])
                     }
                 }
                 else {
-                    console.log("Validation done correctly");
+                    alert("User created successfully");
 
                     var fbAuth = fbRef.getAuth();
 
@@ -50,6 +50,9 @@ angular.module('starter.controllers', [])
                             lastname: account.lastname
                         });
 
+                        // Before we switch tabs let's store the email address so that it is available across all controllers
+                        $rootScope.useremail = account.email;
+
                         // Go to the chats tab
                         $state.go('tab.chats');
                     }
@@ -60,8 +63,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, fireBaseData, $firebase, ContactsService, $cordovaContacts) {
-
+.controller('GroupCtrl', function($scope, fireBaseData, $firebase, ContactsService, $cordovaContacts, $rootScope, $state, $firebaseAuth) {
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -72,41 +74,62 @@ angular.module('starter.controllers', [])
             function(contact) {
                 $scope.data.selectedContacts.push(contact);
                 console.log(contact);
-
             },
             function(failure) {
-                console.log("Bummer.  Failed to pick a contact");
+                console.log("Bummer. Failed to pick a contact");
             }
         );
     }
-    //ends here
 
-    //Writing data to Firebase
-    $scope.group = $firebase(fireBaseData.refSocialcircle()).$asArray();
-
+    // This function is called when the "Invite your wallet buddies" button is pressed
     $scope.addGroup = function(user) {
-        $scope.group.$add({
-            //console.log("Inside group");
-            //picture:user.picture,
-            groupName: user.groupName,
+        // Get the link unique for this user
+        var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users" + "/" + escapeEmailAddress($rootScope.useremail));
+        console.log("Social Circle: " + $rootScope.useremail);
+        console.log("User link :" + fbUser);
+        $scope.user = $firebase(fbUser);
+
+        // Get the social circle name
+        var circleName = convertCircleName(user.groupName);
+        console.log(circleName);
+
+        // Get a unique link to the social circle
+        var fbCircle = new Firebase(fbUser + "/" + circleName);
+
+        // Create a firebase object
+        $scope.circle = $firebase(fbCircle);
+
+        // Update the user profile with the following data for this social circle
+        $scope.circle.$update({
+            circleName: user.groupName,
             plan: user.plan,
             amount: user.amount,
             groupMessage: user.groupMessage,
             contacts: $scope.data.selectedContacts
         });
 
-        //user.picture="";
+        // Logic for Sign Out
+        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+        $rootScope.fbAuth = $firebaseAuth(fbRef);
+
+        $rootScope.logout = function() {
+          $rootScope.fbAuth.$logout();
+        }
+
+        // Clear the forms
         user.groupName = "";
         user.plan = "weekly";
         user.amount = 0;
         user.groupMessage = "";
-        //user.checked= "";
-    };
-    //ends here
+
+        // Go to the launch page
+        $state.go('launch');
+    }
+
 })
 
 // Controller for plaid API
-.controller('ConnectCtrl', function($scope, fireBaseData, $firebase, $state, $stateParams, Plaid, ConnectStore) {
+.controller('ConnectCtrl', function($scope, fireBaseData, $firebase, $state, $stateParams, Plaid, ConnectStore, $rootScope) {
 
     $scope.user = {
         type: '',
@@ -175,7 +198,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Connection Details
-.controller('ConnectDetailCtrl', function($scope, $state, fireBaseData, $firebase, $stateParams, Plaid, ConnectStore) {
+.controller('ConnectDetailCtrl', function($scope, $state, fireBaseData, $firebase, $stateParams, Plaid, ConnectStore, $rootScope) {
     $scope.connection = ConnectStore.get();
 
     console.log($scope.connection);
@@ -246,11 +269,18 @@ angular.module('starter.controllers', [])
                         alert("Login Error! Try again.");
                     } else {
                         console.log("Sign In successful");
+                        // Before we switch tabs let's store the email address so that it is available across all controllers
+                        $rootScope.useremail = email;
+                        // Switch tabs
                         $state.go('tab.chats');
                     }
                 }
             );
         }
+
+        // Clear the forms
+        $scope.user.email = "";
+        $scope.user.password = "";
     }
 ])
 
@@ -289,4 +319,12 @@ function escapeEmailAddress(email) {
   email = email.toLowerCase();
   email = email.replace(/\./g, ',');
   return email.trim();
+};
+
+// Function to modify the social circle name to remove whitespaces, convert to lower case
+function convertCircleName(circlename) {
+  if (!circlename) return false
+  circlename = circlename.toLowerCase();
+  circlename = circlename.replace(/ /g, '');
+  return circlename.trim();
 };
