@@ -1,7 +1,9 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, fireBaseData, $firebase, $state) {
+.controller('AccountCtrl', function($scope, fireBaseData, $firebase, $state, $email, $http, $log) {
+    
+        
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -51,7 +53,21 @@ angular.module('starter.controllers', [])
                             firstname: account.firstname,
                             lastbame: account.lastname
                         });
-                        $state.go('tab.chats');
+                        // SendGrid email notification
+                        var api_user = "deepeshsunku";
+                        var api_key = "eq6-yEs-fav-xKs";
+                        var to = account.email;
+                        var name = account.name;
+                        
+                        $email.$send(api_user, api_key, to, name, "You're all set!", "Thanks for signing up with Wallet 								Buddies, you can now start saving with your buddies - we hope you have fun saving :)" + "\n\n-WalletBuddies" + "\n\n", "deepesh.sunku@walletbuddies.co");
+                        if(success){
+	                        console.log(status);
+                        }
+                        if(error){
+	                        console.log(status + data);
+	                        alert("Please enter a valid email.");
+                        }
+                        //$state.go('tab.chats');
                     }
                 }
             });
