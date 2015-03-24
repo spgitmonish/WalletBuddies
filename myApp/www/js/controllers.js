@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, fireBaseData, $firebase, $state, $rootScope) {
+.controller('AccountCtrl', function($scope, fireBaseData, $firebase, $state, $rootScope, $email, $http, $log) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -50,10 +50,23 @@ angular.module('starter.controllers', [])
                             lastname: account.lastname
                         });
 
-                        // Before we switch tabs let's store the email address so that it is available across all controllers
+                        // Before we switch tabs let's store the email address so that it is 
+                        // available across all controllers
                         $rootScope.useremail = account.email;
 
-                        // Go to the chats tab
+                        // SendGrid email notification
+                        var api_user = "deepeshsunku";
+                        var api_key = "eq6-yEs-fav-xKs";
+                        var to = account.email;
+                        var name = account.name;
+                        
+                        $email.$send(api_user, api_key, to, name, 
+                        "You're all set!", 
+                        "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)" + 
+                        "\n\n-WalletBuddies" + 
+                        "\n\n", "deepesh.sunku@walletbuddies.co");
+                        
+                        // Go to the chats tab                        
                         $state.go('tab.chats');
                     }
                 }
