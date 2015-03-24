@@ -98,8 +98,6 @@ angular.module('starter.controllers', [])
 
         // Create a firebase object
         $scope.circle = $firebase(fbCircle);
-        // Use angular.copy to avoid $$hashKey being added to object
-        $scope.data.selectedContacts = angular.copy($scope.data.selectedContacts);
 
         // Update the user profile with the following data for this social circle
         $scope.circle.$update({
@@ -109,7 +107,6 @@ angular.module('starter.controllers', [])
             groupMessage: user.groupMessage,
             contacts: $scope.data.selectedContacts
         });
-                
 
         // Logic for Sign Out
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");

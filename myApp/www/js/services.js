@@ -225,7 +225,7 @@ angular.module('starter.services', [])
             //"displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
             //"phones": contact.phoneNumbers || [],
             //"photos": contact.photos || [],
-            "emails":contact.emails
+            "emails": contact.emails || []
         };
 
     };
