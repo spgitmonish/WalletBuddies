@@ -101,6 +101,9 @@ angular.module('starter.controllers', [])
         console.log("Social Circle: " + $rootScope.useremail);
         console.log("User link :" + fbUser);
         $scope.user = $firebase(fbUser);
+        
+        // Use angular.copy to avoid $$hashKey being added to object
+        $scope.data.selectedContacts = angular.copy($scope.data.selectedContacts);
 
         // Get the social circle name
         var circleName = convertCircleName(user.groupName);
