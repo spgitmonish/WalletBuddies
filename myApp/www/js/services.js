@@ -222,7 +222,7 @@ angular.module('starter.services', [])
 .factory("ContactsService", ['$q', function($q) {
     var formatContact = function(contact) {
         return {
-            //"displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
+            "displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
             //"phones": contact.phoneNumbers || [],
             //"photos": contact.photos || [],
             "emails": contact.emails || []

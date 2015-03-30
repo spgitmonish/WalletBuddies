@@ -34,41 +34,36 @@ angular.module('starter.controllers', [])
                     }
                 }
                 else {
+                    // Create a new link for the user based on the email id
+                    var fbUser = new Firebase(fbRef.child('Users') + "/" + escapeEmailAddress(account.email));
+                    $scope.user = $firebase(fbUser);
+
+                    // Try and write the data($update doesn't overwrite the data which exists)
+                    $scope.user.$update({
+                        firstname: account.firstname,
+                        lastname: account.lastname
+                    });
+
+                    // Before we switch tabs let's store the email address so that it is
+                    // available across all controllers
+                    $rootScope.useremail = account.email;
+
+                    // SendGrid email notification
+                    var api_user = "deepeshsunku";
+                    var api_key = "eq6-yEs-fav-xKs";
+                    var to = account.email;
+                    var name = account.name;
+
+                    $email.$send(api_user, api_key, to, name,
+                    "You're all set!",
+                    "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)" +
+                    "\n\n-WalletBuddies" +
+                    "\n\n", "deepesh.sunku@walletbuddies.co");
+
                     alert("User created successfully");
 
-                    var fbAuth = fbRef.getAuth();
-
-                    // Validate that the user has signed into a Firebase account
-                    if(fbAuth){
-                        // Create a new link for the user based on the email id
-                        var fbUser = new Firebase(fbRef.child('Users') + "/" + escapeEmailAddress(account.email));
-                        $scope.user = $firebase(fbUser);
-
-                        // Try and write the data($update doesn't overwrite the data which exists)
-                        $scope.user.$update({
-                            firstname: account.firstname,
-                            lastname: account.lastname
-                        });
-
-                        // Before we switch tabs let's store the email address so that it is 
-                        // available across all controllers
-                        $rootScope.useremail = account.email;
-
-                        // SendGrid email notification
-                        var api_user = "deepeshsunku";
-                        var api_key = "eq6-yEs-fav-xKs";
-                        var to = account.email;
-                        var name = account.name;
-                        
-                        $email.$send(api_user, api_key, to, name, 
-                        "You're all set!", 
-                        "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)" + 
-                        "\n\n-WalletBuddies" + 
-                        "\n\n", "deepesh.sunku@walletbuddies.co");
-                        
-                        // Go to the chats tab                        
-                        $state.go('tab.chats');
-                    }
+                    // Go to the chats tab
+                    $state.go('tab.chats');
                 }
             });
         }
@@ -101,7 +96,7 @@ angular.module('starter.controllers', [])
         console.log("Social Circle: " + $rootScope.useremail);
         console.log("User link :" + fbUser);
         $scope.user = $firebase(fbUser);
-        
+
         // Use angular.copy to avoid $$hashKey being added to object
         $scope.data.selectedContacts = angular.copy($scope.data.selectedContacts);
 
@@ -109,19 +104,26 @@ angular.module('starter.controllers', [])
         var circleName = convertCircleName(user.groupName);
         console.log(circleName);
 
-        // Get a unique link to the social circle
-        var fbCircle = new Firebase(fbUser + "/" + circleName);
+        // Get the link to the Circles of the User
+        var fbCircle = new Firebase(fbUser + "/Circles/");
 
-        // Create a firebase object
-        $scope.circle = $firebase(fbCircle);
-
-        // Update the user profile with the following data for this social circle
-        $scope.circle.$update({
+        // Push the following data for this circle under this user
+        fbCircle.push({
             circleName: user.groupName,
             plan: user.plan,
             amount: user.amount,
             groupMessage: user.groupMessage,
             contacts: $scope.data.selectedContacts
+        });
+
+        // Retrieve all the social circles under this user
+        // Note: This callback occurs repeatedly till all the "children" are parsed
+        fbCircle.on("child_added", function(snapshot) {
+          var circleVal = snapshot.val();
+          console.log("Name: " + circleVal.circleName);
+          console.log("Plan: " + circleVal.plan);
+          console.log("Amount: " + circleVal.amount);
+          console.log("Message: " + circleVal.groupMessage);
         });
 
         // Logic for Sign Out
