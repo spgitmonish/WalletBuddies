@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, fireBaseData, $firebase, $state, $rootScope, $email, $http, $log) {
+.controller('AccountCtrl', function($scope, fireBaseData, $state, $rootScope, $email, $http, $log) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -35,14 +35,16 @@ angular.module('starter.controllers', [])
                 }
                 else {
                     // Create a new link for the user based on the email id
-                    var fbUser = new Firebase(fbRef.child('Users') + "/" + escapeEmailAddress(account.email));
-                    $scope.user = $firebase(fbUser);
+                    $scope.user = new Firebase(fbRef.child('Users') + "/" + escapeEmailAddress(account.email));
 
                     // Try and write the data($update doesn't overwrite the data which exists)
-                    $scope.user.$update({
-                        firstname: account.firstname,
-                        lastname: account.lastname
-                    });
+                    $scope.user.update({firstname: account.firstname, lastname: account.lastname}, function(error) {
+					    if (error) {
+					    	console.log("Error:", error);
+					    } else {
+					        console.log("Profile set successfully!");
+					    }
+					});
 
                     // Before we switch tabs let's store the email address so that it is
                     // available across all controllers
@@ -71,7 +73,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, fireBaseData, $firebase, ContactsService, $cordovaContacts, $rootScope, $state, $firebaseAuth) {
+.controller('GroupCtrl', function($scope, fireBaseData, ContactsService, $cordovaContacts, $rootScope, $state, $firebaseAuth) {
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -95,7 +97,6 @@ angular.module('starter.controllers', [])
         var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users" + "/" + escapeEmailAddress($rootScope.useremail));
         console.log("Social Circle: " + $rootScope.useremail);
         console.log("User link :" + fbUser);
-        $scope.user = $firebase(fbUser);
 
         // Use angular.copy to avoid $$hashKey being added to object
         $scope.data.selectedContacts = angular.copy($scope.data.selectedContacts);
@@ -147,7 +148,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for plaid API
-.controller('ConnectCtrl', function($scope, fireBaseData, $firebase, $state, $stateParams, Plaid, ConnectStore, $rootScope) {
+.controller('ConnectCtrl', function($scope, fireBaseData, $state, $stateParams, Plaid, ConnectStore, $rootScope, $firebaseArray) {
 
     $scope.user = {
         type: '',
@@ -155,7 +156,7 @@ angular.module('starter.controllers', [])
         password: 'plaid_good'
     };
 
-    $scope.connectPlaid = $firebase(fireBaseData.refPlaid()).$asArray();
+    $scope.connectPlaid = $firebaseArray(fireBaseData.refPlaid());
     // get All institutions
     Plaid.getInstitutions().then(function(result) {
         $scope.institutions = result.data;
@@ -216,12 +217,12 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Connection Details
-.controller('ConnectDetailCtrl', function($scope, $state, fireBaseData, $firebase, $stateParams, Plaid, ConnectStore, $rootScope) {
+.controller('ConnectDetailCtrl', function($scope, $state, fireBaseData, $stateParams, Plaid, ConnectStore, $rootScope, $firebaseArray) {
     $scope.connection = ConnectStore.get();
 
     console.log($scope.connection);
 
-    $scope.connectPlaid = $firebase(fireBaseData.refPlaid()).$asArray();
+    $scope.connectPlaid = $firebaseArray(fireBaseData.refPlaid());
 
     $scope.connect = function(user) {
         //last working point
