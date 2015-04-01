@@ -117,23 +117,14 @@ angular.module('starter.controllers', [])
             contacts: $scope.data.selectedContacts
         });
 
-        // Retrieve all the social circles under this user
-        // Note: This callback occurs repeatedly till all the "children" are parsed
-        fbCircle.on("child_added", function(snapshot) {
-          var circleVal = snapshot.val();
-          console.log("Name: " + circleVal.circleName);
-          console.log("Plan: " + circleVal.plan);
-          console.log("Amount: " + circleVal.amount);
-          console.log("Message: " + circleVal.groupMessage);
-        });
-
         // Logic for Sign Out
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+        /*var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
         $rootScope.fbAuth = $firebaseAuth(fbRef);
 
         $rootScope.logout = function() {
-          $rootScope.fbAuth.$logout();
-        }
+            $rootScope.selectedContacts = $scope.data.selectedContacts;
+            $rootScope.fbAuth.$logout();
+        }*/
 
         // Clear the forms
         user.groupName = "";
@@ -142,7 +133,7 @@ angular.module('starter.controllers', [])
         user.groupMessage = "";
 
         // Go to the launch page
-        $state.go('launch');
+        $state.go('dash');
     }
 
 })
@@ -290,8 +281,38 @@ angular.module('starter.controllers', [])
                         console.log("Sign In successful");
                         // Before we switch tabs let's store the email address so that it is available across all controllers
                         $rootScope.useremail = email;
-                        // Switch tabs
-                        $state.go('tab.chats');
+
+                        // Get the link unique for this user
+                        var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users" + "/" + escapeEmailAddress($rootScope.useremail));
+
+                        // Get the link to the Circles of the User
+                        var fbCircle = new Firebase(fbUser + "/Circles/");
+
+                        // Create an array which stores all the information
+                        $rootScope.circlesArray = [];
+                        var loopCount = 0;
+
+                        // Retrieve all the social circles under this user
+                        // Note: This callback occurs repeatedly till all the "children" are parsed
+                        fbCircle.on("child_added", function(snapshot) {
+                          var circleVal = snapshot.val();
+                          $rootScope.circlesArray.push(circleVal)
+                          console.log("Name: " + $rootScope.circlesArray[loopCount].circleName);
+                          console.log("Plan: " + $rootScope.circlesArray[loopCount].plan);
+                          console.log("Amount: " + $rootScope.circlesArray[loopCount].amount);
+                          console.log("Message: " + $rootScope.circlesArray[loopCount].groupMessage);
+                          console.log("Number of circles:" + loopCount);
+                          loopCount++;
+                        });
+
+                        // Length will always equal count, since snap.val() will include every child_added event
+                        // triggered before this point
+                        fbCircle.once("value", function(snap) {
+                            // The actual length is +1 of the value returned by Object.keys(snap.val()).length
+                            console.log("Initial data loaded!", Object.keys(snap.val()).length === loopCount);
+                            // The data is ready, switch to the Chats tab
+                            $state.go('tab.chats');
+                        });
                     }
                 }
             );
@@ -305,7 +326,10 @@ angular.module('starter.controllers', [])
 
 
 // Other unfilled and unused controllers
-.controller('ChatsCtrl', function($scope, Chats) {
+.controller('ChatsCtrl', function($scope, Chats, $rootScope) {
+    // Make sure the data is available in this controller
+    console.log("Inside Chats" + $rootScope.circlesArray[0].circleName);
+
     $scope.chats = Chats.all();
     $scope.remove = function(chat) {
         Chats.remove(chat);
