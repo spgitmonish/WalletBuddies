@@ -58,8 +58,8 @@ angular.module('starter.controllers', [])
 
                     $email.$send(api_user, api_key, to, name,
                     "You're all set!",
-                    "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)" +
-                    "\n\n-WalletBuddies" +
+                    "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)\n\n\n" +
+                    "\n\n - Team Wallet Buddies" +
                     "\n\n", "deepesh.sunku@walletbuddies.co");
 
                     alert("User created successfully");
@@ -309,9 +309,11 @@ angular.module('starter.controllers', [])
                         // triggered before this point
                         fbCircle.once("value", function(snap) {
                             // The actual length is +1 of the value returned by Object.keys(snap.val()).length
-                            console.log("Initial data loaded!", Object.keys(snap.val()).length === loopCount);
-                            // Use the setter and set the value so that it is accessible to another controller
-                            Circles.set(circlesArray);
+                            if(loopCount != 0){
+	                            console.log("Initial data loaded!", Object.keys(snap.val()).length === loopCount);
+	                            // Use the setter and set the value so that it is accessible to another controller
+	                            Circles.set(circlesArray);
+                            }
                             // The data is ready, switch to the Chats tab
                             $state.go('tab.chats');
                         });
@@ -331,7 +333,7 @@ angular.module('starter.controllers', [])
 .controller('ChatsCtrl', function($scope, Chats, Circles) {
     // Make sure the data is available in this controller
     $scope.circles = Circles.get();
-    console.log("Circle Name: " + $scope.circles[0].circleName);
+    //console.log("Circle Name: " + $scope.circles[0].circleName);
 })
 
 .controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
