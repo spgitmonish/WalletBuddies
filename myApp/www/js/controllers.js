@@ -252,8 +252,8 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Sign In
-.controller('SignInCtrl', ['$scope', '$state', '$rootScope',
-    function($scope, $state, $rootScope) {
+.controller('SignInCtrl', ['$scope', '$state', '$rootScope', 'Circles',
+    function($scope, $state, $rootScope, Circles) {
         var ref = new Firebase("https://walletbuddies.firebaseio.com/");
 
         $scope.user = {
@@ -289,18 +289,18 @@ angular.module('starter.controllers', [])
                         var fbCircle = new Firebase(fbUser + "/Circles/");
 
                         // Create an array which stores all the information
-                        $rootScope.circlesArray = [];
+                        var circlesArray = [];
                         var loopCount = 0;
 
                         // Retrieve all the social circles under this user
                         // Note: This callback occurs repeatedly till all the "children" are parsed
                         fbCircle.on("child_added", function(snapshot) {
                           var circleVal = snapshot.val();
-                          $rootScope.circlesArray.push(circleVal)
-                          console.log("Name: " + $rootScope.circlesArray[loopCount].circleName);
-                          console.log("Plan: " + $rootScope.circlesArray[loopCount].plan);
-                          console.log("Amount: " + $rootScope.circlesArray[loopCount].amount);
-                          console.log("Message: " + $rootScope.circlesArray[loopCount].groupMessage);
+                          circlesArray.push(circleVal)
+                          console.log("Name: " + circlesArray[loopCount].circleName);
+                          console.log("Plan: " + circlesArray[loopCount].plan);
+                          console.log("Amount: " + circlesArray[loopCount].amount);
+                          console.log("Message: " + circlesArray[loopCount].groupMessage);
                           console.log("Number of circles:" + loopCount);
                           loopCount++;
                         });
@@ -310,6 +310,8 @@ angular.module('starter.controllers', [])
                         fbCircle.once("value", function(snap) {
                             // The actual length is +1 of the value returned by Object.keys(snap.val()).length
                             console.log("Initial data loaded!", Object.keys(snap.val()).length === loopCount);
+                            // Use the setter and set the value so that it is accessible to another controller
+                            Circles.set(circlesArray);
                             // The data is ready, switch to the Chats tab
                             $state.go('tab.chats');
                         });
@@ -326,9 +328,10 @@ angular.module('starter.controllers', [])
 
 
 // Other unfilled and unused controllers
-.controller('ChatsCtrl', function($scope, Chats, $rootScope) {
+.controller('ChatsCtrl', function($scope, Chats, $rootScope, Circles) {
     // Make sure the data is available in this controller
-    console.log("Inside Chats" + $rootScope.circlesArray[0].circleName);
+    var circlesInfo = Circles.get();
+    console.log("Circle Name: " + circlesInfo[0].circleName);
 
     $scope.chats = Chats.all();
     $scope.remove = function(chat) {

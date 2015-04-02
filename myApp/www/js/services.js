@@ -101,7 +101,6 @@ angular.module('starter.services', [])
     }
 })
 
-
 .factory('ConnectStore', function() {
 
     var connectionStore = this.connectionStore = {};
@@ -117,8 +116,8 @@ angular.module('starter.services', [])
     }
 })
 
-
-//Plaid API factory ends here
+.factory('Circles', function($rootScope){
+    var circlesInfo;
 
 
 
