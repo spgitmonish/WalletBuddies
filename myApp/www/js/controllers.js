@@ -132,8 +132,8 @@ angular.module('starter.controllers', [])
         user.amount = 0;
         user.groupMessage = "";
 
-        // Go to the launch page
-        $state.go('dash');
+        // Go to the wallet page
+        $state.go('tab.chats');
     }
 
 })
@@ -329,11 +329,9 @@ angular.module('starter.controllers', [])
 .controller('ChatsCtrl', function($scope, Chats, $rootScope) {
     // Make sure the data is available in this controller
     console.log("Inside Chats" + $rootScope.circlesArray[0].circleName);
+    $scope.circles = $rootScope.circlesArray;
+    console.log("Inside Circles: " + $scope.circles +" inside object = "+ $scope.circles[0].circleName);
 
-    $scope.chats = Chats.all();
-    $scope.remove = function(chat) {
-        Chats.remove(chat);
-    }
 })
 
 .controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
