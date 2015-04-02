@@ -328,7 +328,7 @@ angular.module('starter.controllers', [])
 
 
 // Other unfilled and unused controllers
-.controller('ChatsCtrl', function($scope, Chats, $rootScope, Circles) {
+.controller('ChatsCtrl', function($scope, Chats, Circles) {
     // Make sure the data is available in this controller
     var circlesInfo = Circles.get();
     console.log("Circle Name: " + circlesInfo[0].circleName);
