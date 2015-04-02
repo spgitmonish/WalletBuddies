@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, fireBaseData, $state, $rootScope, $email, $http, $log) {
+.controller('AccountCtrl', function($scope, fireBaseData, $state, $rootScope, $email, $http, $log, Circles) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -64,8 +64,37 @@ angular.module('starter.controllers', [])
 
                     alert("User created successfully");
 
-                    // Go to the chats tab
-                    $state.go('tab.chats');
+                    // Get the link unique for this user
+                    var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users" + "/" + escapeEmailAddress($rootScope.useremail));
+
+                    // Get the link to the Circles of the User
+                    var fbCircle = new Firebase(fbUser + "/Circles/");
+
+                    // Create an array which stores all the information
+                    var circlesArray = [];
+                    var loopCount = 0;
+
+                    // Retrieve all the social circles under this user
+                    // Note: This callback occurs repeatedly till all the "children" are parsed
+                    fbCircle.on("child_added", function(snapshot) {
+                      var circleVal = snapshot.val();
+                      circlesArray.push(circleVal)
+                      console.log("Name: " + circlesArray[loopCount].circleName);
+                      console.log("Plan: " + circlesArray[loopCount].plan);
+                      console.log("Amount: " + circlesArray[loopCount].amount);
+                      console.log("Message: " + circlesArray[loopCount].groupMessage);
+                      console.log("Number of circles:" + loopCount);
+                      loopCount++;
+                    });
+
+                    // Length will always equal count, since snap.val() will include every child_added event
+                    // triggered before this point
+                    fbCircle.once("value", function(snap) {
+                        // Use the setter and set the value so that it is accessible to another controller
+                        Circles.set(circlesArray);
+                        // The data is ready, switch to the Chats tab
+                        $state.go('tab.chats');
+                    });
                 }
             });
         }
@@ -310,9 +339,9 @@ angular.module('starter.controllers', [])
                         fbCircle.once("value", function(snap) {
                             // The actual length is +1 of the value returned by Object.keys(snap.val()).length
                             if(loopCount != 0){
-	                            console.log("Initial data loaded!", Object.keys(snap.val()).length === loopCount);
-	                            // Use the setter and set the value so that it is accessible to another controller
-	                            Circles.set(circlesArray);
+                                console.log("Initial data loaded!", Object.keys(snap.val()).length === loopCount);
+                                // Use the setter and set the value so that it is accessible to another controller
+                                Circles.set(circlesArray);
                             }
                             // The data is ready, switch to the Chats tab
                             $state.go('tab.chats');
