@@ -132,8 +132,8 @@ angular.module('starter.controllers', [])
         user.amount = 0;
         user.groupMessage = "";
 
-        // Go to the launch page
-        $state.go('dash');
+        // Go to the wallet page
+        $state.go('tab.chats');
     }
 
 })
@@ -330,13 +330,8 @@ angular.module('starter.controllers', [])
 // Other unfilled and unused controllers
 .controller('ChatsCtrl', function($scope, Chats, Circles) {
     // Make sure the data is available in this controller
-    var circlesInfo = Circles.get();
-    console.log("Circle Name: " + circlesInfo[0].circleName);
-
-    $scope.chats = Chats.all();
-    $scope.remove = function(chat) {
-        Chats.remove(chat);
-    }
+    $scope.circles = Circles.get();
+    console.log("Circle Name: " + $scope.circles[0].circleName);
 })
 
 .controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
