@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, fireBaseData, $state, $rootScope, $email, $http, $log, Circles) {
+.controller('AccountCtrl', function($scope, fireBaseData, $state, $rootScope, $email, $http, $log, Circles, $firebaseAuth) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -34,66 +34,73 @@ angular.module('starter.controllers', [])
                     }
                 }
                 else {
-                    // Create a new link for the user based on the email id
-                    $scope.user = new Firebase(fbRef.child('Users') + "/" + escapeEmailAddress(account.email));
+                    // Get the Authorization object using the Firebase link
+                    var fbAuth = $firebaseAuth(fbRef);
 
-                    // Try and write the data($update doesn't overwrite the data which exists)
-                    $scope.user.update({firstname: account.firstname, lastname: account.lastname}, function(error) {
-					    if (error) {
-					    	console.log("Error:", error);
-					    } else {
-					        console.log("Profile set successfully!");
-					    }
-					});
+                    // Check for authorization
+                    fbAuth.$authWithPassword({
+                        email: account.email,
+                        password: account.password
+                    }).then(function(authData) {
+                        // This is all asynchronous
+                        console.log("Logged in as: " + authData.uid);
 
-                    // Before we switch tabs let's store the email address so that it is
-                    // available across all controllers
-                    $rootScope.useremail = account.email;
+                        // Get the Firebase link for this user
+                        var fbUser = fbRef.child("Users").child(authData.uid);
+                        console.log("Link: " + fbUser);
 
-                    // SendGrid email notification
-                    var api_user = "deepeshsunku";
-                    var api_key = "eq6-yEs-fav-xKs";
-                    var to = account.email;
-                    var name = account.name;
+                        // Store the user information
+                        fbUser.update({
+                            firstname: account.firstname,
+                            lastname: account.lastname
+                        });
 
-                    $email.$send(api_user, api_key, to, name,
-                    "You're all set!",
-                    "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)\n\n\n" +
-                    "\n\n - Team Wallet Buddies" +
-                    "\n\n", "deepesh.sunku@walletbuddies.co");
+                        // SendGrid email notification
+                        var api_user = "deepeshsunku";
+                        var api_key = "eq6-yEs-fav-xKs";
+                        var to = account.email;
+                        var name = account.name;
 
-                    alert("User created successfully");
+                        $email.$send(api_user, api_key, to, name,
+                        "You're all set!",
+                        "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)\n\n\n" +
+                        "\n\n - Team Wallet Buddies" +
+                        "\n\n", "deepesh.sunku@walletbuddies.co");
 
-                    // Get the link unique for this user
-                    var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users" + "/" + escapeEmailAddress($rootScope.useremail));
+                        alert("User created successfully");
 
-                    // Get the link to the Circles of the User
-                    var fbCircle = new Firebase(fbUser + "/Circles/");
+                        // Get the link to the Circles of the User
+                        var fbCircle = new Firebase(fbUser + "/Circles/");
 
-                    // Create an array which stores all the information
-                    var circlesArray = [];
-                    var loopCount = 0;
+                        // Create an array which stores all the information
+                        var circlesArray = [];
+                        var loopCount = 0;
 
-                    // Retrieve all the social circles under this user
-                    // Note: This callback occurs repeatedly till all the "children" are parsed
-                    fbCircle.on("child_added", function(snapshot) {
-                      var circleVal = snapshot.val();
-                      circlesArray.push(circleVal)
-                      console.log("Name: " + circlesArray[loopCount].circleName);
-                      console.log("Plan: " + circlesArray[loopCount].plan);
-                      console.log("Amount: " + circlesArray[loopCount].amount);
-                      console.log("Message: " + circlesArray[loopCount].groupMessage);
-                      console.log("Number of circles:" + loopCount);
-                      loopCount++;
-                    });
+                        // Retrieve all the social circles under this user
+                        // Note: This callback occurs repeatedly till all the "children" are parsed
+                        fbCircle.on("child_added", function(snapshot) {
+                          var circleVal = snapshot.val();
+                          circlesArray.push(circleVal)
+                          console.log("Name: " + circlesArray[loopCount].circleName);
+                          console.log("Plan: " + circlesArray[loopCount].plan);
+                          console.log("Amount: " + circlesArray[loopCount].amount);
+                          console.log("Message: " + circlesArray[loopCount].groupMessage);
+                          console.log("Number of circles:" + loopCount);
+                          loopCount++;
+                        });
 
-                    // Length will always equal count, since snap.val() will include every child_added event
-                    // triggered before this point
-                    fbCircle.once("value", function(snap) {
-                        // Use the setter and set the value so that it is accessible to another controller
-                        Circles.set(circlesArray);
-                        // The data is ready, switch to the Chats tab
-                        $state.go('tab.chats');
+                        // Length will always equal count, since snap.val() will include every child_added event
+                        // triggered before this point
+                        fbCircle.once("value", function(snap) {
+                            // Use the setter and set the value so that it is accessible to another controller
+                            Circles.set(circlesArray);
+                            // Store the firebase link so that it is accessible across controllers
+                            $rootScope.fbUser = fbUser;
+                            // The data is ready, switch to the Chats tab
+                            $state.go('tab.chats');
+                        });
+                    }).catch(function(error) {
+                        console.error("Authentication failed: " + error);
                     });
                 }
             });
@@ -102,7 +109,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, fireBaseData, ContactsService, $cordovaContacts, $rootScope, $state, $firebaseAuth) {
+.controller('GroupCtrl', function($scope, fireBaseData, ContactsService, $cordovaContacts, $rootScope, $state) {
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -123,19 +130,18 @@ angular.module('starter.controllers', [])
     // This function is called when the "Invite your wallet buddies" button is pressed
     $scope.addGroup = function(user) {
         // Get the link unique for this user
-        var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users" + "/" + escapeEmailAddress($rootScope.useremail));
-        console.log("Social Circle: " + $rootScope.useremail);
+        var fbUser = $rootScope.fbUser;
         console.log("User link :" + fbUser);
+
+        // Get the link to the Circles of the User
+        var fbCircle = new Firebase(fbUser + "/Circles/");
+        console.log("User Circle:" + fbCircle);
 
         // Use angular.copy to avoid $$hashKey being added to object
         $scope.data.selectedContacts = angular.copy($scope.data.selectedContacts);
 
-        // Get the social circle name
-        var circleName = convertCircleName(user.groupName);
-        console.log(circleName);
-
-        // Get the link to the Circles of the User
-        var fbCircle = new Firebase(fbUser + "/Circles/");
+        // Print the social circle name
+        console.log(user.groupName);
 
         // Push the following data for this circle under this user
         fbCircle.push({
@@ -145,15 +151,6 @@ angular.module('starter.controllers', [])
             groupMessage: user.groupMessage,
             contacts: $scope.data.selectedContacts
         });
-
-        // Logic for Sign Out
-        /*var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
-        $rootScope.fbAuth = $firebaseAuth(fbRef);
-
-        $rootScope.logout = function() {
-            $rootScope.selectedContacts = $scope.data.selectedContacts;
-            $rootScope.fbAuth.$logout();
-        }*/
 
         // Clear the forms
         user.groupName = "";
@@ -283,13 +280,14 @@ angular.module('starter.controllers', [])
 // Controller for Sign In
 .controller('SignInCtrl', ['$scope', '$state', '$rootScope', 'Circles',
     function($scope, $state, $rootScope, Circles) {
-        var ref = new Firebase("https://walletbuddies.firebaseio.com/");
+        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
         $scope.user = {
             email: "",
             password: ""
         };
 
+        // Called when the user clicks the "Sign In" button
         $scope.validateUser = function() {
             var email = this.user.email;
             var password = this.user.password;
@@ -299,7 +297,8 @@ angular.module('starter.controllers', [])
                 return false;
             }
 
-            ref.authWithPassword({
+            // Authorize the user with email/password
+            fbRef.authWithPassword({
                     email: email,
                     password: password
                 },
@@ -308,11 +307,10 @@ angular.module('starter.controllers', [])
                         alert("Login Error! Try again.");
                     } else {
                         console.log("Sign In successful");
-                        // Before we switch tabs let's store the email address so that it is available across all controllers
-                        $rootScope.useremail = email;
 
-                        // Get the link unique for this user
-                        var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users" + "/" + escapeEmailAddress($rootScope.useremail));
+                        // Get the Firebase link for this user
+                        var fbUser = fbRef.child("Users").child(authData.uid);
+                        console.log("Link: " + fbUser);
 
                         // Get the link to the Circles of the User
                         var fbCircle = new Firebase(fbUser + "/Circles/");
@@ -343,6 +341,8 @@ angular.module('starter.controllers', [])
                                 // Use the setter and set the value so that it is accessible to another controller
                                 Circles.set(circlesArray);
                             }
+                            // Store the firebase link so that it is accessible across controllers
+                            $rootScope.fbUser = fbUser;
                             // The data is ready, switch to the Chats tab
                             $state.go('tab.chats');
                         });
