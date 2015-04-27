@@ -57,7 +57,7 @@ angular.module('starter.controllers', [])
 
                         // SendGrid email notification
                         var api_user = "deepeshsunku";
-                        var api_key = "eq6-yEs-fav-xKs";
+                        var api_key = "hdG-vU7-ETH-FwS";
                         var to = account.email;
                         var name = account.name;
 
