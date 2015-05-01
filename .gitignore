@@ -22,3 +22,4 @@ myApp/hooks/after_platform_add/010_install_plugins.js
 myApp/hooks/after_plugin_add/010_register_plugin.js
 
 myApp/hooks/after_plugin_rm/010_deregister_plugin.js
+*.json
