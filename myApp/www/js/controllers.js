@@ -162,8 +162,18 @@ angular.module('starter.controllers', [])
             groupMessage: user.groupMessage,
             contacts: $scope.data.selectedContacts
         });
+        
+        // Writing UserID under CircleID
+		fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
+			Status: true
+		});
 
-
+		// Writing circle ID to the user's path
+		fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
+			Status: true
+		});
+		
+		
         // Hardcoded to be false
         if( false )
         {
@@ -338,11 +348,13 @@ angular.module('starter.controllers', [])
                         alert("Login Error! Try again.");
                     } else {
                         console.log("Sign In successful");
-
+						// Saving auth data to be used across controllers
+						$rootScope.fbAuthData = authData;
+						
                         // Hard coded to be false
                         if( false ){
                             var fbInvites = new Firebase(fbRef + "/Invites/");
-
+							
                              // Use the user's email address and set the id length to be 4
                             hashids = new Hashids("first@last.com", 4);
 
