@@ -56,6 +56,23 @@ angular.module('starter.controllers', [])
                             email: account.email,
                             phonenumber: account.phonenumber
                         });
+                        
+                        // Create user's unique Hash and save under the Registered Users folder
+                        // Use a secret string and set the id length to be 4
+			            var hashids = new Hashids("SecretMonkey", 4);
+			            // Use the user's phone number
+			            // Converting string to integer
+			            var temp = parseInt(account.phonenumber);
+			            account.phonenumber = temp;
+			            console.log("Phones:   " + account.phonenumber);
+			            var id = hashids.encode(account.phonenumber);
+			            console.log("Hashids: " + hashids + id);
+			
+			            // Write the user's unique hash to registered users and save his UID 
+			            var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
+			            fbHash.update({
+				            uid: authData.uid
+			            });
 
                         // SendGrid email notification
                         var api_user = "deepeshsunku";
@@ -64,7 +81,7 @@ angular.module('starter.controllers', [])
                         var name = account.name;
 
                         $email.$send(api_user, api_key, to, name,
-                        "You're all set!",
+                        name + "! You're all set",
                         "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)\n\n\n" +
                         "\n\n - Team Wallet Buddies" +
                         "\n\n", "deepesh.sunku@walletbuddies.co");
@@ -97,8 +114,8 @@ angular.module('starter.controllers', [])
                         fbCircle.once("value", function(snap) {
                             // Use the setter and set the value so that it is accessible to another controller
                             Circles.set(circlesArray);
-                            // The data is ready, switch to the Chats tab
-                            $state.go('tab.chats');
+                            // The data is ready, switch to the Wallet tab
+                            $state.go('tab.wallet');
                         });
                     }).catch(function(error) {
                         console.error("Authentication failed: " + error);
@@ -110,7 +127,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, fireBaseData, ContactsService, $cordovaContacts, $rootScope, $state) {
+.controller('GroupCtrl', function($scope, fireBaseData, ContactsService, Circles, $cordovaContacts, $rootScope, $state, $email, $http, $log) {
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -136,12 +153,22 @@ angular.module('starter.controllers', [])
         // Get the link to the Circles of the User
         var fbCircle = new Firebase(fbRef + "/Circles/");
         console.log("Circle:" + fbCircle);
+        
+        // Get the link to the user profile
+		var fbProfile = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);     
 
         // Use angular.copy to avoid $$hashKey being added to object
         $scope.data.selectedContacts = angular.copy($scope.data.selectedContacts);
-
-        // Deepesh, can you modify this to pull the contacts and send out an email from here?
-
+		console.log("Contacts Array: " + $scope.data.selectedContacts[0].emails[0].value);
+		
+		//  Method for removing symbols in phone numbers
+        for( var i=0; i<$scope.data.selectedContacts.length; i++){
+			var str = $scope.data.selectedContacts[i].phones[0].value;
+			$scope.data.selectedContacts[i].phones[0].value = str.replace(/\D/g, '');
+			var temp = parseInt($scope.data.selectedContacts[i].phones[0].value);
+			$scope.data.selectedContacts[i].phones[0].value = temp;
+        }		
+		
         // Print the social circle name
         console.log(user.groupName);
 
@@ -162,35 +189,100 @@ angular.module('starter.controllers', [])
             groupMessage: user.groupMessage,
             contacts: $scope.data.selectedContacts
         });
-        
-        // Writing UserID under CircleID
-		fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
-			Status: true
-		});
 
-		// Writing circle ID to the user's path
+		// Writing circle ID to the user's path and set Status to true
 		fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
 			Status: true
 		});
 		
+		// Writing UserID under CircleID and set Status to true
+		fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
+			Status: true
+		});
 		
-        // Hardcoded to be false
-        if( false )
-        {
+		// Create an array which stores all the information
+        var namesArray = [];
+
+		// Callback function to obtain user info
+		function show_fb() {
+			fbProfile.on("child_added", data_added);
+			console.log("Hello..i'm in the callback");
+		};		
+		// Retrive user info
+		function data_added(snapshot){
+			console.log("Hello..i'm in the snap");
+			var temp = snapshot.val();
+			namesArray.push(temp);
+			console.log("Name inside func: " + namesArray);
+		}
+		show_fb();
+		console.log("Name outside func: " + namesArray);
+		
+        // Checking for registered users and generating new Circle invite codes for non-registered users
+        for (var i = 0; i < $scope.data.selectedContacts.length; i++){	
+	        console.log("Contacts length: " + i);	        
             // Use the user's email address and set the id length to be 4
-            hashids = new Hashids("first@last.com", 4);
+            var hashids = new Hashids("SecretMonkey", 4);
             // Use the user's phone number(hard coded for now)
-            var id = hashids.encode(1234567891);
+            console.log("Phones:   " + $scope.data.selectedContacts[i].phones[0].value);
+            var id = hashids.encode($scope.data.selectedContacts[i].phones[0].value);
+            console.log("Hashids: " + hashids + id);
 
-            // Get the link to the Invites
-            var fbInvites = new Firebase(fbRef + "/Invites/");
-
-            // Push the invite
-            fbInvites.push({
-                inviteCode: id,
-                circleID: groupID,
-                circleName: user.groupName
-            });
+            // Get the link to the Registered User
+            var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
+            console.log("RegisteredUser LINK: " + fbHash);
+            console.log("RegisteredUser UID: " + fbHash.uid);
+            
+            // Callback function to obtain user info
+	        fbHash.on("child_added", function(snap) {
+			  console.log("added snap" + snap.val());
+			});
+			// Retrive user info
+			fbProfile.once("value", function(snapshot) {
+				console.log(snapshot.val());
+				Circles.set(snapshot.val());
+	        });
+	        var uid = Circles.get();
+	        console.log("UID DATA " + uid + uid.uid); 
+            
+            if (fbHash.uid != null){
+	            console.log("Hello and welcome");
+	            // Writing UserID under CircleID and set Status to pending
+				fbRef.child("Circles").child(groupID).child("Members").child(id).update({
+					Status: pending
+				});
+				
+				// Writing circle ID to the user's path and set Status to pending
+				fbRef.child("Users").child(fbHash.uid).child("Circles").child(groupID).update({
+					Status: pending
+				});				
+            }
+			
+			else{
+				// Get the link to the Registered User
+				var fbInvites = new Firebase(fbRef + "/Invites/" + id);
+				
+            	// Save the CircleId under Invites and Push the invite
+	            fbInvites.update({
+	                circleID: groupID
+	            });
+	            
+	            // SendGrid email notification
+	            var api_user = "deepeshsunku";
+	            var api_key = "hdG-vU7-ETH-FwS";
+	            var to = $scope.data.selectedContacts[i].emails[0].value;
+	            var name = $scope.data.selectedContacts[i].displayName;
+	            var groupName = user.groupName;
+	            var fbName = "MR. Wall-B";
+	/*
+	        	$email.$send(api_user, api_key, to, name,
+	            "You've been invited to form a Circle on WalletBuddies by " + fbName,
+	            fbName + " has invited you to the " + groupName +
+	            " Circle on WalletBuddies. Use the code: " + id +
+	            " to join this Circle. Have fun. :)", "deepesh.sunku@walletbuddies.co");
+	            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + to);
+	            */
+            }
         }
 
         // Clear the forms
@@ -200,7 +292,7 @@ angular.module('starter.controllers', [])
         user.groupMessage = "";
 
         // Go to the wallet page
-        $state.go('tab.chats');
+        $state.go('tab.wallet');
     }
 
 })
@@ -325,13 +417,15 @@ angular.module('starter.controllers', [])
 
         $scope.user = {
             email: "",
-            password: ""
+            password: "",
+            token: ""
         };
 
         // Called when the user clicks the "Sign In" button
         $scope.validateUser = function() {
             var email = this.user.email;
             var password = this.user.password;
+            var token = this.user.token;
 
             if (!email || !password) {
                 alert("Please enter valid credentials.");
@@ -353,28 +447,30 @@ angular.module('starter.controllers', [])
 						
                         // Hard coded to be false
                         if( false ){
-                            var fbInvites = new Firebase(fbRef + "/Invites/");
+                            var fbInvites = new Firebase(fbRef + "/Invites/" + token);
+                            console.log("Token Hmmm: " + token);
 							
                              // Use the user's email address and set the id length to be 4
                             hashids = new Hashids("first@last.com", 4);
 
                              // Hard code the invite code for now
-                            var inviteEntered = "8wXlb6w";
+                            //var inviteEntered = "8wXlb6w";
 
                             // Use the user's phone number(hard coded for now)
-                            var decodedID = hashids.decode(inviteEntered);
+                            //var decodedID = hashids.decode(inviteEntered);
 
-                            console.log("DecodedID:" + decodedID);
+                            //console.log("DecodedID:" + decodedID);
 
                             // Retrieve all the invites and compare it against the code
                             fbInvites.on("child_added", function(snapshot) {
                                 var inviteVal = snapshot.val();
-                                var inviteKey = snapshot.key()
+                                var inviteKey = snapshot.key();
                                 console.log("Key:" + inviteKey);
+                                console.log("inviteVal.inviteCode = " + inviteKey + " Val: " + inviteVal[0]);
 
-                                if((inviteEntered == inviteVal.inviteCode) && (decodedID == "1234567891")){
+                                //if(token == inviteKey) {//&& (decodedID == "1234567891")){
                                     console.log("CircleID: " + inviteVal.circleID);
-                                    console.log("GroupName: " + inviteVal.circleName);
+                                    //console.log("GroupName: " + inviteVal.circleName);
 
                                     // Copy the circle ID
                                     circleIDMatched = inviteVal.circleID;
@@ -404,8 +500,8 @@ angular.module('starter.controllers', [])
                                       }
 
                                       // Code for deleting the invite after providing access
-                                      var fbInvite = new Firebase(fbRef + "/Invites/" + inviteKey);
-                                      fbInvite.remove();
+                                      //var fbInvite = new Firebase(fbRef + "/Invites/" + inviteKey);
+                                      //fbInvite.remove();
                                     });
 
                                     // Length will always equal count, since snap.val() will include every child_added event
@@ -413,10 +509,10 @@ angular.module('starter.controllers', [])
                                     fbCircle.once("value", function(snap) {
                                          // Use the setter and set the value so that it is accessible to another controller
                                         Circles.set(circlesArray);
-                                        // The data is ready, switch to the Chats tab
-                                        $state.go('tab.chats');
+                                        // The data is ready, switch to the Wallet tab
+                                        $state.go('tab.wallet');
                                     });
-                                }
+                                //}
                             });
                         }
                         else{
@@ -447,8 +543,8 @@ angular.module('starter.controllers', [])
                             fbCircle.once("value", function(snap) {
                                 // Use the setter and set the value so that it is accessible to another controller
                                 Circles.set(circlesArray);
-                                // The data is ready, switch to the Chats tab
-                                $state.go('tab.chats');
+                                // The data is ready, switch to the Wallet tab
+                                $state.go('tab.wallet');
                             });
                         }
                     }
@@ -459,6 +555,7 @@ angular.module('starter.controllers', [])
         // Clear the forms
         $scope.user.email = "";
         $scope.user.password = "";
+        $scope.user.token = "";
     }
 ])
 

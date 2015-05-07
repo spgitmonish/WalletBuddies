@@ -122,9 +122,11 @@ angular.module('starter.services', [])
     return{
         set: function(value){
             circlesInfo = value;
+            console.log("Service : " + circlesInfo);
         },
 
         get: function(){
+	        console.log("Getter : " + circlesInfo);
             return circlesInfo;
         }
     };
@@ -232,7 +234,7 @@ angular.module('starter.services', [])
     var formatContact = function(contact) {
         return {
             "displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
-            //"phones": contact.phoneNumbers || [],
+            "phones": contact.phoneNumbers || [],
             //"photos": contact.photos || [],
             "emails": contact.emails || []
         };
