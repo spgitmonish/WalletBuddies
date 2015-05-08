@@ -126,7 +126,6 @@ angular.module('starter.services', [])
         },
 
         get: function(){
-	        console.log("Getter : " + circlesInfo);
             return circlesInfo;
         }
     };
