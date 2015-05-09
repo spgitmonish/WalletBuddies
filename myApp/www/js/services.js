@@ -131,6 +131,33 @@ angular.module('starter.services', [])
     };
 })
 
+.factory('callbackTest', function(){
+	
+	return{
+		fetch: function(path, callback){
+			path.once('value', function(data) {
+			console.log("OUTPUT IN SERVICE" + data.val());	
+			callback(data.val());
+			});
+		}
+	}
+})
+
+.factory('CirclesTest', function($rootScope){
+    var circlesInfo;
+
+    return{
+        set: function(value){
+            circlesInfo = value;
+            console.log("Service : " + circlesInfo);
+        },
+
+        get: function(){
+            return circlesInfo;
+        }
+    };
+})
+
 //Plaid API factory ends here
 .factory('Chats', function() {
     // Might use a resource here that returns a JSON array

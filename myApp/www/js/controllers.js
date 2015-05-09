@@ -127,7 +127,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, $firebaseObject, fireBaseData, ContactsService, Circles, $cordovaContacts, $rootScope, $state, $email, $http, $log) {
+.controller('GroupCtrl', function($scope, $firebaseObject, fireBaseData, ContactsService, callbackTest, $cordovaContacts, $rootScope, $state, $email, $http, $log) {
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -199,22 +199,9 @@ angular.module('starter.controllers', [])
 		fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
 			Status: true
 		});
-
-		// Callback function to obtain user info
-		// Create a synchronized object, all server changes are downloaded in realtime
-		var userObject = $firebaseObject(fbProfile);
-		userObject.$loaded(function(data) {
-			console.log("LOADED Promise Data: " + data.firstname);
-			var fbName = data.firstname;
-			$scope.name = data.firstname;
-			// Setter function
-			Circles.set(data.firstname);
-		});
 		
-		var contactsArray = [];
-        // Checking for registered users and generating new Circle invite codes for non-registered users
+     // Checking for registered users and generating new Circle invite codes for non-registered users
         for (var i = 0; i < $scope.data.selectedContacts.length; i++){	
-	        console.log("Contacts length: " + i);	        
             // Use the user's email address and set the id length to be 4
             var hashids = new Hashids("SecretMonkey", 4);
             // Use the user's phone number(hard coded for now)
@@ -229,15 +216,13 @@ angular.module('starter.controllers', [])
             var to = $scope.data.selectedContacts[i].emails[0].value;
 		    var name = $scope.data.selectedContacts[i].displayName;
 		    var groupName = user.groupName;     
-		           
+		    console.log("COUNT OUTSIDE CALLBACK: " + i);   
             // Callback function to obtain user info
-	        var inviteObj = $firebaseObject(fbHash);
-			inviteObj.$loaded(function(data) {
-				contactsArray.push(data.uid);
+	        callbackTest.fetch(fbHash, function(data) {
 				console.log("PRINTS: " + to + name);
-				
+				console.log("COUNT INSIDE CALLBACK: " + i);
             	// Check if invited user is registered with WalletBuddies
-	            if (data.uid != null){
+	            if (data != null){
 		            console.log("Invited user is registered with uid: " + data.uid);
 		            // Writing UserID under CircleID and set Status to pending
 					fbRef.child("Circles").child(groupID).child("Members").child(data.uid).update({
@@ -259,20 +244,21 @@ angular.module('starter.controllers', [])
 		            fbInvites.update({
 		                circleID: groupID
 		            });
-					console.log("INSIDE PRINTS: " + to + name);
-		            console.log("INSIDE Contacts length: " + i);
 		            // SendGrid email notification
 		            var api_user = "deepeshsunku";
 		            var api_key = "hdG-vU7-ETH-FwS";
 		            var fbName = "Mr. Wall-B";
 					
-		        	$email.$send(api_user, api_key, to, name,
-		            "You've been invited to form a Circle on WalletBuddies by " + fbName,
-		            fbName + " has invited you to the " + groupName +
-		            " Circle on WalletBuddies. Use the code: " + id +
-		            " to join this Circle. Have fun. :)", "deepesh.sunku@walletbuddies.co");
-		            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + to);
-		            
+					//callbackTest.fetch(fbProfile, function(output){
+						//fbName = output.firstname;
+			        	$email.$send(api_user, api_key, to, name,
+			            "You've been invited to form a Circle on WalletBuddies by " + fbName,
+			            fbName + " has invited you to the " + groupName +
+			            " Circle on WalletBuddies. Use the code: " + id +
+			            " to join this Circle. Have fun. :)", "deepesh.sunku@walletbuddies.co");
+			            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + to);
+			            
+		            //});
 	            }
             });
         }
