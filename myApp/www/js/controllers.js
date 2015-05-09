@@ -78,7 +78,7 @@ angular.module('starter.controllers', [])
                         var api_user = "deepeshsunku";
                         var api_key = "hdG-vU7-ETH-FwS";
                         var to = account.email;
-                        var name = account.name;
+                        var name = account.firstname;
 
                         $email.$send(api_user, api_key, to, name,
                         name + "! You're all set",
@@ -127,7 +127,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, $firebaseObject, fireBaseData, ContactsService, callbackTest, $cordovaContacts, $rootScope, $state, $email, $http, $log) {
+.controller('GroupCtrl', function($scope, $firebaseObject, fireBaseData, ContactsService, fbCallback, $cordovaContacts, $rootScope, $state, $email, $http, $log) {
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -201,66 +201,64 @@ angular.module('starter.controllers', [])
 		});
 		
      // Checking for registered users and generating new Circle invite codes for non-registered users
-        for (var i = 0; i < $scope.data.selectedContacts.length; i++){	
-            // Use the user's email address and set the id length to be 4
-            var hashids = new Hashids("SecretMonkey", 4);
-            // Use the user's phone number(hard coded for now)
-            console.log("Phones:   " + $scope.data.selectedContacts[i].phones[0].value);
-            var id = hashids.encode($scope.data.selectedContacts[i].phones[0].value);
-            console.log("Hashids: " + hashids + id);
-
-            // Get the link to the Registered User
-            var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
-            console.log("User LINK: " + fbHash);
-            
-            var to = $scope.data.selectedContacts[i].emails[0].value;
-		    var name = $scope.data.selectedContacts[i].displayName;
-		    var groupName = user.groupName;     
-		    console.log("COUNT OUTSIDE CALLBACK: " + i);   
-            // Callback function to obtain user info
-	        callbackTest.fetch(fbHash, function(data) {
-				console.log("PRINTS: " + to + name);
-				console.log("COUNT INSIDE CALLBACK: " + i);
-            	// Check if invited user is registered with WalletBuddies
-	            if (data != null){
-		            console.log("Invited user is registered with uid: " + data.uid);
-		            // Writing UserID under CircleID and set Status to pending
-					fbRef.child("Circles").child(groupID).child("Members").child(data.uid).update({
-						Status: "pending"
-					});
-					
-					// Writing circle ID to the user's path and set Status to pending
-					fbRef.child("Users").child(data.uid).child("Circles").child(groupID).update({
-						Status: "pending"
-					});				
-	            }
-	            	// Push email invite if user is not registered
-				else {
-					console.log("Invited user is not registered, push email invites.");
-					// Get the link to the Registered User
-					var fbInvites = new Firebase(fbRef + "/Invites/" + id);
-					
-	            	// Save the CircleId under Invites and Push the invite
-		            fbInvites.update({
-		                circleID: groupID
-		            });
-		            // SendGrid email notification
-		            var api_user = "deepeshsunku";
-		            var api_key = "hdG-vU7-ETH-FwS";
-		            var fbName = "Mr. Wall-B";
-					
-					//callbackTest.fetch(fbProfile, function(output){
-						//fbName = output.firstname;
-			        	$email.$send(api_user, api_key, to, name,
-			            "You've been invited to form a Circle on WalletBuddies by " + fbName,
-			            fbName + " has invited you to the " + groupName +
-			            " Circle on WalletBuddies. Use the code: " + id +
-			            " to join this Circle. Have fun. :)", "deepesh.sunku@walletbuddies.co");
-			            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + to);
-			            
-		            //});
-	            }
-            });
+        for (var i = 0; i < $scope.data.selectedContacts.length; i++){
+	        
+	        // This makes sure variable i is available for the callback function
+	        (function(i){
+	            // Use the user's email address and set the id length to be 4
+	            var hashids = new Hashids("SecretMonkey", 4);
+	            console.log("Phones:   " + $scope.data.selectedContacts[i].phones[0].value);
+	            var id = hashids.encode($scope.data.selectedContacts[i].phones[0].value);
+	            console.log("Hashids: " + hashids + id);
+	
+	            // Get the link to the Registered User
+	            var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
+	            console.log("User LINK: " + fbHash);
+	            
+	            var to = $scope.data.selectedContacts[i].emails[0].value;
+			    var name = $scope.data.selectedContacts[i].displayName;
+			    var groupName = user.groupName;     
+	            // Callback function to obtain user info
+		        fbCallback.fetch(fbHash, function(data) {
+	            	// Check if invited user is registered with WalletBuddies
+		            if (data != null){
+			            console.log("Invited user is registered with uid: " + data.uid);
+			            // Writing UserID under CircleID and set Status to pending
+						fbRef.child("Circles").child(groupID).child("Members").child(data.uid).update({
+							Status: "pending"
+						});
+						
+						// Writing circle ID to the user's path and set Status to pending
+						fbRef.child("Users").child(data.uid).child("Circles").child(groupID).update({
+							Status: "pending"
+						});				
+		            }
+		            	// Push email invite if user is not registered
+					else {
+						console.log("Invited user is not registered, push email invites.");
+						// Get the link to the Registered User
+						var fbInvites = new Firebase(fbRef + "/Invites/" + id);
+						
+		            	// Save the CircleId under Invites and Push the invite
+			            fbInvites.update({
+			                circleID: groupID
+			            });
+			            // SendGrid email notification
+			            var api_user = "deepeshsunku";
+			            var api_key = "hdG-vU7-ETH-FwS";
+						
+						fbCallback.fetch(fbProfile, function(output){
+							fbName = output.firstname;
+				        	$email.$send(api_user, api_key, to, name,
+				            "You've been invited to form a Circle on WalletBuddies by " + fbName,
+				            fbName + " has invited you to the " + groupName +
+				            " Circle on WalletBuddies. Use the code: " + id +
+				            " to join this Circle. Have fun. :)", "deepesh.sunku@walletbuddies.co");
+				            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + to);				            
+			            });
+		            }
+	            });
+        	})(i);
         }
 
         // Clear the forms
