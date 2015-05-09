@@ -122,13 +122,23 @@ angular.module('starter.services', [])
     return{
         set: function(value){
             circlesInfo = value;
-            console.log("Service : " + circlesInfo);
         },
 
         get: function(){
             return circlesInfo;
         }
     };
+})
+
+.factory('fbCallback', function(){
+	
+	return{
+		fetch: function(path, callback){
+			path.once('value', function(data) {
+			callback(data.val());
+			});
+		}
+	}
 })
 
 //Plaid API factory ends here
