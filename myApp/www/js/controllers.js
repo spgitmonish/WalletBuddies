@@ -43,6 +43,7 @@ angular.module('starter.controllers', [])
                         password: account.password
                     }).then(function(authData) {
                         // This is all asynchronous
+                        $rootScope.fbAuthData = authData;
                         console.log("Logged in as: " + authData.uid);
 
                         // Get the Firebase link for this user
@@ -160,14 +161,13 @@ angular.module('starter.controllers', [])
 
         // Use angular.copy to avoid $$hashKey being added to object
         $scope.data.selectedContacts = angular.copy($scope.data.selectedContacts);
-        //console.log("Contacts Array: " + $scope.data.selectedContacts[0].emails[0].value);
 		
         //  Loop for removing symbols in phone numbers
         for( var i = 0; i < $scope.data.selectedContacts.length; i++){
             var str = $scope.data.selectedContacts[i].phones[0].value;
-	  $scope.data.selectedContacts[i].phones[0].value = str.replace(/\D/g, '');
-	  var temp = parseInt($scope.data.selectedContacts[i].phones[0].value);
-	  $scope.data.selectedContacts[i].phones[0].value = temp;
+			$scope.data.selectedContacts[i].phones[0].value = str.replace(/\D/g, '');
+			var temp = parseInt($scope.data.selectedContacts[i].phones[0].value);
+			$scope.data.selectedContacts[i].phones[0].value = temp;
         }		
 		
         // Print the social circle name
@@ -274,6 +274,27 @@ angular.module('starter.controllers', [])
     }
 
 })
+
+// Controller for requests tab
+.controller('RequestsCtrl', function($scope, fbCallback, $firebaseObject, $rootScope) {
+	// Get a reference to the Firebase account
+    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    // Get a reference to where the User's circle IDs are stored
+	var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+	// Obtain list of circle IDs with a "pending" status
+	
+	$scope.requests = $firebaseObject(fbRef.child('Users').child($rootScope.fbAuthData.uid));
+	
+	/*fbCallback.orderByChild(fbUserCircle, "pending", function(data) {
+		var fbCircles = new Firebase(fbRef + "/Circles/" + data);
+		console.log("Circles LINK: " + data);
+		fbCallback.fetch(fbCircles, function(output) {
+			$scope.circles = output;
+			console.log("Circle Name: " + $scope.circles.circleName);
+		})
+	});*/
+})
+
 
 // Controller for plaid API
 .controller('ConnectCtrl', function($scope, fireBaseData, $state, $stateParams, Plaid, ConnectStore, $rootScope, $firebaseArray) {
@@ -516,7 +537,7 @@ angular.module('starter.controllers', [])
                               loopCount++;
                               console.log("Number of circles:" + loopCount);
                             });
-
+							
                             // Length will always equal count, since snap.val() will include every child_added event
                             // triggered before this point
                             fbCircle.once("value", function(snap) {
@@ -540,7 +561,7 @@ angular.module('starter.controllers', [])
 
 
 // Other unfilled and unused controllers
-.controller('ChatsCtrl', function($scope, Chats, Circles) {
+.controller('WalletCtrl', function($scope, Circles) {
     // Make sure the data is available in this controller
     $scope.circles = Circles.get();
 })

@@ -70,7 +70,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         views: {
             'tab-wallet': {
                 templateUrl: 'templates/tab-wallet.html',
-                controller: 'ChatsCtrl'
+                controller: 'WalletCtrl'
             }
         }
     })
@@ -91,6 +91,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             'tab-wallet': {
                 templateUrl: 'templates/socialcircle-form.html',
                 controller: 'GroupCtrl'
+            }
+        }
+    })
+    
+    .state('tab.requests', {
+        url: '/requests',
+        views: {
+            'tab-requests': {
+                templateUrl: 'templates/tab-requests.html',
+                controller: 'RequestsCtrl'
             }
         }
     })

@@ -135,10 +135,31 @@ angular.module('starter.services', [])
 	return{
 		fetch: function(path, callback){
 			path.once('value', function(data) {
-			callback(data.val());
+				callback(data.val());
+			});
+		},
+		
+		orderByChild: function(path, status, callback){
+			path.orderByChild("Status").equalTo(status).on('child_added', function(data){
+				console.log("SERVICE: " + data.key());
+				callback(data.key());
 			});
 		}
 	}
+})
+
+.factory('CirclesTest', function($rootScope){
+    var circlesInfo;
+
+    return{
+        set: function(value){
+            circlesInfo = value;
+        },
+
+        get: function(){
+            return circlesInfo;
+        }
+    };
 })
 
 //Plaid API factory ends here
@@ -253,7 +274,9 @@ angular.module('starter.services', [])
     var pickContact = function() {
         var deferred = $q.defer();
         if (navigator && navigator.contacts) {
+	        console.log("CONTACTS: " + navigator.contacts);
             navigator.contacts.pickContact(function(contact) {
+	            console.log("CONTACTS 2: " + contact);
                 deferred.resolve(formatContact(contact));
             });
         } else {
