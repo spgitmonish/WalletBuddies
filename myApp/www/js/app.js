@@ -65,12 +65,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
 
-    .state('tab.chats', {
-        url: '/chats',
+    .state('tab.wallet', {
+        url: '/wallet',
         views: {
-            'tab-chats': {
-                templateUrl: 'templates/tab-chats.html',
-                controller: 'ChatsCtrl'
+            'tab-wallet': {
+                templateUrl: 'templates/tab-wallet.html',
+                controller: 'WalletCtrl'
             }
         }
     })
@@ -88,9 +88,19 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     .state('tab.socialcircle', {
         url: '/socialcircle',
         views: {
-            'tab-chats': {
+            'tab-wallet': {
                 templateUrl: 'templates/socialcircle-form.html',
                 controller: 'GroupCtrl'
+            }
+        }
+    })
+    
+    .state('tab.requests', {
+        url: '/requests',
+        views: {
+            'tab-requests': {
+                templateUrl: 'templates/tab-requests.html',
+                controller: 'RequestsCtrl'
             }
         }
     })

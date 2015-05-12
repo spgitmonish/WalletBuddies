@@ -130,6 +130,38 @@ angular.module('starter.services', [])
     };
 })
 
+.factory('fbCallback', function(){
+	
+	return{
+		fetch: function(path, callback){
+			path.once('value', function(data) {
+				callback(data.val());
+			});
+		},
+		
+		orderByChild: function(path, status, callback){
+			path.orderByChild("Status").equalTo(status).on('child_added', function(data){
+				console.log("SERVICE: " + data.key());
+				callback(data);
+			});
+		}
+	}
+})
+
+.factory('CirclesTest', function($rootScope){
+    var circlesInfo;
+
+    return{
+        set: function(value){
+            circlesInfo = value;
+        },
+
+        get: function(){
+            return circlesInfo;
+        }
+    };
+})
+
 //Plaid API factory ends here
 .factory('Chats', function() {
     // Might use a resource here that returns a JSON array
@@ -232,7 +264,7 @@ angular.module('starter.services', [])
     var formatContact = function(contact) {
         return {
             "displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
-            //"phones": contact.phoneNumbers || [],
+            "phones": contact.phoneNumbers || [],
             //"photos": contact.photos || [],
             "emails": contact.emails || []
         };
@@ -242,7 +274,9 @@ angular.module('starter.services', [])
     var pickContact = function() {
         var deferred = $q.defer();
         if (navigator && navigator.contacts) {
+	        console.log("CONTACTS: " + navigator.contacts);
             navigator.contacts.pickContact(function(contact) {
+	            console.log("CONTACTS 2: " + contact);
                 deferred.resolve(formatContact(contact));
             });
         } else {
