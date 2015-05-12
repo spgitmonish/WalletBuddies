@@ -142,7 +142,7 @@ angular.module('starter.services', [])
 		orderByChild: function(path, status, callback){
 			path.orderByChild("Status").equalTo(status).on('child_added', function(data){
 				console.log("SERVICE: " + data.key());
-				callback(data.key());
+				callback(data);
 			});
 		}
 	}
