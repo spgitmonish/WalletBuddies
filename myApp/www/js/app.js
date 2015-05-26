@@ -104,6 +104,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
+    
+    .state('tab.requests-detail', {
+        url: '/requests/:circleID',
+        views: {
+            'tab-requests': {
+                templateUrl: 'templates/requests-detail.html',
+                controller: 'RequestsDetailCtrl'
+            }
+        }
+    })
 
     .state('tab.friends', {
         url: '/friends',
