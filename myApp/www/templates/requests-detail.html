@@ -1,0 +1,35 @@
+<ion-view view-title="New Request">
+    </ion-header-bar>
+    <ion-content>
+		<div class="list list-inset">
+		
+		    <div class="item item-thumbnail-left item-text-wrap">
+			    <img src="http://walletbuddies.co/img/NewLogo.png">
+			    <div class="row row-center">
+		    	<div class="col"><b>{{circle.circleName}}</b> with <b>{{circle.contacts[0].displayName}}</b> and {{circle.contacts.length-1}} others</div>
+			    </div>
+		    </div>
+			<div class="item">
+		      <b>Invitees</b> <p ng-repeat="contact in circle.contacts">{{contact.displayName}}</p>
+		    </div>
+		    <div class="item">
+		      <b>How Much &nbsp</b> <p> ${{circle.amount}} {{circle.plan}}</p>
+		    </div>
+		    <div class="item">
+		      <b>Why &nbsp</b> <p>{{circle.groupMessage}}</p>
+		    </div>
+		</div>
+		<div class="row">
+		  	<div class="col">
+			  <button class="button button-block button-balanced" ng-click="onAccept()">
+			  Accept
+			  </button>
+			</div>
+			<div class="col">
+			  <button class="button button-block button-outline button-balanced" ng-click="onDecline()">
+			  Decline
+			  </button>
+			</div>
+		</div>
+    </ion-content>
+</ion-view>
