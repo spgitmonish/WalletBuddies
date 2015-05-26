@@ -1,11 +1,11 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, fireBaseData, $state, $rootScope, $email, $http, $log, Circles, $firebaseAuth) {
+.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $email, $http, $log, Circles, $firebaseAuth) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
-        if (!account.email || !account.password || !account.firstname || !account.lastname) {
+        if (!account.email || !account.password || !account.firstname || !account.lastname || !account.phonenumber) {
             alert("Please enter all credentials");
         }
         else {
@@ -69,13 +69,32 @@ angular.module('starter.controllers', [])
                         var id = hashids.encode(account.phonenumber);
                         console.log("Hashids: " + hashids + id);
 			
-		    // Write the user's unique hash to registered users and save his UID
-		    var fbHashRef = new Firebase(fbRef + "/RegisteredUsers/");
-		    fbHashRef.push({
-                            hash: id,
-		        uid: authData.uid
+					    // Write the user's unique hash to registered users and save his UID
+					    var fbHashRef = new Firebase(fbRef + "/RegisteredUsers/");
+					    fbHashRef.child(id).update({
+							uid: authData.uid
                         });
-
+						
+						// Check to see if user has invites
+						var fbInvites = new Firebase(fbRef + "/Invites/" + id);
+						if (fbInvites != null) {
+							var obj = $firebaseObject(fbInvites);
+							
+							obj.$loaded().then(function() {
+						        console.log("loaded record:", obj.$id);
+						
+						        // To iterate the key/value pairs of the object, use angular.forEach()
+						        angular.forEach(obj, function(value, key) {
+						          console.log(key, value);
+						          var circleID = value;
+						          console.log("Invites path: " + fbInvites + circleID);
+								  fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
+									  Status: "pending"
+								  });
+						        })
+						    })
+						}
+						
                         // SendGrid email notification
                         var api_user = "deepeshsunku";
                         var api_key = "hdG-vU7-ETH-FwS";
@@ -165,7 +184,9 @@ angular.module('starter.controllers', [])
         //  Loop for removing symbols in phone numbers
         for( var i = 0; i < $scope.data.selectedContacts.length; i++){
             var str = $scope.data.selectedContacts[i].phones[0].value;
+            console.log("Before str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
 			$scope.data.selectedContacts[i].phones[0].value = str.replace(/\D/g, '');
+			console.log("After str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
 			var temp = parseInt($scope.data.selectedContacts[i].phones[0].value);
 			$scope.data.selectedContacts[i].phones[0].value = temp;
         }		
@@ -206,7 +227,7 @@ angular.module('starter.controllers', [])
 	        
 	        // This makes sure variable i is available for the callback function
 	        (function(i){
-	            // Use the user's email address and set the id length to be 4
+	            // Use the secret key and set the id length to be 4
 	            var hashids = new Hashids("SecretMonkey", 4);
 	            console.log("Phones:   " + $scope.data.selectedContacts[i].phones[0].value);
 	            var id = hashids.encode($scope.data.selectedContacts[i].phones[0].value);
@@ -215,10 +236,7 @@ angular.module('starter.controllers', [])
 	            // Get the link to the Registered User
 	            var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
 	            console.log("User LINK: " + fbHash);
-	            
-	            var to = $scope.data.selectedContacts[i].emails[0].value;
-			    var name = $scope.data.selectedContacts[i].displayName;
-			    var groupName = user.groupName;     
+	               
 	            // Callback function to obtain user info
 		        fbCallback.fetch(fbHash, function(data) {
 	            	// Check if invited user is registered with WalletBuddies
@@ -247,6 +265,9 @@ angular.module('starter.controllers', [])
 			            // SendGrid email notification
 			            var api_user = "deepeshsunku";
 			            var api_key = "hdG-vU7-ETH-FwS";
+			            var to = $scope.data.selectedContacts[i].emails[0].value;
+					    var name = $scope.data.selectedContacts[i].displayName;
+					    var groupName = user.groupName;  
 						
 						fbCallback.fetch(fbProfile, function(output){
 							fbName = output.firstname;
@@ -276,11 +297,70 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for requests tab
-.controller('RequestsCtrl', function($scope, CirclesTest, fbCallback, $firebaseObject, $rootScope) {
-	   
-$scope.circles = CirclesTest.get();	
+.controller('RequestsCtrl', function($scope, CirclesTest, $firebaseArray, $firebaseObject, $rootScope) {
+	
+	/*
+	// Get a reference to the Firebase account
+    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    // Get a reference to where the User's circle IDs are stored
+	var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+	var fbCircles = new Firebase(fbRef + "/Circles/");
+	//var circlesArray = $firebaseArray(fbCircles);
+	console.log("REQUESTCTRL");
+	fbUserCircle.orderByChild("Status").equalTo("pending").on('child_added', function(indexSnap) {
+		console.log("INSIDE QUERY " + indexSnap.key());
+		var query = fbCircles.orderByChild("circleID").equalTo(indexSnap.key());
+		$scope.circles = $firebaseArray(query);
+	});   
+	*/
+	
+	$scope.circles = CirclesTest.get();	
 })
 
+// Controller for requests-detail page
+.controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state) {
+	// Get a reference to the Firebase account
+    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+		
+	var fbCircles = new Firebase(fbRef + "/Circles/" + $stateParams.circleID);
+	var obj = $firebaseObject(fbCircles);
+	obj.$loaded().then(function() {
+        console.log("loaded record for CircleId:", obj.$id);
+
+        // To iterate the key/value pairs of the object, use angular.forEach()
+        angular.forEach(obj, function(value, key) {
+          console.log(key, value);
+        })
+    })
+    obj.$bindTo($scope, "circle");
+    
+    // Called when user clicks "Accept"
+    $scope.onAccept = function() {
+	    // Change Status of the circle to "true"
+	    fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+		    Status: true
+	    });
+	    
+	    fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+			Status: true
+		});
+		$state.go('tab.requests');
+    }
+    
+    // Called when user clicks "Decline"
+    $scope.onDecline = function() {
+	    // Change Status of the circle to "false"
+	    fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+		    Status: false
+	    });
+	    
+	    fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+			Status: false
+		});
+		$state.go('tab.requests');
+    }
+    
+})
 
 // Controller for plaid API
 .controller('ConnectCtrl', function($scope, fireBaseData, $state, $stateParams, Plaid, ConnectStore, $rootScope, $firebaseArray) {

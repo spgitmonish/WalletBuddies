@@ -3,8 +3,54 @@ angular.module('starter.services', [])
 //Plaid API factory
 
 .value('API_URL', "https://tartan.plaid.com")
-    .value('plaid_client_id', "test_id")
-    .value('plaid_secret', "test_secret")
+.value('plaid_client_id', "test_id")
+.value('plaid_secret', "test_secret")
+.value('FBURL', "https://walletbuddies.firebaseio.com")
+
+.factory('PostsArray', function (FBURL, PostsArrayFactory) {
+    return function (limitToLast) {
+        if (!limitToLast) {
+            console.error("Need limitToLast");
+            return null;
+        }
+        var postsRef = new Firebase(FBURL + '/Circles').orderByChild('circleID').equalTo(limitToLast);
+        return new PostsArrayFactory(postsRef);
+    }
+})
+
+.factory('PostsArrayFactory', function ($q, $firebaseArray) {
+    return $firebaseArray.$extend({
+        getPost: function (postKey) {
+            var deferred = $q.defer();
+            var post = this.$getRecord(postKey);
+            this.$loaded().then(function () {
+                if (post) {
+                    console.log("Got post", post);
+                    deferred.resolve(post);
+                } else {
+                    deferred.reject("Post with key:" + postKey + " not found.");
+                }
+            }).
+            catch (function (error) {
+                deferred.reject(error);
+            });
+            return deferred.promise;
+        },
+        createPost: function (post) {
+            var deferred = $q.defer();
+            post.timestamp = Firebase.ServerValue.TIMESTAMP;
+            this.$add(post).then(function (ref) {
+                var id = ref.key();
+                console.log("added post with id", id, "post:", post);
+                deferred.resolve(ref);
+            }).
+            catch (function (error) {
+                deferred.reject(error);
+            });
+            return deferred.promise;
+        }
+    });
+})
 
 .factory('Plaid', function($http, API_URL, plaid_client_id, plaid_secret) {
 
