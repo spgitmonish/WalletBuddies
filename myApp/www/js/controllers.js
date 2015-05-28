@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $email, $http, $log, Circles, $firebaseAuth) {
+.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $log, Circles, $firebaseAuth) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -95,18 +95,15 @@ angular.module('starter.controllers', [])
 						    })
 						}
 						
-                        // SendGrid email notification
-                        var api_user = "deepeshsunku";
-                        var api_key = "hdG-vU7-ETH-FwS";
-                        var to = account.email;
-                        var name = account.firstname;
-
-                        $email.$send(api_user, api_key, to, name,
-                        name + "! You're all set",
-                        "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)\n\n\n" +
-                        "\n\n - Team Wallet Buddies" +
-                        "\n\n", "deepesh.sunku@walletbuddies.co");
-
+                        // Write email info to /Sendgrid folder to trigger the server to send email
+                        fbRef.child('Sendgrid').push({
+							from: 'hello@walletbuddies.co', 
+							to: account.email, 
+							subject: account.firstname + "! You're all set.", 
+							text: "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)" +
+                        "\n\n Team Wallet Buddies"
+						});
+						
                         alert("User created successfully");
 
                         // Get the link to the Circles of the User
@@ -148,7 +145,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, $firebaseObject, fireBaseData, ContactsService, fbCallback, $cordovaContacts, $rootScope, $state, $email, $http, $log) {
+.controller('GroupCtrl', function($scope, $firebaseObject, ContactsService, fbCallback, $cordovaContacts, $rootScope, $state, $log) {
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -262,20 +259,22 @@ angular.module('starter.controllers', [])
 			            fbInvites.update({
 			                circleID: groupID
 			            });
-			            // SendGrid email notification
-			            var api_user = "deepeshsunku";
-			            var api_key = "hdG-vU7-ETH-FwS";
+			            
+			            // Save data for sending email notification
 			            var to = $scope.data.selectedContacts[i].emails[0].value;
-					    var name = $scope.data.selectedContacts[i].displayName;
-					    var groupName = user.groupName;  
+					    var groupName = user.groupName;
 						
 						fbCallback.fetch(fbProfile, function(output){
 							fbName = output.firstname;
-				        	$email.$send(api_user, api_key, to, name,
-				            "You've been invited to form a Circle on WalletBuddies by " + fbName,
-				            fbName + " has invited you to the " + groupName +
-				            " Circle on WalletBuddies. Use the code: " + id +
-				            " to join this Circle. Have fun. :)", "deepesh.sunku@walletbuddies.co");
+							
+							// Write email info to /Sendgrid folder to trigger the server to send email
+	                        fbRef.child('Sendgrid').push({
+								from: 'hello@walletbuddies.co', 
+								to: $scope.data.selectedContacts[i].emails[0].value, 
+								subject: "You've been invited to form a Circle on WalletBuddies by " + fbName, 
+								text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Use the code: " + id +
+								" to join this Circle. Have fun. :)"
+							});
 				            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + to);				            
 			            });
 		            }
