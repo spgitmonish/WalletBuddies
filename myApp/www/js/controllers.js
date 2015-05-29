@@ -219,6 +219,13 @@ angular.module('starter.controllers', [])
 			Status: true
 		});
 		
+		// Save the timestamp to trigger the circle-start-scheduler
+		var date = Firebase.ServerValue.TIMESTAMP;
+		console.log("Firebase.ServerValue.TIMESTAMP" + date);
+		fbRef.child('StartDate').push({
+			date: date
+		});
+		
      // Checking for registered users and generating new Circle invite codes for non-registered users
         for (var i = 0; i < $scope.data.selectedContacts.length; i++){
 	        
@@ -281,7 +288,7 @@ angular.module('starter.controllers', [])
 	            });
         	})(i);
         }
-
+		
         // Clear the forms
         user.groupName = "";
         user.plan = "weekly";
@@ -355,6 +362,16 @@ angular.module('starter.controllers', [])
 	    
 	    fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
 			Status: false
+		});
+		
+		// Send email notification to circle creator & user confirming decline
+		fbRef.child("Circles").child($stateParams.circleID).once('value', function(data) {
+	        fbRef.child('Sendgrid').push({
+				from: 'hello@walletbuddies.co', 
+				to: $rootScope.fbAuthData.provider.email, 
+				subject: "Confirmation from WalletBuddies", 
+				text: "This message is to confirm that you have declined to join the Circle " + data.val().circleName + ". \n\n- WalletBuddies"
+			});
 		});
 		$state.go('tab.requests');
     }
