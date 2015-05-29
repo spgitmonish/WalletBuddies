@@ -28,3 +28,6 @@ myApp/hooks/after_plugin_rm/010_deregister_plugin.js
 
 myApp/npm-debug.log
 >>>>>>> 5b2903ad039c653a485cec5ca10aa07f88491a8d
+*.json
+*.json
+myApp/config.xml

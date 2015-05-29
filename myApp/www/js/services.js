@@ -162,20 +162,6 @@ angular.module('starter.services', [])
     }
 })
 
-.factory('Circles', function($rootScope){
-    var circlesInfo;
-
-    return{
-        set: function(value){
-            circlesInfo = value;
-        },
-
-        get: function(){
-            return circlesInfo;
-        }
-    };
-})
-
 .factory('fbCallback', function(){
 	
 	return{
@@ -194,7 +180,21 @@ angular.module('starter.services', [])
 	}
 })
 
-.factory('CirclesTest', function($rootScope){
+.factory('Circles', function($rootScope){
+    var circlesInfo;
+
+    return{
+        set: function(value){
+            circlesInfo = value;
+        },
+
+        get: function(){
+            return circlesInfo;
+        }
+    };
+})
+
+.factory('CirclesPending', function($rootScope){
     var circlesInfo;
 
     return{

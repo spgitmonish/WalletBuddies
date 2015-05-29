@@ -18,5 +18,11 @@
     "http://github.com/don/cordova-filechooser.git",
     "org.apache.cordova.camera",
     "org.apache.cordova.contacts"
-  ]
+  ],
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
 }
