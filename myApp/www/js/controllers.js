@@ -2,6 +2,8 @@ angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
 .controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $email, $http, $log, Circles, $firebaseAuth) {
+    console.log("AccountCtrl");
+
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -145,8 +147,175 @@ angular.module('starter.controllers', [])
     }
 })
 
+// Controller for Sign In
+.controller('SignInCtrl', ['$scope', '$state', '$rootScope', 'fbCallback', 'Circles', 'CirclesPending',
+    function($scope, $state, $rootScope, fbCallback, Circles, CirclesPending) {
+        console.log("SignInCtrl");
+        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+
+        $scope.user = {
+            email: "",
+            password: "",
+            token: ""
+        };
+
+        // Called when the user clicks the "Sign In" button
+        $scope.validateUser = function() {
+            var email = this.user.email;
+            var password = this.user.password;
+            var token = this.user.token;
+
+            if (!email || !password) {
+                alert("Please enter valid credentials.");
+                return false;
+            }
+
+            // Authorize the user with email/password
+            fbRef.authWithPassword({
+                    email: email,
+                    password: password
+                },
+                function(error, authData) {
+                    if (error) {
+                        alert("Login Error! Try again.");
+                    } else {
+                        console.log("Sign In successful");
+                        // Saving auth data to be used across controllers
+                        $rootScope.fbAuthData = authData;
+
+                        // Hard coded to be false
+                        if (false) {
+                            var fbInvites = new Firebase(fbRef + "/Invites/" + token);
+                            console.log("Token Hmmm: " + token);
+
+                            // Use the user's email address and set the id length to be 4
+                            hashids = new Hashids("first@last.com", 4);
+
+                            // Hard code the invite code for now
+                            //var inviteEntered = "8wXlb6w";
+
+                            // Use the user's phone number(hard coded for now)
+                            //var decodedID = hashids.decode(inviteEntered);
+
+                            //console.log("DecodedID:" + decodedID);
+
+                            // Retrieve all the invites and compare it against the code
+                            fbInvites.on("child_added", function(snapshot) {
+                                var inviteVal = snapshot.val();
+                                var inviteKey = snapshot.key();
+                                console.log("Key:" + inviteKey);
+                                console.log("inviteVal.inviteCode = " + inviteKey + " Val: " + inviteVal[0]);
+
+                                //if(token == inviteKey) {//&& (decodedID == "1234567891")){
+                                console.log("CircleID: " + inviteVal.circleID);
+                                //console.log("GroupName: " + inviteVal.circleName);
+
+                                // Copy the circle ID
+                                circleIDMatched = inviteVal.circleID;
+
+                                // Get the link to the Circles of the User
+                                var fbCircle = new Firebase(fbRef + "/Circles/");
+
+                                // Create an array which stores all the information
+                                var circlesArray = [];
+                                var loopCount = 0;
+
+                                // Retrieve all the social circles under this user
+                                // Note: This callback occurs repeatedly till all the "children" are parsed
+                                fbCircle.on("child_added", function(snapshot) {
+                                    var circleVal = snapshot.val();
+
+                                    // Display the Circle which matched
+                                    if (circleVal.circleID == circleIDMatched) {
+                                        circlesArray.push(circleVal)
+                                        console.log("Name: " + circlesArray[loopCount].circleName);
+                                        console.log("GroupID: " + circlesArray[loopCount].circleID);
+                                        console.log("Plan: " + circlesArray[loopCount].plan);
+                                        console.log("Amount: " + circlesArray[loopCount].amount);
+                                        console.log("Message: " + circlesArray[loopCount].groupMessage);
+                                        loopCount++;
+                                        console.log("Number of circles:" + loopCount);
+                                    }
+
+                                    // Code for deleting the invite after providing access
+                                    //var fbInvite = new Firebase(fbRef + "/Invites/" + inviteKey);
+                                    //fbInvite.remove();
+                                });
+
+                                // Length will always equal count, since snap.val() will include every child_added event
+                                // triggered before this point
+                                fbCircle.once("value", function(snap) {
+                                    // Use the setter and set the value so that it is accessible to another controller
+                                    Circles.set(circlesArray);
+
+                                    // The data is ready, switch to the Wallet tab
+                                    $state.go('tab.wallet');
+                                });
+                            });
+                        } else {
+                            // Get a reference to where the User's circle IDs are stored
+                            var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+
+                            // Create an array which stores all the information of the circles the user is part of
+                            var circlesArray = [];
+
+                            // Obtain list of circle IDs with a "true" status
+                            fbCallback.orderByChild(fbUserCircle, true, function(data) {
+                                console.log("Circles Id(true): " + data.val().Status + data.key());
+                                var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+                                console.log("Circles FBCircles(true): " + fbCircles);
+
+                                // Obtain circle data for the circles the user is part of(i.e. status is "true")
+                                fbCallback.fetch(fbCircles, function(output) {
+                                    var circleVal = output;
+                                    circlesArray.push(circleVal);
+                                });
+
+                                // Using the setter, set the pending circles array
+                                Circles.set(circlesArray);
+                            });
+
+                            // Array for storing the pending circles information
+                            var pendingCirclesArray = [];
+
+                            // Obtain list of circle IDs with a "pending" status	
+                            fbCallback.orderByChild(fbUserCircle, "pending", function(data) {
+                                console.log("Circles Id(pending): " + data.val().Status + data.key());
+                                var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+                                console.log("Circles FBCircles(pending): " + fbCircles);
+
+                                // Obtain circle data for the pending circles
+                                fbCallback.fetch(fbCircles, function(output) {
+                                    var pendingCircleVal = output;
+                                    pendingCirclesArray.push(pendingCircleVal);
+                                });
+
+                                // Using the setter, set the pending circles array
+                                CirclesPending.set(pendingCirclesArray);
+                            });
+
+                            // Length will always equal count, since snap.val() will include every child_added event
+                            // triggered before this point
+                            fbUserCircle.once("value", function(snap) {
+                                // The data is ready, switch to the Wallet tab
+                                $state.go('tab.wallet');
+                            });
+                        }
+                    }
+                }
+            );
+        }
+
+        // Clear the forms
+        $scope.user.email = "";
+        $scope.user.password = "";
+        $scope.user.token = "";
+    }
+])
+
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, $firebaseObject, fireBaseData, ContactsService, fbCallback, $cordovaContacts, $rootScope, $state, $email, $http, $log) {
+.controller('GroupCtrl', function($scope, $firebaseObject, fireBaseData, ContactsService, fbCallback, $cordovaContacts, $rootScope, $state, $email, $http, $log, Circles) {
+    console.log("GroupCtrl");
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -281,6 +450,28 @@ angular.module('starter.controllers', [])
             })(i);
         }
 
+        // Get a reference to where the User's circle IDs are stored
+        var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+
+        // Create an array which stores all the information of the circles the user is part of
+        var circlesArray = [];
+
+        // Obtain list of circle IDs with a "true" status
+        fbCallback.orderByChild(fbUserCircle, true, function(data) {
+            console.log("Circles Id(group): " + data.val().Status + data.key());
+            var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+            console.log("Circles FBCircles(group): " + fbCircles);
+
+            // Obtain circle data for the circles the user is part of(i.e. status is "true")
+            fbCallback.fetch(fbCircles, function(output) {
+                var CircleVal = output;
+                circlesArray.push(CircleVal);
+            });
+
+            // Using the setter, set the pending circles array
+            Circles.set(circlesArray);
+        });
+
         // Clear the forms
         user.groupName = "";
         user.plan = "weekly";
@@ -289,18 +480,63 @@ angular.module('starter.controllers', [])
 
         // The data is ready, switch to the Wallet tab
         $state.go('tab.wallet');
-
     }
-
 })
 
 // Controller for requests tab
-.controller('RequestsCtrl', function($scope, CirclesPending, $firebaseArray, $firebaseObject, $rootScope) {
+.controller('RequestsCtrl', function($scope, $firebaseArray, $firebaseObject, $rootScope, fbCallback, Circles, CirclesPending, $window, $state) {
+    console.log("RequestCtrl");
+
+    // Get a reference to the Firebase account
+    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+
+    // Get a reference to where the User's circle IDs are stored
+    var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+
+    // Create an array which stores all the information of the circles the user is part of
+    var circlesArray = [];
+
+    // Obtain list of circle IDs with a "true" status
+    fbCallback.orderByChild(fbUserCircle, true, function(data) {
+        console.log("Circles Id(true): " + data.val().Status + data.key());
+        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+        console.log("Circles FBCircles(true): " + fbCircles);
+
+        // Obtain circle data for the circles the user is part of(i.e. status is "true")
+        fbCallback.fetch(fbCircles, function(output) {
+            var CircleVal = output;
+            circlesArray.push(CircleVal);
+        });
+
+        // Using the setter, set the pending circles array
+        Circles.set(circlesArray);
+    });
+
+    // Array for updating the pending circles information
+    var pendingCirclesArray = [];
+
+    // Obtain list of circle IDs with a "pending" status	
+    fbCallback.orderByChild(fbUserCircle, "pending", function(data) {
+        console.log("Circles Id(pending): " + data.val().Status + data.key());
+        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+        console.log("Circles FBCircles(pending): " + fbCircles);
+
+        // Obtain circle data for the pending circles
+        fbCallback.fetch(fbCircles, function(output) {
+            var pendingCircleVal = output;
+            pendingCirclesArray.push(pendingCircleVal);
+        });
+
+        // Using the setter, set the pending circles array
+        CirclesPending.set(pendingCirclesArray);
+    });
+
     $scope.circles = CirclesPending.get();
 })
 
 // Controller for requests-detail page
-.controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state) {
+.controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, fbCallback, Circles, CirclesPending, $window) {
+    console.log("RequestDetailCtrl");
     // Get a reference to the Firebase account
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
@@ -328,6 +564,11 @@ angular.module('starter.controllers', [])
         fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
             Status: true
         });
+
+        // Signal that the data has changed
+        $rootScope.$broadcast("importantDataChanged");
+
+        // Switch to the "Requests" tab
         $state.go('tab.requests');
     }
 
@@ -341,9 +582,13 @@ angular.module('starter.controllers', [])
         fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
             Status: false
         });
+
+        // Signal that the data has changed
+        $rootScope.$broadcast("importantDataChanged");
+
+        // Switch to the "Requests" tab
         $state.go('tab.requests');
     }
-
 })
 
 // Controller for plaid API
@@ -458,173 +703,6 @@ angular.module('starter.controllers', [])
 
     };
 })
-
-// Controller for Sign In
-.controller('SignInCtrl', ['$scope', '$state', '$rootScope', 'fbCallback', 'Circles', 'CirclesPending',
-    function($scope, $state, $rootScope, fbCallback, Circles, CirclesPending) {
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
-
-        $scope.user = {
-            email: "",
-            password: "",
-            token: ""
-        };
-
-        // Called when the user clicks the "Sign In" button
-        $scope.validateUser = function() {
-            var email = this.user.email;
-            var password = this.user.password;
-            var token = this.user.token;
-
-            if (!email || !password) {
-                alert("Please enter valid credentials.");
-                return false;
-            }
-
-            // Authorize the user with email/password
-            fbRef.authWithPassword({
-                    email: email,
-                    password: password
-                },
-                function(error, authData) {
-                    if (error) {
-                        alert("Login Error! Try again.");
-                    } else {
-                        console.log("Sign In successful");
-                        // Saving auth data to be used across controllers
-                        $rootScope.fbAuthData = authData;
-
-                        // Hard coded to be false
-                        if (false) {
-                            var fbInvites = new Firebase(fbRef + "/Invites/" + token);
-                            console.log("Token Hmmm: " + token);
-
-                            // Use the user's email address and set the id length to be 4
-                            hashids = new Hashids("first@last.com", 4);
-
-                            // Hard code the invite code for now
-                            //var inviteEntered = "8wXlb6w";
-
-                            // Use the user's phone number(hard coded for now)
-                            //var decodedID = hashids.decode(inviteEntered);
-
-                            //console.log("DecodedID:" + decodedID);
-
-                            // Retrieve all the invites and compare it against the code
-                            fbInvites.on("child_added", function(snapshot) {
-                                var inviteVal = snapshot.val();
-                                var inviteKey = snapshot.key();
-                                console.log("Key:" + inviteKey);
-                                console.log("inviteVal.inviteCode = " + inviteKey + " Val: " + inviteVal[0]);
-
-                                //if(token == inviteKey) {//&& (decodedID == "1234567891")){
-                                console.log("CircleID: " + inviteVal.circleID);
-                                //console.log("GroupName: " + inviteVal.circleName);
-
-                                // Copy the circle ID
-                                circleIDMatched = inviteVal.circleID;
-
-                                // Get the link to the Circles of the User
-                                var fbCircle = new Firebase(fbRef + "/Circles/");
-
-                                // Create an array which stores all the information
-                                var circlesArray = [];
-                                var loopCount = 0;
-
-                                // Retrieve all the social circles under this user
-                                // Note: This callback occurs repeatedly till all the "children" are parsed
-                                fbCircle.on("child_added", function(snapshot) {
-                                    var circleVal = snapshot.val();
-
-                                    // Display the Circle which matched
-                                    if (circleVal.circleID == circleIDMatched) {
-                                        circlesArray.push(circleVal)
-                                        console.log("Name: " + circlesArray[loopCount].circleName);
-                                        console.log("GroupID: " + circlesArray[loopCount].circleID);
-                                        console.log("Plan: " + circlesArray[loopCount].plan);
-                                        console.log("Amount: " + circlesArray[loopCount].amount);
-                                        console.log("Message: " + circlesArray[loopCount].groupMessage);
-                                        loopCount++;
-                                        console.log("Number of circles:" + loopCount);
-                                    }
-
-                                    // Code for deleting the invite after providing access
-                                    //var fbInvite = new Firebase(fbRef + "/Invites/" + inviteKey);
-                                    //fbInvite.remove();
-                                });
-
-                                // Length will always equal count, since snap.val() will include every child_added event
-                                // triggered before this point
-                                fbCircle.once("value", function(snap) {
-                                    // Use the setter and set the value so that it is accessible to another controller
-                                    Circles.set(circlesArray);
-
-                                    // The data is ready, switch to the Wallet tab
-                                    $state.go('tab.wallet');
-                                });
-                            });
-                        } else {
-                            // Array for storing the pending circles information
-                            var pendingCirclesArray = [];
-
-                            // Get a reference to where the User's circle IDs are stored
-                            var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
-
-                            // Obtain list of circle IDs with a "pending" status	
-                            fbCallback.orderByChild(fbUserCircle, "pending", function(data) {
-                                console.log("Circles Id: " + data.val().Status + data.key());
-                                var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
-                                console.log("Circles FBCircles: " + fbCircles)
-
-                                // Obtain circle data for the pending circles
-                                fbCallback.fetch(fbCircles, function(output) {
-                                    var pendingCircleVal = output;
-                                    pendingCirclesArray.push(pendingCircleVal);
-                                });
-
-                                // Using the setter, set the pending circles array
-                                CirclesPending.set(pendingCirclesArray);
-                            });
-
-                            // Create an array which stores all the information of the circles the user is part of
-                            var circlesArray = [];
-
-                            // Obtain list of circle IDs with a "true" status
-                            fbCallback.orderByChild(fbUserCircle, "true", function(data) {
-                                var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
-
-                                // Obtain circle data for the circles the user is part of(i.e. status is "true")
-                                fbCallback.fetch(fbCircles, function(output) {
-                                    var CircleVal = output;
-                                    circlesArray.push(CircleVal);
-                                });
-
-                                // Using the setter, set the pending circles array
-                                Circles.set(circlesArray);
-                            });
-
-                            // Length will always equal count, since snap.val() will include every child_added event
-                            // triggered before this point
-                            fbUserCircle.once("value", function(snap) {
-                                // Use the setter and set the value so that it is accessible to another controller
-                                Circles.set(circlesArray);
-
-                                // The data is ready, switch to the Wallet tab
-                                $state.go('tab.wallet');
-                            });
-                        }
-                    }
-                }
-            );
-        }
-
-        // Clear the forms
-        $scope.user.email = "";
-        $scope.user.password = "";
-        $scope.user.token = "";
-    }
-])
-
 
 // Other unfilled and unused controllers
 .controller('WalletCtrl', function($scope, Circles) {
