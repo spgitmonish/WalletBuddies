@@ -3,12 +3,12 @@ angular.module('starter.services', [])
 //Plaid API factory
 
 .value('API_URL', "https://tartan.plaid.com")
-.value('plaid_client_id', "test_id")
-.value('plaid_secret', "test_secret")
-.value('FBURL', "https://walletbuddies.firebaseio.com")
+    .value('plaid_client_id', "test_id")
+    .value('plaid_secret', "test_secret")
+    .value('FBURL', "https://walletbuddies.firebaseio.com")
 
-.factory('PostsArray', function (FBURL, PostsArrayFactory) {
-    return function (limitToLast) {
+.factory('PostsArray', function(FBURL, PostsArrayFactory) {
+    return function(limitToLast) {
         if (!limitToLast) {
             console.error("Need limitToLast");
             return null;
@@ -18,12 +18,12 @@ angular.module('starter.services', [])
     }
 })
 
-.factory('PostsArrayFactory', function ($q, $firebaseArray) {
+.factory('PostsArrayFactory', function($q, $firebaseArray) {
     return $firebaseArray.$extend({
-        getPost: function (postKey) {
+        getPost: function(postKey) {
             var deferred = $q.defer();
             var post = this.$getRecord(postKey);
-            this.$loaded().then(function () {
+            this.$loaded().then(function() {
                 if (post) {
                     console.log("Got post", post);
                     deferred.resolve(post);
@@ -31,20 +31,20 @@ angular.module('starter.services', [])
                     deferred.reject("Post with key:" + postKey + " not found.");
                 }
             }).
-            catch (function (error) {
+            catch(function(error) {
                 deferred.reject(error);
             });
             return deferred.promise;
         },
-        createPost: function (post) {
+        createPost: function(post) {
             var deferred = $q.defer();
             post.timestamp = Firebase.ServerValue.TIMESTAMP;
-            this.$add(post).then(function (ref) {
+            this.$add(post).then(function(ref) {
                 var id = ref.key();
                 console.log("added post with id", id, "post:", post);
                 deferred.resolve(ref);
             }).
-            catch (function (error) {
+            catch(function(error) {
                 deferred.reject(error);
             });
             return deferred.promise;
@@ -162,47 +162,47 @@ angular.module('starter.services', [])
     }
 })
 
-.factory('fbCallback', function(){
-	
-	return{
-		fetch: function(path, callback){
-			path.once('value', function(data) {
-				callback(data.val());
-			});
-		},
-		
-		orderByChild: function(path, status, callback){
-			path.orderByChild("Status").equalTo(status).on('child_added', function(data){
-				console.log("SERVICE: " + data.key());
-				callback(data);
-			});
-		}
-	}
+.factory('fbCallback', function() {
+
+    return {
+        fetch: function(path, callback) {
+            path.once('value', function(data) {
+                callback(data.val());
+            });
+        },
+
+        orderByChild: function(path, status, callback) {
+            path.orderByChild("Status").equalTo(status).on('child_added', function(data) {
+                console.log("SERVICE: " + data.key());
+                callback(data);
+            });
+        }
+    }
 })
 
-.factory('Circles', function($rootScope){
+.factory('Circles', function($rootScope) {
     var circlesInfo;
 
-    return{
-        set: function(value){
+    return {
+        set: function(value) {
             circlesInfo = value;
         },
 
-        get: function(){
+        get: function() {
             return circlesInfo;
         }
     };
 })
 
-.factory('CirclesPending', function($rootScope){
+.factory('CirclesPending', function($rootScope) {
     var circlesInfo;
 
-    return{
-        set: function(value){
+    return {
+        set: function(value) {
             circlesInfo = value;
         },
 
-        get: function(){
+        get: function() {
             return circlesInfo;
         }
     };
@@ -307,33 +307,33 @@ angular.module('starter.services', [])
 
 //Service for picking contacts
 .factory("ContactsService", ['$q', function($q) {
-    var formatContact = function(contact) {
-        return {
-            "displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
-            "phones": contact.phoneNumbers || [],
-            //"photos": contact.photos || [],
-            "emails": contact.emails || []
+        var formatContact = function(contact) {
+            return {
+                "displayName": contact.name.formatted || contact.name.givenName + " " + contact.name.familyName || "Mystery Person",
+                "phones": contact.phoneNumbers || [],
+                //"photos": contact.photos || [],
+                "emails": contact.emails || []
+            };
+
         };
 
-    };
-
-    var pickContact = function() {
-        var deferred = $q.defer();
-        if (navigator && navigator.contacts) {
-	        console.log("CONTACTS: " + navigator.contacts);
-            navigator.contacts.pickContact(function(contact) {
-	            console.log("CONTACTS 2: " + contact);
-                deferred.resolve(formatContact(contact));
-            });
-        } else {
-            deferred.reject("Bummer.  No contacts in desktop browser");
-        }
-        return deferred.promise;
-    };
-    return {
-        pickContact: pickContact
-    };
-}])
+        var pickContact = function() {
+            var deferred = $q.defer();
+            if (navigator && navigator.contacts) {
+                console.log("CONTACTS: " + navigator.contacts);
+                navigator.contacts.pickContact(function(contact) {
+                    console.log("CONTACTS 2: " + contact);
+                    deferred.resolve(formatContact(contact));
+                });
+            } else {
+                deferred.reject("Bummer.  No contacts in desktop browser");
+            }
+            return deferred.promise;
+        };
+        return {
+            pickContact: pickContact
+        };
+    }])
     //Contacts service ends here
 
 // Place holder function to access any data in the app
