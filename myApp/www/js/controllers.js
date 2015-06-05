@@ -1,7 +1,7 @@
-angular.module('starter.controllers', [])
+angular.module('starter.controllers', ['ionic', 'ui.router'])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $email, $http, $log, Circles, $firebaseAuth) {
+.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $email, $http, $log, Circles, $firebaseAuth, fbCallback, CirclesPending) {
     console.log("AccountCtrl");
 
     // Function to do the Sign Up and Add the Account
@@ -109,34 +109,54 @@ angular.module('starter.controllers', [])
 
                             alert("User created successfully");
 
-                            // Get the link to the Circles of the User
-                            var fbCircle = new Firebase(fbRef + "/Circles/");
+                            // Get a reference to where the User's circle IDs are stored
+                            var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
 
-                            // Create an array which stores all the information
+                            // Create an array which stores all the information of the circles the user is part of
                             var circlesArray = [];
-                            var loopCount = 0;
 
-                            // Retrieve all the social circles under this user
-                            // Note: This callback occurs repeatedly till all the "children" are parsed
-                            fbCircle.on("child_added", function(snapshot) {
-                                var circleVal = snapshot.val();
-                                circlesArray.push(circleVal)
-                                console.log("Name: " + circlesArray[loopCount].circleName);
-                                console.log("GroupID: " + circlesArray[loopCount].circleID);
-                                console.log("Plan: " + circlesArray[loopCount].plan);
-                                console.log("Amount: " + circlesArray[loopCount].amount);
-                                console.log("Message: " + circlesArray[loopCount].groupMessage);
-                                loopCount++;
-                                console.log("Number of circles:" + loopCount);
+                            // Obtain list of circle IDs with a "true" status
+                            // NOTE: This callback gets called on a 'child_added' event.
+                            fbCallback.childAdded(fbUserCircle, true, function(data) {
+                                console.log("Circles Id(true): " + data.val().Status + data.key());
+                                var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+                                console.log("Circles FBCircles(true): " + fbCircles);
+
+                                // Obtain circle data for the circles the user is part of(i.e. status is "true")
+                                fbCallback.fetch(fbCircles, function(output) {
+                                    var circleVal = output;
+                                    circlesArray.push(circleVal);
+                                });
+
+                                // Using the setter, set the pending circles array
+                                Circles.set(circlesArray);
+                            });
+
+                            // Array for storing the pending circles information
+                            var pendingCirclesArray = [];
+
+                            // Obtain list of circle IDs with a "pending" status
+                            // NOTE: This callback gets called on a 'child_added' event.	
+                            fbCallback.childAdded(fbUserCircle, "pending", function(data) {
+                                console.log("Circles Id(pending): " + data.val().Status + data.key());
+                                var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+                                console.log("Circles FBCircles(pending): " + fbCircles);
+
+                                // Obtain circle data for the pending circles
+                                fbCallback.fetch(fbCircles, function(output) {
+                                    var pendingCircleVal = output;
+                                    pendingCirclesArray.push(pendingCircleVal);
+                                });
+
+                                // Using the setter, set the pending circles array
+                                CirclesPending.set(pendingCirclesArray);
                             });
 
                             // Length will always equal count, since snap.val() will include every child_added event
                             // triggered before this point
-                            fbCircle.once("value", function(snap) {
-                                // Use the setter and set the value so that it is accessible to another controller
-                                Circles.set(circlesArray);
+                            fbUserCircle.once("value", function(snap) {
                                 // The data is ready, switch to the Wallet tab
-                                $state.go('tab.wallet');
+                                $state.go('tab.dash');
                             });
                         }).catch(function(error) {
                             console.error("Authentication failed: " + error);
@@ -260,7 +280,8 @@ angular.module('starter.controllers', [])
                             var circlesArray = [];
 
                             // Obtain list of circle IDs with a "true" status
-                            fbCallback.orderByChild(fbUserCircle, true, function(data) {
+                            // NOTE: This callback gets called on a 'child_added' event.
+                            fbCallback.childAdded(fbUserCircle, true, function(data) {
                                 console.log("Circles Id(true): " + data.val().Status + data.key());
                                 var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
                                 console.log("Circles FBCircles(true): " + fbCircles);
@@ -278,8 +299,9 @@ angular.module('starter.controllers', [])
                             // Array for storing the pending circles information
                             var pendingCirclesArray = [];
 
-                            // Obtain list of circle IDs with a "pending" status	
-                            fbCallback.orderByChild(fbUserCircle, "pending", function(data) {
+                            // Obtain list of circle IDs with a "pending" status
+                            // NOTE: This callback gets called on a 'child_added' event.	
+                            fbCallback.childAdded(fbUserCircle, "pending", function(data) {
                                 console.log("Circles Id(pending): " + data.val().Status + data.key());
                                 var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
                                 console.log("Circles FBCircles(pending): " + fbCircles);
@@ -450,28 +472,6 @@ angular.module('starter.controllers', [])
             })(i);
         }
 
-        // Get a reference to where the User's circle IDs are stored
-        var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
-
-        // Create an array which stores all the information of the circles the user is part of
-        var circlesArray = [];
-
-        // Obtain list of circle IDs with a "true" status
-        fbCallback.orderByChild(fbUserCircle, true, function(data) {
-            console.log("Circles Id(group): " + data.val().Status + data.key());
-            var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
-            console.log("Circles FBCircles(group): " + fbCircles);
-
-            // Obtain circle data for the circles the user is part of(i.e. status is "true")
-            fbCallback.fetch(fbCircles, function(output) {
-                var CircleVal = output;
-                circlesArray.push(CircleVal);
-            });
-
-            // Using the setter, set the pending circles array
-            Circles.set(circlesArray);
-        });
-
         // Clear the forms
         user.groupName = "";
         user.plan = "weekly";
@@ -484,7 +484,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for requests tab
-.controller('RequestsCtrl', function($scope, $firebaseArray, $firebaseObject, $rootScope, fbCallback, Circles, CirclesPending, $window, $state) {
+.controller('RequestsCtrl', function($scope, $firebaseArray, $firebaseObject, $rootScope, fbCallback, Circles, CirclesPending) {
     console.log("RequestCtrl");
 
     // Get a reference to the Firebase account
@@ -493,45 +493,36 @@ angular.module('starter.controllers', [])
     // Get a reference to where the User's circle IDs are stored
     var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
 
-    // Create an array which stores all the information of the circles the user is part of
-    var circlesArray = [];
-
-    // Obtain list of circle IDs with a "true" status
-    fbCallback.orderByChild(fbUserCircle, true, function(data) {
-        console.log("Circles Id(true): " + data.val().Status + data.key());
-        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
-        console.log("Circles FBCircles(true): " + fbCircles);
-
-        // Obtain circle data for the circles the user is part of(i.e. status is "true")
-        fbCallback.fetch(fbCircles, function(output) {
-            var CircleVal = output;
-            circlesArray.push(CircleVal);
-        });
-
-        // Using the setter, set the pending circles array
-        Circles.set(circlesArray);
-    });
-
     // Array for updating the pending circles information
-    var pendingCirclesArray = [];
+    var pendingCirclesArray = $scope.circles = CirclesPending.get();;
 
-    // Obtain list of circle IDs with a "pending" status	
-    fbCallback.orderByChild(fbUserCircle, "pending", function(data) {
-        console.log("Circles Id(pending): " + data.val().Status + data.key());
+    // Obtain list of circle IDs with a "pending" status
+    // NOTE: This callback gets called on a 'child_removal'	event.
+    fbCallback.childRemoved(fbUserCircle, "pending", function(data) {
+        console.log("Circles Id(removal): " + data.val().Status + data.key());
         var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
-        console.log("Circles FBCircles(pending): " + fbCircles);
+        console.log("Circles FBCircles(removal): " + fbCircles);
 
         // Obtain circle data for the pending circles
         fbCallback.fetch(fbCircles, function(output) {
             var pendingCircleVal = output;
-            pendingCirclesArray.push(pendingCircleVal);
+            for(var arrayCounter = 0; arrayCounter < pendingCirclesArray.length; arrayCounter++)
+            {
+                // Look for a match
+                if(pendingCirclesArray[arrayCounter].circleName == output.circleName)
+                {
+                    // Remove the corresponding entry in the array
+                    pendingCirclesArray.splice(arrayCounter, 1);
+                }
+            }
         });
 
         // Using the setter, set the pending circles array
         CirclesPending.set(pendingCirclesArray);
-    });
 
-    $scope.circles = CirclesPending.get();
+        // Update $scope.circles
+        $scope.circles = CirclesPending.get();
+    });
 })
 
 // Controller for requests-detail page
@@ -541,6 +532,7 @@ angular.module('starter.controllers', [])
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
     var fbCircles = new Firebase(fbRef + "/Circles/" + $stateParams.circleID);
+
     var obj = $firebaseObject(fbCircles);
 
     obj.$loaded().then(function() {
@@ -565,9 +557,6 @@ angular.module('starter.controllers', [])
             Status: true
         });
 
-        // Signal that the data has changed
-        $rootScope.$broadcast("importantDataChanged");
-
         // Switch to the "Requests" tab
         $state.go('tab.requests');
     }
@@ -582,9 +571,6 @@ angular.module('starter.controllers', [])
         fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
             Status: false
         });
-
-        // Signal that the data has changed
-        $rootScope.$broadcast("importantDataChanged");
 
         // Switch to the "Requests" tab
         $state.go('tab.requests');
