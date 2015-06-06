@@ -525,6 +525,40 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
     });
 })
 
+// Other unfilled and unused controllers
+.controller('WalletCtrl', function($scope, Circles, $rootScope, fbCallback) {
+    // Make sure the data is available in this controller
+    $scope.circles = Circles.get();
+
+    // Get a reference to the Firebase account
+    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+
+    // Get a reference to where the User's circle IDs are stored
+    var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+
+    // Create an array which stores all the information of the circles the user is part of
+    var circlesArray = [];
+
+    // Obtain list of circle IDs with a "true" status
+    // NOTE: This callback gets called on a 'child_added' event.
+    fbCallback.childAdded(fbUserCircle, true, function(data) {
+        console.log("Circles Id(wallet): " + data.val().Status + data.key());
+        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+        console.log("Circles FBCircles(wallet): " + fbCircles);
+
+        // Obtain circle data for the circles the user is part of(i.e. status is "true")
+        fbCallback.fetch(fbCircles, function(output) {
+            var circleVal = output;
+            circlesArray.push(circleVal);
+        });
+
+        // Using the setter, set the pending circles array
+        Circles.set(circlesArray);
+
+        $scope.circles = Circles.get();
+    });
+})
+
 // Controller for requests-detail page
 .controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, fbCallback, Circles, CirclesPending, $window) {
     console.log("RequestDetailCtrl");
@@ -688,12 +722,6 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
         });
 
     };
-})
-
-// Other unfilled and unused controllers
-.controller('WalletCtrl', function($scope, Circles) {
-    // Make sure the data is available in this controller
-    $scope.circles = Circles.get();
 })
 
 .controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
