@@ -555,6 +555,7 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
         // Using the setter, set the pending circles array
         Circles.set(circlesArray);
 
+        // Update $scope.circles
         $scope.circles = Circles.get();
     });
 })
