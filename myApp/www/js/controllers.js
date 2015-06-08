@@ -494,7 +494,27 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
     var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
 
     // Array for updating the pending circles information
-    var pendingCirclesArray = $scope.circles = CirclesPending.get();;
+    var pendingCirclesArray = [];// $scope.circles = CirclesPending.get();
+
+    // Obtain list of circle IDs with a "pending" status
+    // NOTE: This callback gets called on a 'child_removal'	event.
+    fbCallback.childAdded(fbUserCircle, "pending", function(data) {
+        console.log("Circles Id(added): " + data.val().Status + data.key());
+        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+        console.log("Circles FBCircles(added): " + fbCircles);
+
+        // Obtain circle data for the pending circles
+        fbCallback.fetch(fbCircles, function(output) {
+            var pendingCircleVal = output;
+            pendingCirclesArray.push(pendingCircleVal);
+        });
+
+        // Using the setter, set the pending circles array
+        CirclesPending.set(pendingCirclesArray);
+
+        // Update $scope.circles
+        $scope.circles = CirclesPending.get();
+    });
 
     // Obtain list of circle IDs with a "pending" status
     // NOTE: This callback gets called on a 'child_removal'	event.
