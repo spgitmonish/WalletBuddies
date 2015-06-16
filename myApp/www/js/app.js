@@ -75,16 +75,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
 
-    .state('tab.chat-detail', {
-        url: '/chats/:chatId',
-        views: {
-            'tab-chats': {
-                templateUrl: 'templates/chat-detail.html',
-                controller: 'ChatDetailCtrl'
-            }
-        }
-    })
-
     .state('tab.socialcircle', {
         url: '/socialcircle',
         views: {
@@ -144,13 +134,53 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-
-    .state('tab.bank-auth', {
-        url: '/account/:auth',
+    
+    .state('tab.choose-account', {
+        url: '/choose-account',
         views: {
             'tab-account': {
-                templateUrl: 'templates/bank-auth.html',
-                controller: 'ConnectCtrl'
+                templateUrl: 'templates/choose-account.html',
+                controller: 'ChooseAccCtrl'
+            }
+        }
+    })
+    
+    .state('tab.kyc-details', {
+        url: '/kyc-details',
+        views: {
+            'tab-account': {
+                templateUrl: 'templates/kyc-details.html',
+                controller: 'KycCtrl'
+            }
+        }
+    })
+    
+    .state('tab.kyc-questions', {
+        url: '/kyc-questions',
+        views: {
+            'tab-account': {
+                templateUrl: 'templates/kyc-questions.html',
+                controller: 'KycQuestionCtrl'
+            }
+        }
+    })
+    
+    .state('tab.auth-question', {
+        url: '/auth-question',
+        views: {
+            'tab-account': {
+                templateUrl: 'templates/auth-question.html',
+                controller: 'QuestionCtrl'
+            }
+        }
+    })
+    
+    .state('tab.auth-code', {
+        url: '/auth-code',
+        views: {
+            'tab-account': {
+                templateUrl: 'templates/auth-code.html',
+                controller: 'MFACtrl'
             }
         }
     });

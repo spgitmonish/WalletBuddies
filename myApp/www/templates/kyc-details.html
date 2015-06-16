@@ -1,0 +1,37 @@
+<ion-view view-title="Customer Verification">
+    <ion-content>
+    	<div class="card">
+            <div class="item item-divider item-text-wrap">
+                Date of birth
+            </div>
+            <label class="item item-input">
+                <input ng-model="user.month" type="number" placeholder="MM" ng-required="true">
+            </label>
+            <label class="item item-input">
+                <input ng-model="user.day" type="number" placeholder="DD" ng-required="true">
+            </label>
+            <label class="item item-input">
+                <input ng-model="user.year" type="number" placeholder="YYYY" ng-required="true">
+            </label>
+            <div class="item item-divider item-text-wrap">
+                Last 4 digits of SSN
+            </div>
+            <label class="item item-input">
+                <input ng-model="user.ssn" type="number" placeholder="XXXX" ng-required="true">
+            </label>
+            <div class="item item-divider item-text-wrap">
+                Address
+            </div>
+            <label class="item item-input">
+                <input ng-model="user.street" type="text" placeholder="Street" ng-required="true">
+            </label>
+            <label class="item item-input">
+                <input ng-model="user.city" type="text" placeholder="City" ng-required="true">
+            </label>
+            <label class="item item-input">
+                <input ng-model="user.zip" type="tel" placeholder="Zipcode" ng-required="true">
+            </label>
+        </div>
+        <button ng-click="validateUser(user)" class="button button-block button-balanced">Verify</button>        
+    </ion-content>
+</ion-view>

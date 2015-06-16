@@ -2,34 +2,37 @@
     <ion-content padding="true">
 
         <div class="card">
-            <div class="item item-divider-ios">
-                Link your account
+            <div class="item item-divider">
+                <h2 style="color: #33cd5f" align="center">Link your account</h2>
             </div>
             <div class="item">
+                <label class="item item-input item-select">
+                    <div class="input-label">
+                        Select your bank
+                    </div>
+                    <select ng-model="user.id" ng-required="true">
+                        <option ng-repeat="inst in institutions.banks" ng-selected="inst.id == user.id" value="{{inst.id}}">{{inst.bank_name}}</option>
+                    </select>
+                </label>
 
-                <form ng-submit="connect(user)">
-                    <label class="item item-input item-select">
-                        <div class="input-label">
-                            Select your bank
-                        </div>
-                        <select ng-model="user.type" ng-required="true">
-                            <option ng-repeat="inst in institutions" ng-selected="inst.type == user.type" value="{{inst.type}}">{{inst.name}}</option>
-                        </select>
-                    </label>
+                <label class="item item-input item-floating-label">
+                    <span class="input-label">Username</span>
+                    <input type="text" placeholder="Username" ng-model="user.username" ng-required="true">
+                </label>
 
-                    <label class="item item-input item-floating-label">
-                        <span class="input-label">Username</span>
-                        <input type="text" placeholder="Username" ng-model="user.username" ng-required="true">
-                    </label>
-
-                    <label class="item item-input item-floating-label">
-                        <span class="input-label">Password</span>
-                        <input type="text" placeholder="Password" ng-model="user.password" ng-required="true">
-                    </label>
-
-                    <button type="submit" class="button button-block button-balanced">CONNECT</button>
-                </form>
+                <label class="item item-input item-floating-label">
+                    <span class="input-label">Password</span>
+                    <input type="text" placeholder="Password" ng-model="user.password" ng-required="true">
+                </label>
             </div>
         </div>
+        <button ng-click="connect(user)" class="button button-block button-balanced">Connect</button>
+        <div class="card">
+            <div class="item item-divider">
+	            <h2 style="color: #33cd5f" align="center">Make a transaction</h2>
+            </div>
+        </div>
+        <button ng-click="testDebit()" class="button button-block button-balanced">Debit my account</button>
+        <button ng-click="viewTran()" class="button button-block button-balanced">View Transactions</button>
     </ion-content>
 </ion-view>

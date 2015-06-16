@@ -28,3 +28,15 @@ myApp/hooks/after_plugin_rm/010_deregister_plugin.js
 
 myApp/npm-debug.log
 >>>>>>> 5b2903ad039c653a485cec5ca10aa07f88491a8d
+
+myApp/node_modules/sendgrid/node_modules/.bin/mime
+
+myApp/node_modules/sendgrid/node_modules/request/node_modules/.bin/har-validator
+
+myApp/node_modules/sendgrid/node_modules/request/node_modules/.bin/uuid
+
+myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node_modules/chalk/node_modules/.bin/has-ansi
+
+myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node_modules/chalk/node_modules/.bin/strip-ansi
+
+myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node_modules/chalk/node_modules/.bin/supports-color

@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $log, Circles, $firebaseAuth) {
+.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $log, Circles, $firebaseAuth, $http) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -105,6 +105,59 @@ angular.module('starter.controllers', [])
 						});
 						
                         alert("User created successfully");
+						
+						// Create a SynapsePay user account
+						$http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
+						    "client": {
+							    //your client ID and secret
+							    "client_id": "8i4Yl1BVmblUBBpIZTNM",  
+							    "client_secret": "MudcA6qyaVvpop2f5ACCCLyll32Ps15HtTyYQLsi"
+							  },
+							  "logins": [
+							    //email and password of the user. Passwords are optional.
+							    //yes you can add multiple emails and multiple users for one account here
+							    {
+							      "email": account.email,
+							      "read_only":false
+							    }
+							  ],
+							  "phone_numbers": [
+							    //user's mobile numbers. Can be used for 2FA
+							    account.phonenumber.toString()
+							  ],
+							  "legal_names": [
+							    //user's legal names. If multiple user's are being added, add multiple legal names.
+							    //If business account, add the name of the person creating the account and the name of the company
+							    account.firstname + " " + account.lastname
+							  ],
+							  "fingerprints": [
+							    //fingerprints of the devices that you will be accessing this account from
+							    {
+							      "fingerprint": "suasusau21324redakufejfjsf"
+							    }
+							  ],
+							  "ips": [
+							    //user's IP addresses
+							    "192.168.1.1"
+							  ],
+							  "extra": {
+								//optional fields
+							    "note": "WalletBuddies User",
+							    "supp_id": "No IDs Here",
+							    //toggle to true if its a business account
+							    "is_business": false
+							  }
+			            }).then(function(response) {
+							fbUser.child("Payments").update({
+							  oauth: response.data.oauth, // We need this for making bank transactions, every user has a unique key.
+							  client_id: response.data.user.client.id,
+							  fingerprint: "suasusau21324redakufejfjsf"
+							});
+						  
+						}).catch(function(err) {
+						  console.log("An error occured while communicating with Synapse");
+						  console.log(err);
+						});
 
                         // Get the link to the Circles of the User
                         var fbCircle = new Firebase(fbRef + "/Circles/");
@@ -376,116 +429,408 @@ angular.module('starter.controllers', [])
     }  
 })
 
-// Controller for plaid API
-.controller('ConnectCtrl', function($scope, fireBaseData, $state, $stateParams, Plaid, ConnectStore, $rootScope, $firebaseArray) {
+// Controller for Tab-Account 
+.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $http, $ionicPopup) {
 
     $scope.user = {
         type: '',
-        username: 'plaid_test',
-        password: 'plaid_good'
+        username: 'synapse_nomfa',
+        password: 'test1234'
     };
 
-    $scope.connectPlaid = $firebaseArray(fireBaseData.refPlaid());
-    // get All institutions
-    Plaid.getInstitutions().then(function(result) {
-        $scope.institutions = result.data;
-        //console.log(result.data);
-    }, function(error) {
-        console.error(error);
-    });
+	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
+
+	// Create a SynapsePay user account
+	/*
+	$http.get('https://sandbox.synapsepay.com/api/v2/bankstatus/show').then(function(response) {
+		$scope.institutions = response.data.banks;
+		console.log(JSON.stringify(response.data.banks));
+	}).catch(function(err) {
+	  console.log("Got an error in list of banks.");
+	  console.log(err);
+	  alert(err.statusText);
+	});
+	*/
+	
+	// List of supported institutions
+	$scope.institutions = {
+		"banks": [{"bank_name":"Ally","date":"2015-06-04T22:50:10.628919","id":"ally","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/ally.png","resource_uri":"/api/v2/bankstatus/11/","status":"Active"},{"bank_name":"First Tennessee","date":"2015-06-04T22:50:11.579320","id":"firsttennessee","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/first_tn.png","resource_uri":"/api/v2/bankstatus/12/","status":"Active"},{"bank_name":"TD Bank","date":"2015-06-04T22:50:14.312727","id":"td","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/td.png","resource_uri":"/api/v2/bankstatus/13/","status":"Active"},{"bank_name":"BB&T Bank","date":"2015-06-04T22:50:14.316785","id":"bbt","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/bbt.png","resource_uri":"/api/v2/bankstatus/16/","status":"Active"},{"bank_name":"Bank of America","date":"2015-06-04T22:50:00.069431","id":"bofa","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/bofa.png","resource_uri":"/api/v2/bankstatus/1/","status":"Active"},{"bank_name":"Chase","date":"2015-06-04T22:50:00.073254","id":"chase","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/chase.png","resource_uri":"/api/v2/bankstatus/2/","status":"Active"},{"bank_name":"Wells Fargo","date":"2015-06-04T22:50:00.076002","id":"wells","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/wells_fargo.png","resource_uri":"/api/v2/bankstatus/3/","status":"Active"},{"bank_name":"Citibank","date":"2015-06-04T22:50:00.078971","id":"citi","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/citi.png","resource_uri":"/api/v2/bankstatus/4/","status":"Active"},{"bank_name":"US Bank","date":"2015-06-04T22:50:00.081610","id":"us","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/usbank.png","resource_uri":"/api/v2/bankstatus/5/","status":"Active"},{"bank_name":"USAA","date":"2015-06-04T22:50:00.084672","id":"usaa","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/usaa.png","resource_uri":"/api/v2/bankstatus/6/","status":"Active"},{"bank_name":"Charles Schwab","date":"2015-06-04T22:50:00.087398","id":"schwab","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/charles_schwab.png","resource_uri":"/api/v2/bankstatus/7/","status":"Active"},{"bank_name":"Capital One 360","date":"2015-06-04T22:50:00.090046","id":"capone360","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/cap360.png","resource_uri":"/api/v2/bankstatus/8/","status":"Active"},{"bank_name":"PNC","date":"2015-06-04T22:50:00.092713","id":"pnc","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/pnc.png","resource_uri":"/api/v2/bankstatus/14/","status":"Active"},{"bank_name":"Fidelity","date":"2015-06-04T22:50:00.095358","id":"fidelity","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/fidelity.png","resource_uri":"/api/v2/bankstatus/15/","status":"Active"},{"bank_name":"Regions","date":"2015-06-04T22:50:04.796854","id":"regions","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/regionsbank.png","resource_uri":"/api/v2/bankstatus/9/","status":"Active"},{"bank_name":"SunTrust","date":"2015-06-04T22:50:10.625099","id":"suntrust","logo":"https://s3.amazonaws.com/synapse_django/bank_logos/suntrust.png","resource_uri":"/api/v2/bankstatus/10/","status":"Active"}]
+	}
 
     $scope.connect = function(user) {
-        Plaid.auth(user.type, user.username, user.password).then(function(result) {
-            console.log(result);
-
-            if (result.status == 200) {
-                ConnectStore.save(result.data);
-                $scope.connectPlaid.$add({
-                    results: result.data
-                });
-
-                result.data = "0";
-
-                //$state.go('tab.chat-detail');
-            }
-
-            if (result.status == 201) {
-                ConnectStore.save(result.data);
-                alert(result.data.access_token + " MFA required " + user.type);
-                // $state.go('tab.bank-auth');
-
-                var answer_question = "tomato";
-                //$scope.answer = function (user){
-                //new try------------------------------------------ call within a call
-                //$scope.authStep = function (result) {
-                Plaid.authStep(user.type, answer_question, result.data.access_token).then(function(response) {
-                    console.log(response);
-
-                    //if (result) {
-                    ConnectStore.save(response.data);
-                    $scope.connectPlaid.$add({
-                        results: response.data
-                    });
-
-                    response.data = "0";
-                    //}
-
-
-                }, function(error) {
-                    alert("There was an error connecting\n ERROR: " + error.data.message + '\n RESOLVE: ' + error.data.resolve);
-                });
-                //}
-            }
-
-        }, function(error) {
-            alert("There was an error connecting\n ERROR: " + error.data.message + '\n RESOLVE: ' + error.data.resolve);
-        });
-
+	    console.log("Bank ID: " + user.id);
+		fbRef.child("Payments").once('value', function(data) {
+			// $http post for Bank Login
+			$http.post('https://sandbox.synapsepay.com/api/v3/node/add', {
+			    'login':{
+				    'oauth_key': data.val().oauth.oauth_key
+				  },
+				  'user':{
+				    'fingerprint':'suasusau21324redakufejfjsf'
+				  },
+				  'node':{
+				    'type':'ACH-US',
+				    'info':{
+				      'bank_id': user.username,
+				      'bank_pw': user.password,
+				      'bank_name': user.id,
+				    }
+				}
+            }).then(function(payload) {
+	            console.log("Payload " + payload.data.success);
+				if (payload.data.success) {
+				    if (payload.data.nodes[0].allowed == null) {
+						console.log("MFA QUESTION: " + JSON.stringify(payload.data));
+						$rootScope.question = payload.data;
+						$state.go('tab.auth-question');			         
+				    }
+				    else {
+						console.log("Bank Account Details: " + JSON.stringify(payload.data));
+			            $rootScope.data = payload.data;
+			            $state.go('tab.choose-account');
+				    }
+				}
+			}).catch(function(err) {
+			  console.log("Got an error in bank login.");
+			  console.log(err);
+			  alert(err.statusText);
+			});
+		});
     };
-
+    /* Enable this after testing
+    $scope.user = {
+        type: '',
+        username: '',
+        password: ''
+    }; */
+    var amt = 20.00;
+    var fee = 1.00;
+    
+    // Test code for making a transaction
+    $scope.testDebit = function() {
+	    fbRef.child("Payments").once('value', function(data) {
+		    $http.post('https://sandbox.synapsepay.com/api/v3/trans/add', {
+			  'login':{
+			    'oauth_key': data.val().oauth.oauth_key
+			  },
+			  'user':{
+			    'fingerprint':'suasusau21324redakufejfjsf'
+			  },
+			  'trans':{
+			      //where you wish to debit funds from. This should belong to the user who's OAUTH key you have supplied in login
+			      'from':{
+			      'type': data.val().Bank.type,
+			      'id': data.val().Bank.oid
+			  	  },
+				  //where you wish to send funds to
+				  'to':{
+				      'type':'ACH-US',
+				      'id': '557f7a7186c2736fb1c60c09'
+				  },
+				  'amount':{
+				      //'amount': (11).toFixed(2),
+				      'amount': parseFloat("10.11"),
+				      'currency':'USD'
+				  },
+				  //process on lets you supply the date when you wish to process this transaction. This is delta time, which means 1 for tomorrow, 2 means dayafter, and so on
+				  //Finally the IP address of the transaction
+				  'extra':{
+				      'supp_id':'',
+				      'note':'Debited from WB user',
+				      'webhook':'',
+				      'process_on':0,
+				      'ip':'192.168.1.1',
+				  },
+				  //this lets you add a facilitator fee to the transaction, once the transaction settles, you will get a part of the transaction
+				  'fees':[{
+				      'fee': parseFloat("1.10"),
+				      'note':'Facilitator Fee',
+				      'to':{
+				        'id':'557383d286c273157cb619d3'
+				      }
+				  }]
+			  }
+		    }).then(function(payload) {
+			    console.log("Transaction Successful with and with deatils: " + JSON.stringify(payload.data));
+			    $ionicPopup.alert({
+				    title: "Did it happen?",
+				    template: "You tell me!... INCOMING DATA: " + JSON.stringify(payload.data)
+				})
+		    }).catch(function(err) {
+			    console.log("Got an error in transaction");
+			    console.log(JSON.stringify(err));
+			    alert(err.statusText);
+		    });
+	    
+	    })
+    };
+    
+    $scope.viewTran = function() {
+	    fbRef.child("Payments").once('value', function(data) {
+		    $http.post('https://sandbox.synapsepay.com/api/v3/trans/show', {
+			  'login':{
+			    'oauth_key': data.val().oauth.oauth_key
+			  },
+			  'user':{
+			    'fingerprint':'suasusau21324redakufejfjsf'
+			  }
+			  //this is all optional stuff. You can provide one field or all.
+			  //Filter object allows you to filter information the way you see fit
+			  
+  		    }).then(function(payload) {
+			    console.log("Transaction Successful with and with deatils: " + JSON.stringify(payload.data));
+			    $ionicPopup.alert({
+				    title: "Did it happen?",
+				    template: "You tell me!... INCOMING DATA: " + JSON.stringify(payload.data)
+				})
+		    }).catch(function(err) {
+			    console.log("Got an error in transaction");
+			    console.log(JSON.stringify(err));
+			    alert(err.statusText);
+		    });
+	    
+	    })
+    };
+    
 })
 
-// Controller for Connection Details
-.controller('ConnectDetailCtrl', function($scope, $state, fireBaseData, $stateParams, Plaid, ConnectStore, $rootScope, $firebaseArray) {
-    $scope.connection = ConnectStore.get();
+// Controller for Choose-Account
+.controller('ChooseAccCtrl', function($scope, $rootScope, $state, $ionicPopup) {
 
-    console.log($scope.connection);
+	$scope.data = $rootScope.data;
+	
+	$scope.checkSelect = function(index) {
+		console.log('array index is ' + index);
+		$scope.temp = index;
+	}
+	
+	$scope.validateUser = function() {
+		//alert("Your " + $scope.data.banks[$scope.temp].nickname + " account is now linked.");
+		$ionicPopup.alert({
+		    title: "Alright!",
+		    template: "Your " + $scope.data.nodes[$scope.temp].info.class + " " + $scope.data.nodes[$scope.temp].info.type + " account is now linked."
+		});
+		var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid).child("Payments").child("Bank");
+		fbRef.update({
+			account_num: $scope.data.nodes[$scope.temp].info.account_num,
+			routing: $scope.data.nodes[$scope.temp].info.routing_num,
+			type: $scope.data.nodes[$scope.temp].type,
+			oid: $scope.data.nodes[$scope.temp]._id.$oid
+		});
+		$state.go('tab.kyc-details');
+	};
+})
 
-    $scope.connectPlaid = $firebaseArray(fireBaseData.refPlaid());
+// Controller for providing KYC details.
+.controller('KycCtrl', function($scope, $rootScope, $state, $http, $ionicPopup) {
 
-    $scope.connect = function(user) {
-        //last working point
+	$scope.data = $rootScope.data;
+	
+	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+	
+	$scope.user = {
+        day: 26,
+        month: 12,
+        year: 1987,
+        street: "4301 rowalt dr",
+        city: "College Park",
+        zip: "20740",
+        ssn: 3333
+    };
+	
+	$scope.validateUser = function(user) {
+		fbRef.once("value", function(data) {
+			$http.post('https://sandbox.synapsepay.com/api/v3/user/doc/add', {
+				'login':{
+				    'oauth_key': data.val().Payments.oauth.oauth_key
+				},
+				'user':{
+				    'doc':{
+				      'birth_day': user.day,
+				      'birth_month': user.month,
+				      'birth_year': user.year,
+				      'name_first': data.val().firstname,
+				      'name_last': data.val().lastname,
+				      'address_street1': user.street,
+				      'address_city': user.city,
+				      'address_postal_code': user.zip,
+				      'address_country_code': 'US',
+				      'document_value': user.ssn.toString(),
+				      'document_type':'SSN',
+				    },
+					'fingerprint':'suasusau21324redakufejfjsf'
+			    }
+			}).then(function(payload) {
+				console.log("KYC response " + payload.data.message.en);
+				console.log(JSON.stringify(payload.data));
+				if (payload.data.message.en == "SSN information verified") {
+					$ionicPopup.alert({
+					    title: "You're all set!",
+					    template: "Your verification is complete"
+					});
+					$state.go("tab.account");
+				}
+				else {
+					$ionicPopup.alert({
+					    title: "We need a little more info from you",
+					    template: "Please bear with us :)"
+					});
+					$rootScope.kycQuestions = payload.data;
+					$state.go("tab.kyc-questions");
+				}
+			}).catch(function(err) {
+				console.log(err);
+				console.log(JSON.stringify(err));
+				alert(err.statusText);
+			});
+		});
+	};
+})
 
-        Plaid.authStep(user.answer, connection.type, connection.access_token).then(function(result) {
-            console.log(result);
-            $state.go('tab.chat-detail');
+// Controller for Choose-Account
+.controller('KycQuestionCtrl', function($scope, $rootScope, $state, $http, $ionicPopup) {
 
-            if (result.status == 200) {
-                ConnectStore.save(result.data);
-                $scope.connectPlaid.$add({
-                    results: result.data
-                });
+	$scope.data = $rootScope.kycQuestions.question_set;
+	console.log("Questions: ", $scope.data.questions);
+	$scope.selection = {};
+	
+	$scope.validate = function() {
+		var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+		fbRef.child("Payments").once('value', function(data) {
+			$http.post('https://sandbox.synapsepay.com/api/v3/user/doc/verify', {
+				'login':{
+				    'oauth_key': data.val().oauth.oauth_key
+				},
+				'user':{
+				    'doc':{
+				      'question_set_id': $scope.data.id,
+				      'answers':[
+				        { 'question_id': 1, 'answer_id': $scope.selection.answer[1] },
+				        { 'question_id': 2, 'answer_id': $scope.selection.answer[2] },
+				        { 'question_id': 3, 'answer_id': $scope.selection.answer[3] },
+				        { 'question_id': 4, 'answer_id': $scope.selection.answer[4] },
+				        { 'question_id': 5, 'answer_id': $scope.selection.answer[5] }
+				      ]
+				    },
+				    'fingerprint':'suasusau21324redakufejfjsf'
+				}
+			}).then(function(payload) {
+				console.log("KYC Questions Response: " + JSON.stringify(payload.data));
+				$ionicPopup.alert({
+					    title: "You're all set!",
+					    template: "Your SSN information was verified."
+				});
+				fbRef.child("Payments").child("KYC").update({
+					oid: payload.data.user._id.$oid,
+					clientid: payload.data.user.client.id
+				});
+				$state.go("tab.account");
+			}).catch(function(err) {
+				console.log("Got an error in MFA - QuestionCtrl.");
+				console.log(err);
+				console.log("Error Message in JSON: " + JSON.stringify(err));
+				
+				// Popup for wrong answer
+				if (err.status == 400) {
+					$ionicPopup.alert({
+					    title: "Wrong Answer!",
+					    template: "Please try again."
+					});
+				}
+				else {
+					alert(err.statusText);  
+				}
+			})
+		});
+	};
+})
 
-                result.data = "No data";
+// Controller for Auth-Question page
+.controller('QuestionCtrl', function($scope, $rootScope, $state, $http, $ionicPopup) {
 
-                //$state.go('tab.chat-detail');
-            }
+	$scope.question = $rootScope.question;
+	console.log("QUESTION: " + $scope.question.nodes[0].extra.mfa.message);
+	$scope.authStep = function (user) {
+			var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+			fbRef.child("Payments").once('value', function(data) {
+				console.log("POST DATA: " + data.val().oauth.oauth_key +" "+$scope.question.nodes[0]._id.$oid+" "+ user.answer);
+				$http.post('https://sandbox.synapsepay.com/api/v3/node/verify', {
+	                'login':{
+				    'oauth_key': data.val().oauth.oauth_key
+				  },
+				  'user':{
+				    'fingerprint':'suasusau21324redakufejfjsf'
+				  },
+				  'node':{
+					  '_id':{
+						  '$oid': $scope.question.nodes[0]._id.$oid
+					  },
+					  'verify':{
+						  'mfa': user.answer
+				  	  }
+				  }
+	            }).then(function(payload) {
+		            console.log("Bank Account Details: " + JSON.stringify(payload.data));
+		            $rootScope.data = payload.data;
+		            $state.go('tab.choose-account');
+	            }).catch(function(err) {
+				  console.log("Got an error in MFA - QuestionCtrl.");
+				  console.log(err);
+				  console.log("Error Message in JSON: " + JSON.stringify(err));
+				  
+				  // Popup for wrong answer
+				  if (err.status == 400) {
+					$ionicPopup.alert({
+					    title: "Wrong Answer!",
+					    template: "Please try again."
+					});
+				  }
+				  else {
+					alert(err.statusText);  
+				  }
+				});
+            })
+	}
+	$scope.user = {
+        answer: ''
+    };
+})
 
-            if (result.status == 201) {
-                //alert("MFA required");
-                ConnectStore.save(result.data);
-                $scope.connectPlaid.$add({
-                    results: result.data
-                });
-                result.data = "No data";
+// Controller for Auth-Question page
+.controller('MFACtrl', function($scope, $rootScope, $state, $http, $ionicPopup) {
 
-                // $state.go('tab.bank-auth');
-            }
-
-        }, function(error) {
-            alert("There was an error connecting\n ERROR: " + error.data.message + '\n RESOLVE: ' + error.data.resolve);
-        });
-
+	$scope.mfa = $rootScope.mfa;
+	$scope.authStep = function (user) {
+			var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+			fbRef.once('value', function(data) {
+				$http.post('https://sandbox.synapsepay.com/api/v2/bank/mfa', {
+	                access_token: $scope.mfa.response.access_token,
+				    mfa: user.answer,
+				    bank: $rootScope.bank,
+				    oauth_consumer_key: data.val().oauthkey
+	            }).then(function(payload) {
+		            console.log("Bank Account Details: " + JSON.stringify(payload.data));
+		            $rootScope.data = payload.data;
+		            $state.go('tab.choose-account');
+	            }).catch(function(err) {
+				  console.log("Got an error in MFA - QuestionCtrl.");
+				  console.log(err);
+				  
+				  // Popup for wrong answer
+				  if (err.status == 400) {
+					$ionicPopup.alert({
+					    title: "Wrong Code!",
+					    template: "Please try again."
+					});
+				  }
+				  else {
+					alert(err.statusText);  
+				  }
+				});
+            })
+	}
+	$scope.user = {
+        answer: ''
     };
 })
 
@@ -495,9 +840,8 @@ angular.module('starter.controllers', [])
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
         $scope.user = {
-            email: "",
-            password: "",
-            token: ""
+            email: "sunku@fb.com",
+            password: "deepesh"
         };
 
         // Called when the user clicks the "Sign In" button
@@ -521,6 +865,7 @@ angular.module('starter.controllers', [])
                         alert("Login Error! Try again.");
                     } else {
                         console.log("Sign In successful");
+                        
 						// Saving auth data to be used across controllers
 						$rootScope.fbAuthData = authData;
 						
@@ -588,7 +933,7 @@ angular.module('starter.controllers', [])
                                     fbCircle.once("value", function(snap) {
                                          // Use the setter and set the value so that it is accessible to another controller
                                         Circles.set(circlesArray);
-
+                                        
                                         // The data is ready, switch to the Wallet tab
                                         $state.go('tab.wallet');
                                     });
@@ -652,9 +997,9 @@ angular.module('starter.controllers', [])
         }
 
         // Clear the forms
-        $scope.user.email = "";
-        $scope.user.password = "";
-        $scope.user.token = "";
+        //$scope.user.email = "";
+        //$scope.user.password = "";
+        //$scope.user.token = "";
     }
 ])
 
