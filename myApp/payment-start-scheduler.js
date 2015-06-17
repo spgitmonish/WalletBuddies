@@ -45,7 +45,7 @@ fbRef.child('PaymentStart').on('child_added', function(dateSnap) {
 	    // Get a reference to the Firebase account
 		var path = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles").child(dateSnap.val().circleID).child("Members");
 	    if (count < dateSnap.val().length){
-		    // Check for and remove user's with a "pending" status
+		    // Filter users based on their priority.
 			path.orderByChild("Priority").equalTo(count).on('child_added', function(data){
 				console.log("Payment made to Mr. " + data.key() + " with Priority " + count-1);
 				

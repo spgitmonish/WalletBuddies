@@ -35,49 +35,53 @@ fbRef.child('StartDate').on('child_added', function(dateSnap) {
 			path.child(data.key()).remove();
 		});
 		
-		// Generate and assign a random priority for the remaining users
-		path.once('value', function(data) {
-			console.log("No of Children: " + data.numChildren());
-			if (data.numChildren() < 3) {
-				// Write code to inform user and delete circle
-			}
-			else {
-				// Generate unique random numbers
-				var limit = data.numChildren(),
-			    lower_bound = 0,
-			    upper_bound = limit-1,
-			    unique_random_numbers = [];
-			
-				while (unique_random_numbers.length < limit) {
-			    	var random_number = Math.round(Math.random()*(upper_bound - lower_bound) + lower_bound);
-					if (unique_random_numbers.indexOf(random_number) == -1) { 
-				        // Yay! new unique random number
-				        console.log(random_number);
-				        unique_random_numbers.push( random_number );
-			    	}
+		setTimeout(function () {
+			// Generate and assign a random priority for the remaining users
+			path.once('value', function(data) {
+				console.log("No of Children: " + data.numChildren());
+				if (data.numChildren() < 3) {
+					// Write code to inform user and delete circle
+					console.log("Finishing up scheduler...Not enough number of users.");
+					j.cancel();
 				}
+				else {
+					// Generate unique random numbers
+					var limit = data.numChildren(),
+				    lower_bound = 0,
+				    upper_bound = limit-1,
+				    unique_random_numbers = [];
 				
-				// Assign a random priority for the remaining users
-				var count = 0;
-				data.forEach(function(childSnapshot) {
-					var key = childSnapshot.key();
-					console.log("KEYS: " + key + "Count" + count);
-					path.child(key).update({
-						Priority: unique_random_numbers[count]
+					while (unique_random_numbers.length < limit) {
+				    	var random_number = Math.round(Math.random()*(upper_bound - lower_bound) + lower_bound);
+						if (unique_random_numbers.indexOf(random_number) == -1) { 
+					        // Yay! new unique random number
+					        console.log(random_number);
+					        unique_random_numbers.push( random_number );
+				    	}
+					}
+					
+					// Assign a random priority for the remaining users
+					var count = 0;
+					data.forEach(function(childSnapshot) {
+						var key = childSnapshot.key();
+						console.log("KEYS: " + key + "Count" + count);
+						path.child(key).update({
+							Priority: unique_random_numbers[count]
+						});
+						count++;
 					});
-					count++;
-				});
-				
-				// Save the timestamp & circleID to trigger the payments-start-scheduler
-				var circleStartDate = Firebase.ServerValue.TIMESTAMP;
-				fbRef.child('PaymentStart').push({
-					date: circleStartDate,
-					circleID: dateUnformatted.circleID,
-					plan: dateUnformatted.plan,
-					length: data.numChildren()
-				});
-			}
-		});
+					
+					// Save the timestamp & circleID to trigger the payments-start-scheduler
+					var circleStartDate = Firebase.ServerValue.TIMESTAMP;
+					fbRef.child('PaymentStart').push({
+						date: circleStartDate,
+						circleID: dateUnformatted.circleID,
+						plan: dateUnformatted.plan,
+						length: data.numChildren()
+					});
+				}
+			});
+		}, 5000);
 		
 	}.bind(null, dateUnformatted));	// This is done to use current data in the future
 });

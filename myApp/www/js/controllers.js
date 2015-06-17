@@ -962,7 +962,8 @@ angular.module('starter.controllers', [])
 							// Get a reference to where the User's circle IDs are stored
 							var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");						
 							
-							// Obtain list of circle IDs with a "pending" status	
+							// Obtain list of circle IDs with a "pending" status
+							console.log("I'm here!");	
 							fbCallback.orderByChild(fbUserCircle, "pending", function(data) {
 								console.log("Circles Id: " + data.val().Status + data.key());
 								var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
@@ -986,13 +987,13 @@ angular.module('starter.controllers', [])
                             fbCircle.on("child_added", function(snapshot) {
                               var circleVal = snapshot.val();
                               circlesArray.push(circleVal)
-                              console.log("Name: " + circlesArray[loopCount].circleName);
-                              console.log("GroupID: " + circlesArray[loopCount].circleID);
-                              console.log("Plan: " + circlesArray[loopCount].plan);
-                              console.log("Amount: " + circlesArray[loopCount].amount);
-                              console.log("Message: " + circlesArray[loopCount].groupMessage);
+                              //console.log("Name: " + circlesArray[loopCount].circleName);
+                              //console.log("GroupID: " + circlesArray[loopCount].circleID);
+                              //console.log("Plan: " + circlesArray[loopCount].plan);
+                              //console.log("Amount: " + circlesArray[loopCount].amount);
+                              //console.log("Message: " + circlesArray[loopCount].groupMessage);
                               loopCount++;
-                              console.log("Number of circles:" + loopCount);
+                              //console.log("Number of circles:" + loopCount);
                             });
 							
                             // Length will always equal count, since snap.val() will include every child_added event
