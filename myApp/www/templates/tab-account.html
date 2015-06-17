@@ -1,6 +1,5 @@
 <ion-view view-title="Settings">
     <ion-content padding="true">
-
         <div class="card">
             <div class="item item-divider">
                 <h2 style="color: #33cd5f" align="center">Link your account</h2>
@@ -26,13 +25,13 @@
                 </label>
             </div>
         </div>
-        <button ng-click="connect(user)" class="button button-block button-balanced">Connect</button>
+        <button ng-click="connect(user)" class="button button-full button-balanced">Connect</button>
         <div class="card">
             <div class="item item-divider">
 	            <h2 style="color: #33cd5f" align="center">Make a transaction</h2>
             </div>
         </div>
         <button ng-click="testDebit()" class="button button-block button-balanced">Debit my account</button>
-        <button ng-click="viewTran()" class="button button-block button-balanced">View Transactions</button>
+        <button ng-click="signOut()" class="button button-block button-outline button-balanced">Sign Out</button>        
     </ion-content>
 </ion-view>

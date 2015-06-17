@@ -24,7 +24,7 @@ fbRef.child('PaymentStart').on('child_added', function(dateSnap) {
 	}
 	else if (dateSnap.val().plan == "monthly") {
 		if (date.getDate() <= 28){
-			//rule.dayOfMonth = date.getDate(); // Returns the day of the month (1-31) for the specified date according to local time
+			//rule.dayOfMonth = date.getDate() + 1; // Returns the day of the month (1-31) for the specified date according to local time
 			rule.minute = new schedule.Range(0, 60, 6);; // For testing purposes let's run the job every 6 mins for monthly plan
 		}
 		else
@@ -48,6 +48,7 @@ fbRef.child('PaymentStart').on('child_added', function(dateSnap) {
 		    // Check for and remove user's with a "pending" status
 			path.orderByChild("Priority").equalTo(count).on('child_added', function(data){
 				console.log("Payment made to Mr. " + data.key() + " with Priority " + count-1);
+				
 			});
 			// Increment the counter
 		    count++;

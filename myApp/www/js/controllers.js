@@ -57,7 +57,7 @@ angular.module('starter.controllers', [])
                             email: account.email,
                             phonenumber: account.phonenumber
                         });
-
+												
                         // Create user's unique Hash and save under the Registered Users folder
                         // Use a secret string and set the id length to be 4
                         var hashids = new Hashids("SecretMonkey", 4);
@@ -158,6 +158,12 @@ angular.module('starter.controllers', [])
 						  console.log("An error occured while communicating with Synapse");
 						  console.log(err);
 						});
+						// Clear the form
+				        account.firstname = '';
+				        account.lastname = '';
+				        account.email = '';
+				        account.phonenumber = '';
+				        account.password = '';
 
                         // Get the link to the Circles of the User
                         var fbCircle = new Firebase(fbRef + "/Circles/");
@@ -185,6 +191,7 @@ angular.module('starter.controllers', [])
                         fbCircle.once("value", function(snap) {
                             // Use the setter and set the value so that it is accessible to another controller
                             Circles.set(circlesArray);
+						    
                             // The data is ready, switch to the Wallet tab
                             $state.go('tab.wallet');
                         });
@@ -439,7 +446,7 @@ angular.module('starter.controllers', [])
     };
 
 	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
-
+	var ref = new Firebase("https://walletbuddies.firebaseio.com");
 	// Create a SynapsePay user account
 	/*
 	$http.get('https://sandbox.synapsepay.com/api/v2/bankstatus/show').then(function(response) {
@@ -546,7 +553,7 @@ angular.module('starter.controllers', [])
 				      'fee': parseFloat("1.10"),
 				      'note':'Facilitator Fee',
 				      'to':{
-				        'id':'557383d286c273157cb619d3'
+				        'id':'557f7a7186c2736fb1c60c09'
 				      }
 				  }]
 			  }
@@ -559,6 +566,7 @@ angular.module('starter.controllers', [])
 		    }).catch(function(err) {
 			    console.log("Got an error in transaction");
 			    console.log(JSON.stringify(err));
+			    console.log(err);
 			    alert(err.statusText);
 		    });
 	    
@@ -590,6 +598,11 @@ angular.module('starter.controllers', [])
 		    });
 	    
 	    })
+    };
+    
+    $scope.signOut = function () {
+	    ref.unauth();
+	    $state.go('launch');
     };
     
 })
