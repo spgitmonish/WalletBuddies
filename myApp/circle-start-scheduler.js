@@ -6,14 +6,14 @@ var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
 // Monitor the folder /StartDate for new data
 fbRef.child('StartDate').on('child_added', function(dateSnap) {
-	var dateUnformatted = dateSnap.val();
-	var date = new Date(dateUnformatted.date);
-	console.log("FORMATTED DATE: " + date.getFullYear() + "-" + date.getDate() + "-" +  date.getMonth() + " / " + date.getHours() + ":" + date.getMinutes() + ":" + 			date.getSeconds());
-	
-	// Remove it now that we've processed the date
+    var dateUnformatted = dateSnap.val();
+    var date = new Date(dateUnformatted.date);
+    console.log("FORMATTED DATE: " + date.getFullYear() + "-" + date.getDate() + "-" + date.getMonth() + " / " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds());
+
+    // Remove it now that we've processed the date
     dateSnap.ref().remove();
 	
-	// Schedule a job at specified date (Currently set to 5 mins from circle creation)
+	// Schedule a job at specified date (Currently set to 2 mins from circle creation)
 	var mins = date.getMinutes() + 2;
 	var scheduledDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), mins, date.getSeconds());
 	console.log("Scheduled DATE: " + scheduledDate.getFullYear() + "-" + scheduledDate.getDate() + "-" +  scheduledDate.getMonth() + " / " + scheduledDate.getHours() + ":" + 	scheduledDate.getMinutes() + ":" + scheduledDate.getSeconds());
@@ -91,3 +91,4 @@ fbRef.child('StartDate').on('child_added', function(dateSnap) {
 		
 	}.bind(null, dateUnformatted));	// This is done to use current data in the future
 });
+

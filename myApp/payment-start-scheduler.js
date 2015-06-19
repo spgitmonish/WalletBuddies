@@ -7,12 +7,12 @@ var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
 // Monitor the folder /StartDate for new data
 fbRef.child('PaymentStart').on('child_added', function(dateSnap) {
-	var date = new Date(dateSnap.val().date);
-	var rule = new schedule.RecurrenceRule();
-	rule.minute = date.getMinutes();
-	//rule.hour = date.getHours();
-	
-	// Remove it now that we've processed the date
+    var date = new Date(dateSnap.val().date);
+    var rule = new schedule.RecurrenceRule();
+    rule.minute = date.getMinutes();
+    //rule.hour = date.getHours();
+
+    // Remove it now that we've processed the date
     dateSnap.ref().remove();
 	
 	console.log("FORMATTED DATE: " + date.getFullYear() + "-" + date.getDate() + "-" +  date.getMonth() + " / " + date.getHours() + ":" + date.getMinutes() + ":" + 			date.getSeconds());
