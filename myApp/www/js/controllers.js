@@ -385,7 +385,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for requests-detail page
-.controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state) {
+.controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, $ionicPopup) {
 	// Get a reference to the Firebase account
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 		
@@ -403,15 +403,27 @@ angular.module('starter.controllers', [])
     
     // Called when user clicks "Accept"
     $scope.onAccept = function() {
-	    // Change Status of the circle to "true"
-	    fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-		    Status: true
+	    var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
+	    fbUser.once("value", function(data) {
+		    // Check if user's bank account is linked and KYC info verified before the user can accept an invite
+		    if (data.child("Payments/Bank").exists() && data.child("Payments/KYC").exists()) {
+				// Change Status of the circle to "true"
+			    fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+				    Status: true
+			    });
+			    
+			    fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+					Status: true
+				});
+				$state.go('tab.requests');
+		    }
+		    else {
+			    $ionicPopup.alert({
+				    title: "You haven't linked your bank account yet!",
+					template: "You can accept a request once you've linked an account. Please go to settings to link an account."
+			    });
+		    }
 	    });
-	    
-	    fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
-			Status: true
-		});
-		$state.go('tab.requests');
     }
     
     // Called when user clicks "Decline"
@@ -1021,9 +1033,25 @@ angular.module('starter.controllers', [])
 
 
 // Other unfilled and unused controllers
-.controller('WalletCtrl', function($scope, Circles) {
+.controller('WalletCtrl', function($scope, Circles, $state, $rootScope, $ionicPopup) {
     // Make sure the data is available in this controller
     $scope.circles = Circles.get();
+    
+    $scope.newCircle = function () {
+	    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
+	    fbRef.once("value", function(data) {
+		    // Check if user's bank account is linked and KYC verified
+		    if (data.child("Payments/Bank").exists() && data.child("Payments/KYC").exists()) {
+			    $state.go("tab.socialcircle");
+		    }
+		    else {
+			    $ionicPopup.alert({
+				    title: "You haven't linked your bank account yet!",
+					template: "You can start a new circle once you've linked an account. Please go to settings to link an account."
+			    });
+		    }
+	    });
+    };
 })
 
 .controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
