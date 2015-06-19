@@ -1,0 +1,38 @@
+<ion-view view-title="Home">
+    <ion-content class="padding">
+	    <div class="list card" ng-repeat="transaction in transactions">
+            <div class="item item-body" ng-if="transaction.type === 'Debit'">
+			    <p style="color: black">
+			    	<b>${{transaction.amount}}</b> was debited from your account as part of the <b>{{transaction.circle}}</b> circle.
+			    </p>
+			    <p>
+			      <a href="#" class="subdued">1 Like</a>
+			      <a href="#" class="subdued">5 Comments</a>
+			    </p>
+			</div>
+			<div class="item item-body" ng-if="transaction.type === 'Credit'">
+			    <p style="color: black">
+			    	Woohoo! You just got paid for the <b>{{transaction.circle}}</b> circle. <b>${{transaction.amount}}</b> was <b>credited</b> to your account.
+			    </p>
+			    <p>
+			      <a href="#" class="subdued">1 Like</a>
+			      <a href="#" class="subdued">5 Comments</a>
+			    </p>
+			</div>
+			<div class="item tabs tabs-secondary tabs-icon-left">
+			    <a class="tab-item" href="#">
+			      <i class="icon ion-thumbsup"></i>
+			      Like
+			    </a>
+			    <a class="tab-item" href="#">
+			      <i class="icon ion-chatbox"></i>
+			      Comment
+			    </a>
+			    <a class="tab-item" href="#">
+			      <i class="icon ion-share"></i>
+			      Share
+			    </a>
+            </div>
+	    </div>    
+    </ion-content>
+</ion-view>

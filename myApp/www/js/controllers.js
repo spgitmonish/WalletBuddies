@@ -159,7 +159,7 @@ angular.module('starter.controllers', [])
 						  console.log(err);
 						});
 						// Clear the form
-				        account.firstname = '';
+				        $account.firstname = '';
 				        account.lastname = '';
 				        account.email = '';
 				        account.phonenumber = '';
@@ -283,7 +283,8 @@ angular.module('starter.controllers', [])
 		fbRef.child('StartDate').push({
 			date: date,
 			circleID: groupID,
-			plan: user.plan
+			plan: user.plan,
+			amount: user.amount
 		});
 		
      // Checking for registered users and generating new Circle invite codes for non-registered users
@@ -437,8 +438,8 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Tab-Account 
-.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $http, $ionicPopup) {
-
+.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $http, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
+	console.log("History before signout: " + $ionicHistory.viewHistory());
     $scope.user = {
         type: '',
         username: 'synapse_nomfa',
@@ -447,7 +448,7 @@ angular.module('starter.controllers', [])
 
 	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
 	var ref = new Firebase("https://walletbuddies.firebaseio.com");
-	// Create a SynapsePay user account
+
 	/*
 	$http.get('https://sandbox.synapsepay.com/api/v2/bankstatus/show').then(function(response) {
 		$scope.institutions = response.data.banks;
@@ -504,15 +505,14 @@ angular.module('starter.controllers', [])
 			});
 		});
     };
-    /* Enable this after testing
+    // Clear the forms
     $scope.user = {
         type: '',
         username: '',
         password: ''
-    }; */
-    var amt = 20.00;
-    var fee = 1.00;
-    
+    };
+    var fee = "1";
+    var amt;
     // Test code for making a transaction
     $scope.testDebit = function() {
 	    fbRef.child("Payments").once('value', function(data) {
@@ -550,7 +550,7 @@ angular.module('starter.controllers', [])
 				  },
 				  //this lets you add a facilitator fee to the transaction, once the transaction settles, you will get a part of the transaction
 				  'fees':[{
-				      'fee': parseFloat("1.10"),
+				      'fee': parseFloat(fee + ".01"),
 				      'note':'Facilitator Fee',
 				      'to':{
 				        'id':'557f7a7186c2736fb1c60c09'
@@ -601,6 +601,10 @@ angular.module('starter.controllers', [])
     };
     
     $scope.signOut = function () {
+	    $ionicHistory.clearCache();
+	    $ionicHistory.clearHistory();
+	    $ionicNavBarDelegate.showBackButton(false);
+	    console.log("History" + $ionicHistory.viewHistory());
 	    ref.unauth();
 	    $state.go('launch');
     };
@@ -963,7 +967,6 @@ angular.module('starter.controllers', [])
 							var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");						
 							
 							// Obtain list of circle IDs with a "pending" status
-							console.log("I'm here!");	
 							fbCallback.orderByChild(fbUserCircle, "pending", function(data) {
 								console.log("Circles Id: " + data.val().Status + data.key());
 								var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
@@ -1013,7 +1016,6 @@ angular.module('starter.controllers', [])
         // Clear the forms
         //$scope.user.email = "";
         //$scope.user.password = "";
-        //$scope.user.token = "";
     }
 ])
 
@@ -1036,11 +1038,13 @@ angular.module('starter.controllers', [])
     $scope.friend = Friends.get($stateParams.friendId);
 })
 
-.controller('DashCtrl', function($scope) {
-    $scope.settings = {
-        enableFriends: true
-    };
-
+.controller('HomeCtrl', function($scope, $rootScope, $firebaseArray) {
+	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("Transactions");
+	// download the data from a Firebase database reference into a (pseudo read-only) array
+    // all server changes are applied in realtime
+    $scope.transactions = $firebaseArray(fbRef);
+    
+	
 })
 
 // Function to modify the email address to create a unique link based on the user

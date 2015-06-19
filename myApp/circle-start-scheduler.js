@@ -27,6 +27,9 @@ fbRef.child('StartDate').on('child_added', function(dateSnap) {
 		path.orderByChild("Status").equalTo("pending").on('child_added', function(data){
 			console.log("SERVICE: " + data.key());
 			path.child(data.key()).remove();
+			// Remove the circle from user's path too
+			var userPath = new Firebase("https://walletbuddies.firebaseio.com/Users/").child(data.key()).child("Circles").child(dateUnformatted.circleID);
+			userPath.remove();
 		});
 		
 		// Check for and remove user's with a "false" status
@@ -35,6 +38,7 @@ fbRef.child('StartDate').on('child_added', function(dateSnap) {
 			path.child(data.key()).remove();
 		});
 		
+		// Waiting 5 seconds to allow firebase to complete previous tasks
 		setTimeout(function () {
 			// Generate and assign a random priority for the remaining users
 			path.once('value', function(data) {
@@ -71,13 +75,15 @@ fbRef.child('StartDate').on('child_added', function(dateSnap) {
 						count++;
 					});
 					
+					console.log("Amt: " + dateUnformatted.amount);
 					// Save the timestamp & circleID to trigger the payments-start-scheduler
 					var circleStartDate = Firebase.ServerValue.TIMESTAMP;
 					fbRef.child('PaymentStart').push({
 						date: circleStartDate,
 						circleID: dateUnformatted.circleID,
 						plan: dateUnformatted.plan,
-						length: data.numChildren()
+						length: data.numChildren(),
+						amount: dateUnformatted.amount
 					});
 				}
 			});
