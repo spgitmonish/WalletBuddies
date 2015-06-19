@@ -1,0 +1,16 @@
+<ion-view view-title="Choose An Account">
+    <ion-content>
+    					
+			<ul class="list">
+			  <li class="item item-checkbox" ng-repeat="account in data.nodes">
+			     <label class="checkbox">
+			       <input type="radio" ng-required="true" ng-change="checkSelect($index)" ng-model="account.info.bank_name">
+			     </label>
+			     {{account.info.class}} {{account.info.type}} xxxx-xxxx-{{account.info.account_num}} {{account.info.bank_name}}
+			  </li>
+			</ul>
+			<!--<ion-radio ng-repeat="account in data.banks" ng-change="checkSelect($index)" ng-model="account.balance">{{account.nickname}} ${{account.balance}}</ion-radio>
+	        -->
+	        <button ng-click="validateUser(user)" class="button button-block button-balanced">Link</button>
+    </ion-content>
+</ion-view>

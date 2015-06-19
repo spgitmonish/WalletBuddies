@@ -1,0 +1,16 @@
+<ion-view view-title="Verification Question">
+    <ion-content padding="false">
+        <div class="card">
+            <label class="item item-input item-text-wrap item-select" ng-repeat="question in data.questions">
+                <div class="input-label">
+                    {{question.question}}
+                </div>
+                <select ng-model="selection.answer[question.id]" ng-required="true">
+                    <option ng-repeat="answer in question.answers" ng-selected="answer.id == answer" value="{{answer.id}}">{{answer.answer}}</option>
+                </select>
+            </label>
+        </div>
+		<button ng-click="validate()" class="button button-block button-balanced">Finish</button>
+
+    </ion-content>
+</ion-view>

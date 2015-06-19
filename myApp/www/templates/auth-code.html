@@ -1,0 +1,15 @@
+<ion-view view-title="Additional Security">
+    <ion-content padding="false">
+
+        <div class="card">
+            <div class="item item-divider item-text-wrap">
+                Enter the code sent to your device.
+            </div>
+            <label class="item item-input">
+                <input ng-model="user.answer" type="password" placeholder="Answer" ng-required="true">
+            </label>
+        </div>
+		<button ng-click="authStep(user)" class="button button-block button-balanced">Next</button>
+
+    </ion-content>
+</ion-view>
