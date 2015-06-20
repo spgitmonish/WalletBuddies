@@ -449,12 +449,14 @@ angular.module('starter.controllers', [])
 	
 	// Signout from the app
 	$scope.signOut = function() {
-	    $ionicHistory.clearCache();
+		ref.unauth();
+		$state.go('launch');
+		//$scope.$on('$ionicView.afterLeave', function(){
+		$ionicHistory.clearCache();
 	    $ionicHistory.clearHistory();
-	    $ionicNavBarDelegate.showBackButton(false);
-	    console.log("History" + $ionicHistory.viewHistory());
-	    ref.unauth();
-	    $state.go('launch');
+	    //$ionicNavBarDelegate.showBackButton(false);
+	    console.log("History" + JSON.stringify($ionicHistory.viewHistory()));
+		//});
     };
 })
 
@@ -874,14 +876,15 @@ angular.module('starter.controllers', [])
 
 // Controller for Sign In
 .controller('SignInCtrl', ['$scope', '$state', '$rootScope', 'fbCallback', 'Circles', 'CirclesTest',
-    function($scope, $state, $rootScope, fbCallback, Circles, CirclesTest) {
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    function($scope, $state, $rootScope, fbCallback, Circles, CirclesTest, $ionicHistory) {
 
+        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+	
         $scope.user = {
             email: "sunku@fb.com",
             password: "deepesh"
         };
-
+		
         // Called when the user clicks the "Sign In" button
         $scope.validateUser = function() {
             var email = this.user.email;
