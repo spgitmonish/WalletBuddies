@@ -449,9 +449,32 @@ angular.module('starter.controllers', [])
     }  
 })
 
-// Controller for Tab-Account 
+// Controller for tab-settings
+.controller('SettingsCtrl', function($scope, $ionicHistory, $ionicNavBarDelegate, $state) {
+	// Create a firebase reference
+	var ref = new Firebase("https://walletbuddies.firebaseio.com");
+	
+	// Go to tab-account
+	$scope.account = function() {
+		$state.go("tab.account");
+	}; 
+	
+	// Signout from the app
+	$scope.signOut = function() {
+		ref.unauth();
+		$state.go('launch');
+		//$scope.$on('$ionicView.afterLeave', function(){
+		$ionicHistory.clearCache();
+	    $ionicHistory.clearHistory();
+	    //$ionicNavBarDelegate.showBackButton(false);
+	    console.log("History" + JSON.stringify($ionicHistory.viewHistory()));
+		//});
+    };
+})
+
+// Controller for tab-Account 
 .controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $http, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
-	console.log("History before signout: " + $ionicHistory.viewHistory());
+	//console.log("History before signout: " + $ionicHistory.viewHistory());
     $scope.user = {
         type: '',
         username: 'synapse_nomfa',
@@ -497,6 +520,12 @@ angular.module('starter.controllers', [])
 				    }
 				}
             }).then(function(payload) {
+	            // Clear the forms
+			    $scope.user = {
+			        type: '',
+			        username: '',
+			        password: ''
+			    };
 	            console.log("Payload " + payload.data.success);
 				if (payload.data.success) {
 				    if (payload.data.nodes[0].allowed == null) {
@@ -517,14 +546,8 @@ angular.module('starter.controllers', [])
 			});
 		});
     };
-    // Clear the forms
-    $scope.user = {
-        type: '',
-        username: '',
-        password: ''
-    };
-    var fee = "1";
-    var amt;
+
+    /*
     // Test code for making a transaction
     $scope.testDebit = function() {
 	    fbRef.child("Payments").once('value', function(data) {
@@ -620,7 +643,7 @@ angular.module('starter.controllers', [])
 	    ref.unauth();
 	    $state.go('launch');
     };
-    
+    */
 })
 
 // Controller for Choose-Account
@@ -697,7 +720,7 @@ angular.module('starter.controllers', [])
 					    title: "You're all set!",
 					    template: "Your verification is complete"
 					});
-					$state.go("tab.account");
+					$state.go("tab.settings");
 				}
 				else {
 					$ionicPopup.alert({
@@ -753,7 +776,7 @@ angular.module('starter.controllers', [])
 					oid: payload.data.user._id.$oid,
 					clientid: payload.data.user.client.id
 				});
-				$state.go("tab.account");
+				$state.go("tab.settings");
 			}).catch(function(err) {
 				console.log("Got an error in MFA - QuestionCtrl.");
 				console.log(err);
@@ -865,14 +888,15 @@ angular.module('starter.controllers', [])
 
 // Controller for Sign In
 .controller('SignInCtrl', ['$scope', '$state', '$rootScope', 'fbCallback', 'Circles', 'CirclesTest',
-    function($scope, $state, $rootScope, fbCallback, Circles, CirclesTest) {
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    function($scope, $state, $rootScope, fbCallback, Circles, CirclesTest, $ionicHistory) {
 
+        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+	
         $scope.user = {
             email: "sunku@fb.com",
             password: "deepesh"
         };
-
+		
         // Called when the user clicks the "Sign In" button
         $scope.validateUser = function() {
             var email = this.user.email;
