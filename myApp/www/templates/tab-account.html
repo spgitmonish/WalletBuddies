@@ -1,9 +1,6 @@
-<ion-view view-title="Settings">
+<ion-view view-title="Link your account">
     <ion-content padding="true">
         <div class="card">
-            <div class="item item-divider">
-                <h2 style="color: #33cd5f" align="center">Link your account</h2>
-            </div>
             <div class="item">
                 <label class="item item-input item-select">
                     <div class="input-label">
@@ -15,23 +12,16 @@
                 </label>
 
                 <label class="item item-input item-floating-label">
-                    <span class="input-label">Username</span>
-                    <input type="text" placeholder="Username" ng-model="user.username" ng-required="true">
+                    <span class="input-label">Online ID</span>
+                    <input type="text" placeholder="Online ID" ng-model="user.username" ng-required="true">
                 </label>
 
                 <label class="item item-input item-floating-label">
                     <span class="input-label">Password</span>
-                    <input type="text" placeholder="Password" ng-model="user.password" ng-required="true">
+                    <input type="password" placeholder="Password" ng-model="user.password" ng-required="true">
                 </label>
             </div>
         </div>
-        <button ng-click="connect(user)" class="button button-full button-balanced">Connect</button>
-        <div class="card">
-            <div class="item item-divider">
-	            <h2 style="color: #33cd5f" align="center">Make a transaction</h2>
-            </div>
-        </div>
-        <button ng-click="testDebit()" class="button button-block button-balanced">Debit my account</button>
-        <button ng-click="signOut()" class="button button-block button-outline button-balanced">Sign Out</button>        
+        <button ng-click="connect(user)" class="button button-full button-balanced">Connect</button>        
     </ion-content>
 </ion-view>

@@ -74,7 +74,17 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-
+	
+	.state('tab.settings', {
+        url: '/settings',
+        views: {
+            'tab-settings': {
+                templateUrl: 'templates/tab-settings.html',
+                controller: 'SettingsCtrl'
+            }
+        }
+    })
+	
     .state('tab.socialcircle', {
         url: '/socialcircle',
         views: {
@@ -128,7 +138,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     .state('tab.account', {
         url: '/account',
         views: {
-            'tab-account': {
+            'tab-settings': {
                 templateUrl: 'templates/tab-account.html',
                 controller: 'ConnectCtrl'
             }
@@ -138,7 +148,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     .state('tab.choose-account', {
         url: '/choose-account',
         views: {
-            'tab-account': {
+            'tab-settings': {
                 templateUrl: 'templates/choose-account.html',
                 controller: 'ChooseAccCtrl'
             }
@@ -148,7 +158,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     .state('tab.kyc-details', {
         url: '/kyc-details',
         views: {
-            'tab-account': {
+            'tab-settings': {
                 templateUrl: 'templates/kyc-details.html',
                 controller: 'KycCtrl'
             }
@@ -158,7 +168,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     .state('tab.kyc-questions', {
         url: '/kyc-questions',
         views: {
-            'tab-account': {
+            'tab-settings': {
                 templateUrl: 'templates/kyc-questions.html',
                 controller: 'KycQuestionCtrl'
             }
@@ -168,7 +178,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     .state('tab.auth-question', {
         url: '/auth-question',
         views: {
-            'tab-account': {
+            'tab-settings': {
                 templateUrl: 'templates/auth-question.html',
                 controller: 'QuestionCtrl'
             }
@@ -178,7 +188,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     .state('tab.auth-code', {
         url: '/auth-code',
         views: {
-            'tab-account': {
+            'tab-settings': {
                 templateUrl: 'templates/auth-code.html',
                 controller: 'MFACtrl'
             }
