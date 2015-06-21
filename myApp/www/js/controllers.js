@@ -205,7 +205,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, $firebaseObject, ContactsService, fbCallback, $cordovaContacts, $rootScope, $state, $log) {
+.controller('GroupCtrl', function($scope, $firebaseObject, ContactsService, fbCallback, $cordovaContacts, $rootScope, $state, $log, $ionicPopup) {
     //For accessing the device's contacts
     $scope.data = {
         selectedContacts: []
@@ -250,7 +250,7 @@ angular.module('starter.controllers', [])
 		
         // Print the social circle name
         console.log(user.groupName);
-
+		var groupName = user.groupName;
         // Get the reference for the push
         var fbCirclePushRef = fbCircle.push();
 
@@ -329,21 +329,40 @@ angular.module('starter.controllers', [])
 			            });
 			            
 			            // Save data for sending email notification
-			            var to = $scope.data.selectedContacts[i].emails[0].value;
-					    var groupName = user.groupName;
+			            var email = $scope.data.selectedContacts[i].emails[0];
+			            var phone = $scope.data.selectedContacts[i].phones[0];
 						
 						fbCallback.fetch(fbProfile, function(output){
 							fbName = output.firstname;
-							
-							// Write email info to /Sendgrid folder to trigger the server to send email
-	                        fbRef.child('Sendgrid').push({
-								from: 'hello@walletbuddies.co', 
-								to: $scope.data.selectedContacts[i].emails[0].value, 
-								subject: "You've been invited to form a Circle on WalletBuddies by " + fbName, 
-								text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Use the code: " + id +
-								" to join this Circle. Have fun. :)"
-							});
-				            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + to);				            
+							// Check if user has phonenumber only or email only or both
+							if (email && phone) {
+								// Write email info to /Sendgrid folder to trigger the server to send email
+		                        fbRef.child('Sendgrid').push({
+									from: 'hello@walletbuddies.co', 
+									to: email.value, 
+									subject: "You've been invited to form a Circle on WalletBuddies by " + fbName, 
+									text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.com to join this Circle. Have fun. :)"
+								});
+					            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + email.value);
+							}
+							else if (email) {
+								// Write email info to /Sendgrid folder to trigger the server to send email
+		                        fbRef.child('Sendgrid').push({
+									from: 'hello@walletbuddies.co', 
+									to: email.value, 
+									subject: "You've been invited to form a Circle on WalletBuddies by " + fbName, 
+									text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.com to join this Circle. Have fun. :)"
+								});
+					            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + email.value);	
+							}
+							else {
+								// Write email info to /Sendgrid folder to trigger the server to send email
+		                        fbRef.child('Twilio').push({ 
+									to: phone.value, 
+									text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.com to join this Circle. Have fun. :)"
+								});
+					            console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + phone.value);
+							}				            
 			            });
 		            }
 	            });
@@ -355,7 +374,12 @@ angular.module('starter.controllers', [])
         user.plan = "weekly";
         user.amount = 0;
         user.groupMessage = "";
-
+		
+		$ionicPopup.alert({
+		    title: "Done!",
+			template: "Your invites are one their way. :)"
+	    });
+		
         // The data is ready, switch to the Wallet tab
         $state.go('tab.wallet');
 
