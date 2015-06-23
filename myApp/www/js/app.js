@@ -20,6 +20,46 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     });
 })
 
+// All this does is allow the message
+// to be sent when you tap return
+.directive('input', function($timeout) {
+  return {
+    restrict: 'E',
+    scope: {
+      'returnClose': '=',
+      'onReturn': '&',
+      'onFocus': '&',
+      'onBlur': '&'
+    },
+    link: function(scope, element, attr) {
+      element.bind('focus', function(e) {
+        if (scope.onFocus) {
+          $timeout(function() {
+            scope.onFocus();
+          });
+        }
+      });
+      element.bind('blur', function(e) {
+        if (scope.onBlur) {
+          $timeout(function() {
+            scope.onBlur();
+          });
+        }
+      });
+      element.bind('keydown', function(e) {
+        if (e.which == 13) {
+          if (scope.returnClose) element[0].blur();
+          if (scope.onReturn) {
+            $timeout(function() {
+              scope.onReturn();
+            });
+          }
+        }
+      });
+    }
+  }
+})
+
 .config(function($stateProvider, $urlRouterProvider) {
 
     // Ionic uses AngularUI Router which uses the concept of states
@@ -81,6 +121,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             'tab-settings': {
                 templateUrl: 'templates/tab-settings.html',
                 controller: 'SettingsCtrl'
+            }
+        }
+    })
+	
+	.state('tab.chat', {
+        url: '/chat',
+        views: {
+            'tab-settings': {
+                templateUrl: 'templates/chat.html',
+                controller: 'ChatCtrl'
             }
         }
     })

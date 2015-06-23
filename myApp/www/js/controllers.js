@@ -496,6 +496,71 @@ angular.module('starter.controllers', [])
     };
 })
 
+// Controller for chat
+.controller('ChatCtrl', function($scope, $rootScope, $timeout, $ionicScrollDelegate, $firebaseArray, $firebaseObject) {
+	
+	fbRef = new Firebase("https://walletbuddies.firebaseio.com/Messages/");
+	// Create a synchronized array at the firebase reference
+	$scope.messages = $firebaseArray(fbRef);
+
+	fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/").child($rootScope.fbAuthData.uid);
+	// Create a synchronized array at the firebase reference
+	var user = $firebaseObject(fbUser); 
+	
+	// Scroll down the content automatically
+	$scope.$on('$ionicView.enter', function() {
+      console.log('$ionicView.enter');
+      $ionicScrollDelegate.scrollBottom(true);
+    });
+	
+	// Save the uid to use in the view
+	$scope.uid = $rootScope.fbAuthData.uid;
+	
+	$scope.hideTime = true;
+	
+	var alternate;
+	var isIOS = ionic.Platform.isWebView() && ionic.Platform.isIOS();
+	
+	$scope.sendMessage = function() {
+		alternate = !alternate;
+		
+		var d = new Date();
+		d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+		
+		$scope.messages.$add({
+		  userId: $rootScope.fbAuthData.uid,
+		  text: $scope.data.message,
+		  time: d,
+		  name: user.firstname
+		});
+	
+		delete $scope.data.message;
+	};	
+	
+	// Scroll down when new messages are added
+	fbRef.on('child_added', function(data){
+		$timeout(function() {
+		  $ionicScrollDelegate.scrollBottom(false);
+		}, 300);
+	});
+		
+	$scope.inputUp = function() {
+		if (isIOS) $scope.data.keyboardHeight = 216;
+		$timeout(function() {
+		  cordova.plugins.Keyboard.disableScroll(true);
+		}, 300);	
+	};
+	
+	$scope.inputDown = function() {
+		if (isIOS) $scope.data.keyboardHeight = 0;
+		$ionicScrollDelegate.resize();
+	};
+	
+	$scope.closeKeyboard = function() {
+		// cordova.plugins.Keyboard.close();
+	};
+})
+
 // Controller for tab-Account 
 .controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $http, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
 	//console.log("History before signout: " + $ionicHistory.viewHistory());
