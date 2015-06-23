@@ -494,7 +494,16 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
     var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
 
     // Array for updating the pending circles information
-    var pendingCirclesArray = [];// $scope.circles = CirclesPending.get();
+    var pendingCirclesArray = [];
+
+    // Get a reference to where the User's pending circles are going to be stored
+    var fbUserPendingCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/");
+
+    // Clear all the data
+    fbUserPendingCircle.remove();
+
+    // Update $scope.circles
+    $scope.circles = $firebaseArray(fbUserPendingCircle);
 
     // Obtain list of circle IDs with a "pending" status
     // NOTE: This callback gets called on a 'child_removal'	event.
@@ -507,13 +516,16 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
         fbCallback.fetch(fbCircles, function(output) {
             var pendingCircleVal = output;
             pendingCirclesArray.push(pendingCircleVal);
+
+            // Get the reference for the push
+            var fbPendingCirclePushRef = fbUserPendingCircle.push();
+
+            // Update the location(temporary cache)
+            fbPendingCirclePushRef.update(pendingCircleVal);
         });
 
         // Using the setter, set the pending circles array
         CirclesPending.set(pendingCirclesArray);
-
-        // Update $scope.circles
-        $scope.circles = CirclesPending.get();
     });
 
     // Obtain list of circle IDs with a "pending" status
@@ -526,6 +538,15 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
         // Obtain circle data for the pending circles
         fbCallback.fetch(fbCircles, function(output) {
             var pendingCircleVal = output;
+
+            fbUserPendingCircle.on('child_added', function(snapshot){
+                if(snapshot.val().circleName == output.circleName){
+                    var fbPendingRemove = new Firebase(fbUserPendingCircle + "/" + snapshot.key());
+                    console.log("Removal:" + fbPendingRemove);
+                    fbPendingRemove.remove();
+                }
+            });
+
             for(var arrayCounter = 0; arrayCounter < pendingCirclesArray.length; arrayCounter++)
             {
                 // Look for a match
@@ -539,9 +560,6 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
 
         // Using the setter, set the pending circles array
         CirclesPending.set(pendingCirclesArray);
-
-        // Update $scope.circles
-        $scope.circles = CirclesPending.get();
     });
 })
 
