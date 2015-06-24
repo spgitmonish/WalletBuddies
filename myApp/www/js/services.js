@@ -204,20 +204,6 @@ angular.module('starter.services', [])
     };
 })
 
-.factory('CirclesPending', function($rootScope) {
-    var circlesInfo;
-
-    return {
-        set: function(value) {
-            circlesInfo = value;
-        },
-
-        get: function() {
-            return circlesInfo;
-        }
-    };
-})
-
 //Plaid API factory ends here
 .factory('Chats', function() {
     // Might use a resource here that returns a JSON array
