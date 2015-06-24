@@ -109,12 +109,8 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
 
                             alert("User created successfully");
 
-                            // Length will always equal count, since snap.val() will include every child_added event
-                            // triggered before this point
-                            fbUserCircle.once("value", function(snap) {
-                                // The data is ready, switch to the Wallet tab
-                                $state.go('tab.dash');
-                            });
+                            // Switch to the Wallet tab
+                            $state.go('tab.wallet');
                         }).catch(function(error) {
                             console.error("Authentication failed: " + error);
                         });
@@ -227,15 +223,8 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
                                 });
                             });
                         } else {
-                            // Get a reference to where the User's circle IDs are stored
-                            var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
-
-                            // Length will always equal count, since snap.val() will include every child_added event
-                            // triggered before this point
-                            fbUserCircle.once("value", function(snap) {
-                                // The data is ready, switch to the Wallet tab
-                                $state.go('tab.wallet');
-                            });
+                            // The data is ready, switch to the Wallet tab
+                            $state.go('tab.wallet');
                         }
                     }
                 }
@@ -398,7 +387,7 @@ angular.module('starter.controllers', ['ionic', 'ui.router'])
 })
 
 // Controller for requests tab
-.controller('RequestsCtrl', function($scope, $firebaseArray, $firebaseObject, $rootScope, fbCallback, Circles) {
+.controller('RequestsCtrl', function($scope, $firebaseArray, $firebaseObject, $rootScope, fbCallback) {
     console.log("RequestCtrl");
 
     // Get a reference to the Firebase account
