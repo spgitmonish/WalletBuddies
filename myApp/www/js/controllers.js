@@ -694,9 +694,24 @@ angular.module('starter.controllers', [])
     };
 })
 
-// Controller for tab-Account
-.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $http, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
-    //console.log("History before signout: " + $ionicHistory.viewHistory());
+// Controller for tabs
+.controller('TabsCtrl', function($scope, $state) {
+	// Define all the views that do not need the tab bar at the bottom
+	$scope.shouldHide = function() {
+        switch ($state.current.name) {
+            case 'tab.account':
+                return true;
+            case 'statename2':
+                return true;
+            default:
+                return false;
+        };
+    };
+
+})
+
+// Controller for tab-Account 
+.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $http, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {    
     $scope.user = {
         type: '',
         username: 'synapse_nomfa',
