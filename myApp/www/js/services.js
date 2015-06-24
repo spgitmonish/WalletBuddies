@@ -179,33 +179,29 @@ angular.module('starter.services', [])
 .factory('fbCallback', function() {
 
     return {
+        // Fetch the data
         fetch: function(path, callback) {
             path.once('value', function(data) {
                 callback(data.val());
             });
         },
 
-        orderByChild: function(path, status, callback) {
+        // Fetch the data on child added events
+        childAdded: function(path, status, callback) {
             path.orderByChild("Status").equalTo(status).on('child_added', function(data) {
-                console.log("SERVICE: " + data.key());
+                console.log("SERVICE(Added): " + data.key());
+                callback(data);
+            });
+        },
+
+        // Fetch the data on child removal events
+        childRemoved: function(path, status, callback) {
+            path.orderByChild("Status").equalTo(status).on('child_removed', function(data) {
+                console.log("SERVICE(Removed): " + data.key());
                 callback(data);
             });
         }
     }
-})
-
-.factory('CirclesTest', function($rootScope) {
-    var circlesInfo;
-
-    return {
-        set: function(value) {
-            circlesInfo = value;
-        },
-
-        get: function() {
-            return circlesInfo;
-        }
-    };
 })
 
 //Plaid API factory ends here
