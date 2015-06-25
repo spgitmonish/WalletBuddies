@@ -157,7 +157,7 @@ angular.module('starter.controllers', [])
                                 console.log(err);
                             });
                             // Clear the form
-                            $account.firstname = '';
+                            account.firstname = '';
                             account.lastname = '';
                             account.email = '';
                             account.phonenumber = '';
