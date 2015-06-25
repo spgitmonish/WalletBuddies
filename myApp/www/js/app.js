@@ -75,6 +75,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
+    
+    .state('tab.wallet-detail', {
+        url: '/wallet/:circleID',
+        views: {
+            'tab-wallet': {
+                templateUrl: 'templates/wallet-detail.html',
+                controller: 'WalletDetailCtrl'
+            }
+        }
+    })
 	
 	.state('tab.settings', {
         url: '/settings',

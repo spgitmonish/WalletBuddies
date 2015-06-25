@@ -3,7 +3,7 @@
         <ion-list>
             <ion-item class="item item-thumbnail-left item-text-wrap" ng-repeat="circle in circles track by $index" href="#/tab/requests/{{circle.circleID}}">
             <img src="http://walletbuddies.co/img/NewLogo.png">
-            You were invited to join the social circle <b>{{circle.circleName}}</b></p>
+            <b>{{circle.invitorName}}</b> invited you to join the circle <b>{{circle.circleName}}</b></p>
 				<button class="button button-small button-outline button-balanced">
 					View Request
 				</button>

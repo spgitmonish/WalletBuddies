@@ -1,0 +1,32 @@
+<ion-view>
+	<ion-nav-title>
+      <h1 class="title">{{circle.circleName}}</h1>
+    </ion-nav-title>
+    <ion-content>
+    	<div class="card">
+			<div class="item item-divider" style="color: #33cd5f">		
+			    Buddies
+			</div>
+			<div class="item" ng-repeat="member in members">
+				{{member}}
+			</div>
+			<div class="item item-divider" style="color: #33cd5f">		
+			    Payday
+			</div>
+			<div class="item">
+				{{circle.plan}}
+			</div>
+			<div class="item item-divider" style="color: #33cd5f">		
+			    Payday Amount
+			</div>
+			<div class="item">
+				${{circle.amount * members.length}}
+			</div>
+    	</div>
+    	<div align="center">
+    	<button class="button button-outline button-balanced">
+		  Group Chat
+		</button>
+    	</div>
+    </ion-content>
+</ion-view>
