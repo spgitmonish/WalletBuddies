@@ -86,6 +86,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
 	
+	.state('tab.chat', {
+        url: '/chat?circleID',
+        views: {
+            'tab-wallet': {
+                templateUrl: 'templates/chat.html',
+                controller: 'ChatCtrl'
+            }
+        }
+    })
+	
 	.state('tab.settings', {
         url: '/settings',
         views: {
