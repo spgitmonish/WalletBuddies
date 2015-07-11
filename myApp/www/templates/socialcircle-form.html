@@ -3,21 +3,25 @@
     <ion-content>
         <ion-list class="padding">
             <div class="list">
-                <!-- <label ng-model='user.picture' class="button button-block button-balanced" ng-click="takePicture()">Upload Circle Photo</label> -->
-                <label class="item item-input">
-                    <input ng-model='user.groupName' type="text" placeholder="Circle Name">
+                <label class="item item-avatar" ng-click="selectPicture()">
+                  <img ng-src="{{imageSrc}}">
+			      <h2>Circle Photo</h2>
+			      <p>Select a photo</p>
                 </label>
             </div>
-        </ion-list>
-
-        <hr size="1" width="90%" noshade>
-        <br>
-
-        <ion-list>
+            
             <div class="list">
+	            <p><b>&nbsp&nbspGive your circle a name</b></p>
+                <label class="item item-input">
+                    <input ng-model='user.groupName' type="text" placeholder="Eg. Sunday Brunch">
+                </label>
+            </div>
+            
+            <div class="list">
+	            <p><b>&nbsp&nbspPick your plan</b></p>
                 <label class="item item-input item-select">
                     <div class="input-label">
-                        <p><b>Pick your plan</b></p>
+                        <p>Click to select a plan</p>
                     </div>
                     <select ng-model='user.plan'>
                         <option>weekly</option>
@@ -26,38 +30,25 @@
                     </select>
                 </label>
             </div>
-        </ion-list>
 
-        <br>
-        <hr size="1" width="90%" noshade>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Set your payment amount</b></p>
+            <div class="list">
+                <p><b>&nbsp&nbspSet your payment amount</b></p>
                 <label class="item item-input">
                     <input ng-model='user.amount' type="tel" placeholder="$ 50.00">
                 </label>
             </div>
-        </ion-list>
 
-        <br>
-        <hr size="1" width="90%" noshade>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Say something to your buddies</b></p>
+            <div class="list">
+                <p><b>&nbsp&nbspSay something to your buddies</b></p>
                 <label class="item item-input">
                     <textarea ng-model='user.groupMessage' placeholder="Brunch was fun last sunday we should do this more often. Join away!"></textarea>
                 </label>
             </div>
         </ion-list>
 
-        <br>
-        <hr size="1" width="90%" noshade>
-
         <ion-list>
             <!-- Picking contacts -->
-            <button class="button button-block button-balanced" ng-click="pickContact()">Contacts</button>
+            <button class="button button-block button-dark" ng-click="pickContact()">Select Your Buddies</button>
             <div class="list">
                 <a class="item" ng-repeat="contact in data.selectedContacts">
                     <h2>{{contact.displayName}}</h2>

@@ -18,6 +18,10 @@
   "cordovaPlugins": [
     "http://github.com/don/cordova-filechooser.git",
     "org.apache.cordova.camera",
-    "org.apache.cordova.contacts"
+    "org.apache.cordova.contacts",
+    "cordova-plugin-camera"
+  ],
+  "cordovaPlatforms": [
+    "ios"
   ]
 }
