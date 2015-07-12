@@ -2,13 +2,16 @@
     <ion-content>
         <ion-list>
             <button class="button button-block button-dark" ng-click="newCircle()" href="#/tab/socialcircle">
-        Start a New Social Circle
-        </button>
+                Start a New Social Circle
+            </button>
         </ion-list>
         <ion-list>
             <ion-item class="item item-thumbnail-left item-text-wrap item-remove-animate item-icon-right" ng-repeat="circle in circles" href="#/tab/wallet/{{circle.circleID}}">
-            	<img ng-src="{{circle.circlePhoto}}">
-                </p><br><b>{{circle.circleName}}</b><br></p>
+                <img ng-src="{{circle.circlePhoto}}">
+                </p>
+                <br><b>{{circle.circleName}}</b>
+                <br>
+                </p>
                 <p>${{circle.amount}} {{circle.plan}}</p>
                 <i class="icon ion-chevron-right icon-accessory"></i>
                 <ion-option-button class="button-assertive" ng-click="remove(chat)">
