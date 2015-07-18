@@ -6,7 +6,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'firebase', 'email'])
 
-.run(function($ionicPlatform) {
+.run(function($ionicPlatform, $rootScope) {
     $ionicPlatform.ready(function() {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
@@ -18,6 +18,25 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // org.apache.cordova.statusbar required
             StatusBar.styleDefault();
         }
+        // Listen and Display for New Push Notifications 
+        $rootScope.$on('$cordovaPush:notificationReceived', function(event, notification) {
+	      if (notification.alert) {
+	        navigator.notification.alert(notification.alert);
+	      }
+	
+	      if (notification.sound) {
+	        var snd = new Media(event.sound);
+	        snd.play();
+	      }
+	
+	      if (notification.badge) {
+	        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+	          // Success!
+	        }, function(err) {
+	          // An error occurred. Show a message to the user
+	        });
+	      }
+	    });
     });
 })
 
