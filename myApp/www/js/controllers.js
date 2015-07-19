@@ -580,10 +580,10 @@ angular.module('starter.controllers', [])
     
     // Check if user has linked a bank account before he can start a circle
     $scope.newCircle = function () {
-	    var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
+	    var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid + "/Payments");
 	    fbUser.once("value", function(data) {
 		    // Check if user's bank account is linked and KYC verified
-		    if (data.child("Payments/Bank").exists() && data.child("Payments/KYC").exists()) {
+		    if (data.child("Bank").exists() && data.child("KYC").exists()) {
 			    $state.go("tab.socialcircle");
 		    }
 		    else {
