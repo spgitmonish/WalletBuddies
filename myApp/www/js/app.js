@@ -6,7 +6,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'firebase', 'email'])
 
-.run(function($ionicPlatform, $rootScope) {
+.run(function($ionicPlatform, $state, $rootScope) {
     $ionicPlatform.ready(function() {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
@@ -75,7 +75,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     // State definition for Launch page
     .state('launch', {
         url: '/launch',
-        templateUrl: 'templates/launchpage.html'
+        templateUrl: 'templates/launchpage.html',
+        controller: 'LaunchCtrl'
     })
 
     // States for signin and signup

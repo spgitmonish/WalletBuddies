@@ -1,5 +1,23 @@
 angular.module('starter.controllers', [])
 
+// Controller for Launch page
+.controller('LaunchCtrl', function($scope, $state, $rootScope) {
+	$scope.$on('$ionicView.beforeEnter', function() {
+		var ref = new Firebase("https://walletbuddies.firebaseio.com/");
+	    var authData = ref.getAuth();
+		if (authData) {
+		  console.log("Authenticated user with uid: ", authData.uid);
+		  	// Saving auth data to be used across controllers
+	        $rootScope.fbAuthData = authData;
+		    // Switch to the Wallet Tab
+	        $state.go('tab.wallet');
+		}
+		else {
+			console.log("Not authenticated");
+		}
+	});
+})
+
 // Controller for Account Creation and Sign Up
 .controller('AccountCtrl', function($scope, $firebaseObject, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush) {
     // Function to do the Sign Up and Add the Account
@@ -102,7 +120,7 @@ angular.module('starter.controllers', [])
                                     "\n\n Team Wallet Buddies"
                             });
 
-                            $ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
+                            //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
 
                             // Create a SynapsePay user account
                             $http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
@@ -154,7 +172,7 @@ angular.module('starter.controllers', [])
 
                             }).catch(function(err) {
                                 console.log("An error occured while communicating with Synapse");
-                                console.log(err);
+                                console.log(JSON.stringify(err));
                             });
                             // Clear the form
                             account.firstname = '';
@@ -932,13 +950,13 @@ angular.module('starter.controllers', [])
         // Delete all the accepted circles cached data
         fbUserAcceptedCircles.remove();
 
-        ref.unauth();
         $state.go('launch');
         //$scope.$on('$ionicView.afterLeave', function(){
-        $ionicHistory.clearCache();
-        $ionicHistory.clearHistory();
-        //$ionicNavBarDelegate.showBackButton(false);
-        console.log("History" + JSON.stringify($ionicHistory.viewHistory()));
+	        $ionicHistory.clearCache();
+	        $ionicHistory.clearHistory();
+	        $ionicNavBarDelegate.showBackButton(false);
+	        console.log("History" + JSON.stringify($ionicHistory.viewHistory()));
+	        ref.unauth();
         //});
     };
 })
