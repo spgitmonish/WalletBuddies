@@ -168,20 +168,39 @@ angular.module('starter.controllers', [])
                             
                             // To request permission for Push Notifications
                             $scope.$on('$ionicView.afterLeave', function() {
-	                            var iosConfig = {
-							    	"badge": true,
-									"sound": true,
-									"alert": true,
-							    };
-	                            $cordovaPush.register(iosConfig).then(function(deviceToken) {
-							      // Success -- send deviceToken to FireBase
-							      console.log("deviceToken: " + deviceToken);
-							      fbUser.update({
-								  	deviceToken : deviceToken
-                            	  });
-							    }, function(err) {
-							      alert("Registration error: " + err);
-							    });
+	                        // Register device for push notifications   
+	                            if (ionic.Platform.isAndroid()) {
+						            androidConfig = {
+						                "senderID": "456019050509" // Project number from GCM
+						            };
+								    $cordovaPush.register(androidConfig).then(function(deviceToken) {
+								      // Success -- send deviceToken to FireBase
+								      console.log("deviceToken: " + deviceToken);
+								      fbUser.update({
+									  	deviceToken : deviceToken,
+									  	device: "Android"
+	                            	  });
+								    }, function(err) {
+								      alert("Registration error: " + err);
+								    })
+						        }
+						        else if (ionic.Platform.isIOS()) {
+							        var iosConfig = {
+								    	"badge": true,
+										"sound": true,
+										"alert": true,
+								    };
+		                            $cordovaPush.register(iosConfig).then(function(deviceToken) {
+								      // Success -- send deviceToken to FireBase
+								      console.log("deviceToken: " + deviceToken);
+								      fbUser.update({
+									  	deviceToken : deviceToken,
+									  	device: "iOS"
+	                            	  });
+								    }, function(err) {
+								      alert("Registration error: " + err);
+								    });
+						        }  
 						    });  
                         }).catch(function(error) {
                             console.error("Authentication failed: " + error);

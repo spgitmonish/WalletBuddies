@@ -20,21 +20,45 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
         // Listen and Display for New Push Notifications 
         $rootScope.$on('$cordovaPush:notificationReceived', function(event, notification) {
-	      if (notification.alert) {
-	        navigator.notification.alert(notification.alert);
+	      if (ionic.Platform.isAndroid()) {
+		      switch(notification.event) {
+		        case 'registered':
+		          if (notification.regid.length > 0 ) {
+		            alert('registration ID = ' + notification.regid);
+		          }
+		          break;
+		
+		        case 'message':
+		          // this is the actual push notification. its format depends on the data model from the push server
+		          alert('message = ' + notification.message + ' msgCount = ' + notification.msgcnt);
+		          break;
+		
+		        case 'error':
+		          alert('GCM error = ' + notification.msg);
+		          break;
+		
+		        default:
+		          alert('An unknown GCM event has occurred');
+		          break;
+		      }    
 	      }
-	
-	      if (notification.sound) {
-	        var snd = new Media(event.sound);
-	        snd.play();
-	      }
-	
-	      if (notification.badge) {
-	        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
-	          // Success!
-	        }, function(err) {
-	          // An error occurred. Show a message to the user
-	        });
+	      else if (ionic.Platform.isIOS()) {
+		  	  if (notification.alert) {
+		  	  	navigator.notification.alert(notification.alert);
+		      }
+		
+		      if (notification.sound) {
+		        var snd = new Media(event.sound);
+		        snd.play();
+		      }
+		
+		      if (notification.badge) {
+		        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+		          // Success!
+		        }, function(err) {
+		          // An error occurred. Show a message to the user
+		        });
+		      }   
 	      }
 	    });
     });
