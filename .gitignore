@@ -40,3 +40,4 @@ myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node
 myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node_modules/chalk/node_modules/.bin/strip-ansi
 
 myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node_modules/chalk/node_modules/.bin/supports-color
+*.zip
