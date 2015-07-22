@@ -126,8 +126,8 @@ angular.module('starter.controllers', [])
                             $http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
                                 "client": {
                                     //your client ID and secret
-                                    "client_id": "8i4Yl1BVmblUBBpIZTNM",
-                                    "client_secret": "MudcA6qyaVvpop2f5ACCCLyll32Ps15HtTyYQLsi"
+                                    "client_id": "LM4weOevsNqafZftKmaR",
+                                    "client_secret": "98Ae6qNVF63MXxHqiqyd7zPMqNL9IAjjyoI6zcQB"
                                 },
                                 "logins": [
                                     //email and password of the user. Passwords are optional.

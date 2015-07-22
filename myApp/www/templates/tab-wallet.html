@@ -1,10 +1,8 @@
 <ion-view view-title="Wallet">
-    <ion-content>
-        <ion-list>
-            <button class="button button-block button-dark" ng-click="newCircle()" href="#/tab/socialcircle">
-        Start a New Social Circle
-        </button>
-        </ion-list>
+	<ion-nav-buttons side="secondary">
+      <a class="button button-icon icon ion-compose" ng-click="newCircle()"></a>
+    </ion-nav-buttons>
+    <ion-content ng-show="circles != 0">
         <ion-list>
             <ion-item class="item item-thumbnail-left item-text-wrap item-remove-animate item-icon-right" ng-repeat="circle in circles" href="#/tab/wallet/{{circle.circleID}}">
             	<img ng-src="{{circle.circlePhoto}}">
@@ -16,5 +14,10 @@
                 </ion-option-button>
             </ion-item>
         </ion-list>
+    </ion-content>
+    <ion-content ng-show="circles == 0" class="no-data">
+    	<h3 style="color: gray">
+			No Circles
+    	</h3>
     </ion-content>
 </ion-view>

@@ -1,5 +1,5 @@
 <ion-view view-title="Requests">
-    <ion-content>
+    <ion-content ng-show="circles != 0">
         <ion-list>
             <ion-item class="item item-thumbnail-left item-text-wrap" ng-repeat="circle in circles track by $index" href="#/tab/requests/{{circle.circleID}}">
             <img src="http://walletbuddies.co/img/NewLogo.png">
@@ -9,5 +9,10 @@
 				</button>
             </ion-item>
         </ion-list>
+    </ion-content>
+    <ion-content ng-show="circles == 0" class="no-data">
+    	<h3 style="color: gray">
+			No new requests
+    	</h3>
     </ion-content>
 </ion-view>
