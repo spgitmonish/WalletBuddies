@@ -192,12 +192,8 @@ angular.module('starter.controllers', [])
 						                "senderID": "456019050509" // Project number from GCM
 						            };
 								    $cordovaPush.register(androidConfig).then(function(deviceToken) {
-								      // Success -- send deviceToken to FireBase
-								      console.log("deviceToken: " + deviceToken);
-								      fbUser.update({
-									  	deviceToken : deviceToken,
-									  	device: "Android"
-	                            	  });
+								      // Success -- Registration ID is received in $notificationReceiver and sent to FireBase
+								      console.log("Success: " + deviceToken);
 								    }, function(err) {
 								      alert("Registration error: " + err);
 								    })
@@ -954,7 +950,7 @@ angular.module('starter.controllers', [])
         //$scope.$on('$ionicView.afterLeave', function(){
 	        $ionicHistory.clearCache();
 	        $ionicHistory.clearHistory();
-	        $ionicNavBarDelegate.showBackButton(false);
+	        //$ionicNavBarDelegate.showBackButton(false);
 	        console.log("History" + JSON.stringify($ionicHistory.viewHistory()));
 	        ref.unauth();
         //});

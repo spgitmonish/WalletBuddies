@@ -24,7 +24,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		      switch(notification.event) {
 		        case 'registered':
 		          if (notification.regid.length > 0 ) {
-		            alert('registration ID = ' + notification.regid);
+		              console.log('registration ID = ' + notification.regid);
+		              // Get a reference to the Firebase account
+					  var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+		              var fbUser = fbRef.child("Users").child($rootScope.fbAuthData.uid);
+		              fbUser.update({
+					  	deviceToken : notification.regid,
+					  	device: "Android"
+	            	  });
 		          }
 		          break;
 		
