@@ -42,3 +42,12 @@ myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node
 myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node_modules/chalk/node_modules/.bin/supports-color
 *.zip
 myApp/bower_components/*
+*.node
+*.obj
+*.lastbuildstate
+*.tlog
+*.pdb
+myApp/www/css/ionic.app.css
+myApp/www/css/ionic.app.css
+myApp/www/css/ionic.app.css
+*.css
