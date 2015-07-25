@@ -18,7 +18,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // org.apache.cordova.statusbar required
             StatusBar.styleDefault();
         }
-        // Listen and Display for New Push Notifications 
+        // Listen and Display for New Push Notifications
         $rootScope.$on('$cordovaPush:notificationReceived', function(event, notification) {
 	      if (ionic.Platform.isAndroid()) {
 		      switch(notification.event) {
@@ -47,7 +47,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		        default:
 		          alert('An unknown GCM event has occurred');
 		          break;
-		      }    
+		      }
 	      }
 	      else if (ionic.Platform.isIOS()) {
 		  	  if (notification.alert) {
@@ -65,7 +65,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		        }, function(err) {
 		          // An error occurred. Show a message to the user
 		        });
-		      }   
+		      }
 	      }
 	    });
     });
@@ -91,6 +91,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         url: '/signin',
         templateUrl: 'templates/signin.html',
         controller: 'SignInCtrl'
+    })
+
+    .state('forgotpassword', {
+        url: '/forgot-password',
+        templateUrl: 'templates/forgot-password.html',
+        controller: 'ForgotPassCtrl'
     })
 
     .state('signup', {
@@ -127,7 +133,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.wallet-detail', {
         url: '/wallet/:circleID',
         views: {
@@ -138,7 +144,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
 	
-	.state('tab.chat', {
+    .state('tab.chat', {
         url: '/chat?circleID',
         views: {
             'tab-wallet': {
@@ -148,7 +154,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
 	
-	.state('tab.settings', {
+    .state('tab.settings', {
         url: '/settings',
         views: {
             'tab-settings': {
@@ -156,6 +162,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
                 controller: 'SettingsCtrl'
             }
         }
+    })
+
+    .state('resetpassword', {
+        url: '/reset-password',
+        templateUrl: 'templates/reset-password.html',
+        controller: 'ResetPassCtrl'
     })
 	
     .state('tab.socialcircle', {
@@ -167,7 +179,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.requests', {
         url: '/requests',
         views: {
@@ -177,7 +189,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.requests-detail', {
         url: '/requests/:circleID',
         views: {
@@ -188,7 +200,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
 
-    .state('tab.friends', {
+    /*.state('tab.friends', {
         url: '/friends',
         views: {
             'tab-friends': {
@@ -196,7 +208,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
                 controller: 'FriendsCtrl'
             }
         }
-    })
+    })*/
 
     .state('tab.friend-detail', {
         url: '/friend/:friendId',
@@ -217,7 +229,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.choose-account', {
         url: '/choose-account',
         views: {
@@ -227,7 +239,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.kyc-details', {
         url: '/kyc-details',
         views: {
@@ -237,7 +249,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.kyc-questions', {
         url: '/kyc-questions',
         views: {
@@ -247,7 +259,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.auth-question', {
         url: '/auth-question',
         views: {
@@ -257,7 +269,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.auth-code', {
         url: '/auth-code',
         views: {
