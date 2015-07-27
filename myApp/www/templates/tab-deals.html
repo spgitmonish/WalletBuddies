@@ -1,0 +1,15 @@
+<ion-view view-title="Hangouts">
+    <ion-content>
+        <ion-list>
+            <ion-item class="item item-thumbnail-left item-text-wrap item-remove-animate item-icon-right" ng-repeat="deal in deals" href="#/tab/deals/{{deal.id}}">
+            	<img ng-src="{{deal.face}}">
+                </p><br><b>{{deal.name}}</b><br></p>
+                <p>{{deal.text}}</p>
+                <i class="icon ion-chevron-right icon-accessory"></i>
+                <ion-option-button class="button-assertive" ng-click="remove(chat)">
+                    Delete
+                </ion-option-button>
+            </ion-item>
+        </ion-list>
+    </ion-content>	
+</ion-view>

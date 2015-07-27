@@ -205,35 +205,41 @@ angular.module('starter.services', [])
 })
 
 //Plaid API factory ends here
-.factory('Chats', function() {
+
+.factory('Deals', function() {
     // Might use a resource here that returns a JSON array
 
     // Some fake testing data
     var chats = [{
         id: 0,
-        name: 'Ben Sparrow',
-        lastText: 'You on your way?',
-        face: 'https://pbs.twimg.com/profile_images/514549811765211136/9SgAuHeY.png'
+        name: 'Looney\'s Pub',
+        text: '$15 Weekly Happy Hour',
+        face: './img/lp.png'
     }, {
         id: 1,
-        name: 'Max Lynx',
-        lastText: 'Hey, it\'s me',
-        face: 'https://avatars3.githubusercontent.com/u/11214?v=3&s=460'
+        name: 'Board & Brew',
+        text: '$10 Bi-Weekly Games & Coffee',
+        face: './img/bb.png'
     }, {
         id: 2,
-        name: 'Andrew Jostlin',
-        lastText: 'Did you get the ice cream?',
-        face: 'https://pbs.twimg.com/profile_images/491274378181488640/Tti0fFVJ.jpeg'
+        name: 'Cornerstone',
+        text: '$15 Monthly Trivia Nights',
+        face: './img/cs.png'
     }, {
         id: 3,
-        name: 'Adam Bradleyson',
-        lastText: 'I should buy a boat',
-        face: 'https://pbs.twimg.com/profile_images/479090794058379264/84TKj_qa.jpeg'
+        name: 'Regal Cinemas',
+        text: '$8 Monthly Movie Wednesdays',
+        face: './img/regal.png'
     }, {
         id: 4,
-        name: 'Perry Governor',
-        lastText: 'Look at my mukluks!',
-        face: 'https://pbs.twimg.com/profile_images/491995398135767040/ie2Z_V6e.jpeg'
+        name: 'Maryland Adventure Program',
+        text: '$60 Monthly Camping & Hiking',
+        face: './img/map.png'
+    }, {
+        id: 5,
+        name: 'AMF Bowling Lanes',
+        text: '$15 Weekly Bowling Thursdays',
+        face: './img/amf.png'
     }];
 
     return {
@@ -257,36 +263,54 @@ angular.module('starter.services', [])
 /**
  * A simple example service that returns some data.
  */
-.factory('Friends', function() {
+.factory('DealsDetail', function() {
     // Might use a resource here that returns a JSON array
 
     // Some fake testing data
     // Some fake testing data
     var friends = [{
         id: 0,
-        name: 'Ben Sparrow',
-        notes: 'Enjoys drawing things',
-        face: 'https://pbs.twimg.com/profile_images/514549811765211136/9SgAuHeY.png'
+        
+        name: 'Happy Hour @ Looney\'s Pub',
+        company:'Looney\'s Pub',
+        amount: '15 Weekly',
+        what: 'Happy Hour every week at Looney\'s pub. Every member in your group gets 2 beers and an appetizer.',
+        face: './img/lp.png'
     }, {
         id: 1,
-        name: 'Max Lynx',
-        notes: 'Odd obsession with everything',
-        face: 'https://avatars3.githubusercontent.com/u/11214?v=3&s=460'
+        name: 'Games & Coffee @ Board & Brew',
+        company:'Board & Brew',
+        amount: '10 Bi-Weekly',
+        what: 'Come on over to Board and Brew any weekday and you to get to pick any board game with a coffee and a short eat.',
+        face: './img/bb.png'
     }, {
         id: 2,
-        name: 'Andrew Jostlen',
-        notes: 'Wears a sweet leather Jacket. I\'m a bit jealous',
-        face: 'https://pbs.twimg.com/profile_images/491274378181488640/Tti0fFVJ.jpeg'
+        name: 'Trivia Nights @ CornerStone',
+        company:'CornerStone',
+        amount: '15 Monthly',
+        what: 'Enjoy Trivia Nights with a pitcher of beer per person in your group.',
+        face: './img/cs.png'
     }, {
         id: 3,
-        name: 'Adam Bradleyson',
-        notes: 'I think he needs to buy a boat',
-        face: 'https://pbs.twimg.com/profile_images/479090794058379264/84TKj_qa.jpeg'
+        name: 'Movie Wednesdays @ Regal Cinemas',
+        company:'Regal Cinemas',
+        amount: '8 monthly',
+        what: 'Watch the latest blockbusters with free popcorn for your group at Regal Cinemas every first Wednesday of the month with this awesome deal.',
+        face: './img/regal.png'
     }, {
         id: 4,
-        name: 'Perry Governor',
-        notes: 'Just the nicest guy',
-        face: 'https://pbs.twimg.com/profile_images/491995398135767040/ie2Z_V6e.jpeg'
+        name: 'Camping & Hiking by Maryland Adventure Program',
+        company:'Maryland Adventure Program',
+        amount: '60 Monthly',
+        what: 'Get out and enjoy the outdoors by spending a weekend every month camping and hiking acoss the state.',
+        face: './img/map.png'
+    }, {
+        id: 5,
+        name: 'Thursday\'s @ AMF Bowling Lanes',
+        company:'AMF Bowling Lanes',
+        amount: '15 Weekly',
+        what: 'Bring your buddies to AMF every Thursdays for 3 rounds of bowling and a drink!',
+        face: './img/amf.png'
     }];
 
 

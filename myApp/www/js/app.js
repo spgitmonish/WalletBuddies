@@ -188,22 +188,22 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
 
-    .state('tab.friends', {
-        url: '/friends',
+    .state('tab.deals', {
+        url: '/deals',
         views: {
-            'tab-friends': {
-                templateUrl: 'templates/tab-friends.html',
-                controller: 'FriendsCtrl'
+            'tab-deals': {
+                templateUrl: 'templates/tab-deals.html',
+                controller: 'DealsCtrl'
             }
         }
     })
 
-    .state('tab.friend-detail', {
-        url: '/friend/:friendId',
+    .state('tab.deals-detail', {
+        url: '/deals/:dealid',
         views: {
-            'tab-friends': {
-                templateUrl: 'templates/friend-detail.html',
-                controller: 'FriendDetailCtrl'
+            'tab-deals': {
+                templateUrl: 'templates/deals-detail.html',
+                controller: 'DealsDetailCtrl'
             }
         }
     })

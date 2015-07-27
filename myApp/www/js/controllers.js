@@ -232,8 +232,8 @@ angular.module('starter.controllers', [])
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
         $scope.user = {
-            email: "sunku@fb.com",
-            password: "deepesh"
+            email: "john@boov.com",
+            password: "password"
         };
 
         // Called when the user clicks the "Sign In" button
@@ -1502,16 +1502,38 @@ angular.module('starter.controllers', [])
     };
 })
 
-.controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
-    $scope.chat = Chats.get($stateParams.chatId);
+.controller('DealsCtrl', function($scope, Deals) {
+    $scope.deals = Deals.all();
+    console.log("Hi");
 })
 
-.controller('FriendsCtrl', function($scope, Friends) {
-    $scope.friends = Friends.all();
-})
-
-.controller('FriendDetailCtrl', function($scope, $stateParams, Friends) {
-    $scope.friend = Friends.get($stateParams.friendId);
+.controller('DealsDetailCtrl', function($scope, $stateParams, DealsDetail, ContactsService, $state, $ionicPopup) {
+    $scope.deal = DealsDetail.get($stateParams.dealid);
+    
+    // For accessing the device's contacts
+    $scope.data = {
+        selectedContacts: []
+    };
+    $scope.pickContact = function() {
+        ContactsService.pickContact().then(
+            function(contact) {
+                $scope.data.selectedContacts.push(contact);
+                console.log(contact);
+            },
+            function(failure) {
+                console.log("Bummer. Failed to pick a contact");
+            }
+        );
+    }
+    
+    $scope.addGroup = function() {
+	    $ionicPopup.alert({
+            title: "Whooosh!",
+            template: "Your invites are one their way. :)"
+        });
+	    $state.go('tab.deals');
+    }
+    
 })
 
 .controller('HomeCtrl', function($scope, $rootScope, $firebaseArray) {
