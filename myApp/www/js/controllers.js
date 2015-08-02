@@ -702,7 +702,7 @@ angular.module('starter.controllers', [])
     var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
 
     // Get a reference to where the User's accepted circles are going to be stored
-    var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/");
+    var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 
     // Clear all the data
     fbUserAcceptedCircles.remove();
@@ -711,7 +711,7 @@ angular.module('starter.controllers', [])
     $scope.circles = $firebaseArray(fbUserAcceptedCircles);
 
     // Obtain list of circle IDs with a "true" status
-    // NOTE: This callback gets called on a 'child_removal'	event.
+    // NOTE: This callback gets called on a 'child_added'	event.
     fbCallback.childAdded(fbUserCircle, true, function(data) {
         console.log("Circles Id(accepted add): " + data.val().Status + data.key());
         var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
@@ -754,20 +754,30 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for wallet-detail page
-.controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, $ionicPopup) {
+.controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, $ionicPopup, $firebaseArray) {
     // Get a reference to the Firebase account
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
-    var names = [];
     var fbCircles = new Firebase(fbRef + "/Circles/" + $stateParams.circleID);
     var obj = $firebaseObject(fbCircles);
+    // Creare a link to a CircleMembers under this circle
+    var fbCircleMembers = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Members/" + $stateParams.circleID + "/CircleMembers/");
+
+    // Clear all the data
+    fbCircleMembers.remove();
+
+    // Update $scope.members
+    $scope.members = $firebaseArray(fbCircleMembers);
+
     obj.$loaded().then(function() {
         console.log("loaded record for CircleId:", obj.$id, obj.Members);
         // To iterate the key/value pairs of the object, use angular.forEach()
         angular.forEach(obj.Members, function(value, key) {
             fbRef.child("Users").child(key).once('value', function(data) {
-                names.push(data.val().firstname);
-                $scope.members = names;
-                console.log("names: ", names);
+                // Get the reference for the push
+                var fbCircleMembersPushRef = fbCircleMembers.push();
+
+                // Update the location(temporary cache)
+                fbCircleMembersPushRef.update({firstName: data.val().firstname});
             });
         })
     })
@@ -992,7 +1002,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tab-settings
-.controller('SettingsCtrl', function($scope, $ionicHistory, $ionicNavBarDelegate, $state, $rootScope) {
+.controller('SettingsCtrl', function($scope, $ionicHistory, $ionicNavBarDelegate, $state, $rootScope, $stateParams) {
     // Create a firebase reference
     var ref = new Firebase("https://walletbuddies.firebaseio.com");
 
