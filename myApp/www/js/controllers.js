@@ -246,7 +246,7 @@ angular.module('starter.controllers', [])
 
                         // Saving auth data to be used across controllers
                         $rootScope.fbAuthData = authData;
-
+						
                         // Hard coded to be false
                         if (false) {
                             var fbInvites = new Firebase(fbRef + "/Invites/" + token);
@@ -434,8 +434,13 @@ angular.module('starter.controllers', [])
             console.log("Before str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
             $scope.data.selectedContacts[i].phones[0].value = str.replace(/\D/g, '');
             console.log("After str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
-            var temp = parseInt($scope.data.selectedContacts[i].phones[0].value);
-            $scope.data.selectedContacts[i].phones[0].value = temp;
+            var temp = $scope.data.selectedContacts[i].phones[0].value;
+            // Removing 1 from the phone number 
+  			if (temp.length > 10){
+			    var temp_int = parseInt(temp.substring(1));
+			    console.log(" second temp_int =" + temp_int);
+			}
+            $scope.data.selectedContacts[i].phones[0].value = temp_int;
         }
 
         // Save data to a local var
