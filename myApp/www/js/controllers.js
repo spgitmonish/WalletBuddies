@@ -59,7 +59,7 @@ angular.module('starter.controllers', [])
                         }).then(function(authData) {
                             // This is all asynchronous
                             $rootScope.fbAuthData = authData;
-                            $rootScope.email = email;
+                            $rootScope.email = account.email;
 
                             console.log("Logged in as: " + authData.uid);
 
@@ -517,7 +517,7 @@ angular.module('starter.controllers', [])
             $scope.data.selectedContacts[i].phones[0].value = str.replace(/\D/g, '');
             console.log("After str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
             var temp = $scope.data.selectedContacts[i].phones[0].value;
-            // Removing 1 from the phone number 
+            // Removing 1 from the phone number
   			if (temp.length > 10){
 			    var temp_int = parseInt(temp.substring(1));
 			    console.log(" second temp_int =" + temp_int);
