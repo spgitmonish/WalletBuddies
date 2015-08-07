@@ -82,9 +82,9 @@ angular.module('starter.controllers', [])
                             // Converting string to integer
                             var temp = parseInt(account.phonenumber);
                             account.phonenumber = temp;
-                            console.log("Phones:   " + account.phonenumber);
+                            console.log("Phone:   " + account.phonenumber);
                             var id = hashids.encode(account.phonenumber);
-                            console.log("Hashids: " + hashids + id);
+                            console.log("ID after encode: " + id);
 
                             // Write the user's unique hash to registered users and save his UID
                             var fbHashRef = new Firebase(fbRef + "/RegisteredUsers/");
@@ -518,11 +518,11 @@ angular.module('starter.controllers', [])
             console.log("After str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
             var temp = $scope.data.selectedContacts[i].phones[0].value;
             // Removing 1 from the phone number
-  			if (temp.length > 10){
-			    var temp_int = parseInt(temp.substring(1));
-			    console.log(" second temp_int =" + temp_int);
-			}
-            $scope.data.selectedContacts[i].phones[0].value = temp_int;
+            /*if (temp.length > 10){
+                var temp_int = parseInt(temp.substring(1));
+                console.log(" second temp_int =" + temp_int);
+            }
+            $scope.data.selectedContacts[i].phones[0].value = temp_int;*/
         }
 
         // Save data to a local var
@@ -583,9 +583,11 @@ angular.module('starter.controllers', [])
             (function(i) {
                 // Use the secret key and set the id length to be 4
                 var hashids = new Hashids("SecretMonkey", 4);
-                console.log("Phones:   " + $scope.data.selectedContacts[i].phones[0].value);
-                var id = hashids.encode($scope.data.selectedContacts[i].phones[0].value);
-                console.log("Hashids: " + hashids + id);
+                console.log("HashID: " + hashids);
+                var temp = parseInt($scope.data.selectedContacts[i].phones[0].value);
+                console.log("Phones:   " + temp);
+                var id = hashids.encode(temp);
+                console.log("ID after encode: " + id);
 
                 // Get the link to the Registered User
                 var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
