@@ -182,6 +182,16 @@ angular.module('starter.controllers', [])
                             account.phonenumber = '';
                             account.password = '';
 
+                            // Get a reference to the NewsFeed of the user
+                            var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+                            var feedToPush = "Welcome to WalletBuddies, your account was succesfully set up!";
+
+                            // Append new data to this FB link
+                            fbNewsFeedRef.push({
+                                feed: feedToPush
+                            });
+
                             // Switch to the Wallet Tab
                             $state.go('tab.wallet');
 
@@ -678,6 +688,16 @@ angular.module('starter.controllers', [])
             template: "Your invites are one their way. :)"
         });
 
+        // Get a reference to the NewsFeed of the user
+        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+        var feedToPush = "You created a new social group " + groupName;
+
+        // Append new data to this FB link
+        fbNewsFeedRef.push({
+            feed: feedToPush
+        });
+
         // The data is ready, switch to the Wallet tab
         $state.go('tab.wallet');
     }
@@ -983,6 +1003,16 @@ angular.module('starter.controllers', [])
                 });
             }
         });
+
+         // Get a reference to the NewsFeed of the user
+        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+        var feedToPush = "You accepted an invite to the social circle: " + $scope.circle.circleName;
+
+        // Append new data to this FB link
+        fbNewsFeedRef.push({
+            feed: feedToPush
+        });
     }
 
     // Called when user clicks "Decline"
@@ -1004,6 +1034,17 @@ angular.module('starter.controllers', [])
                 text: "This message is to confirm that you have declined to join the Circle " + data.val().circleName + ". \n\n- WalletBuddies"
             });
         });
+
+         // Get a reference to the NewsFeed of the user
+        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+        var feedToPush = "You declined an invite to the social circle: " + $scope.circle.circleName;
+
+        // Append new data to this FB link
+        fbNewsFeedRef.push({
+            feed: feedToPush
+        });
+
         $state.go('tab.requests');
     }
 })
@@ -1206,6 +1247,7 @@ angular.module('starter.controllers', [])
 
     $scope.connect = function(user) {
         console.log("Bank ID: " + user.id);
+
         fbRef.child("Payments").once('value', function(data) {
             // $http post for Bank Login
             $http.post('https://sandbox.synapsepay.com/api/v3/node/add', {
@@ -1487,6 +1529,17 @@ angular.module('starter.controllers', [])
                     oid: payload.data.user._id.$oid,
                     clientid: payload.data.user.client.id
                 });
+
+                // Get a reference to the NewsFeed of the user
+                var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+                var feedToPush = "Your bank account was linked successfully!";
+
+                // Append new data to this FB link
+                fbNewsFeedRef.push({
+                    feed: feedToPush
+                });
+
                 $state.go("tab.settings");
             }).catch(function(err) {
                 console.log("Got an error in MFA - QuestionCtrl.");
@@ -1607,12 +1660,15 @@ angular.module('starter.controllers', [])
 })
 
 .controller('HomeCtrl', function($scope, $rootScope, $firebaseArray) {
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("Transactions");
-    // download the data from a Firebase database reference into a (pseudo read-only) array
-    // all server changes are applied in realtime
-    $scope.transactions = $firebaseArray(fbRef);
+    console.log("Home Ctrl");
+    // Get a reference to the NewsFeed of the user
+    var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
+    // Get only the last 25 feed messages
+    var fbLimitedFeed = fbNewsFeedRef.orderByChild("timestamp").limitToLast(25);
 
+    // Link to $scope to have 3-way data binding
+    $scope.newsfeed = $firebaseArray(fbLimitedFeed);
 })
 
 // Function to modify the email address to create a unique link based on the user
