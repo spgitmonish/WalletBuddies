@@ -1,5 +1,4 @@
 <ion-view class="messaging-view" view-title="Chat">
-
     <ion-content class="content-stable"
                  on-swipe-left="hideTime = false"
                  on-swipe-right="hideTime = true">
@@ -40,7 +39,8 @@
 
     <ion-footer-bar keyboard-attach class="bar-stable item-input-inset message-footer" keyboard-attach>
       <label class="item-input-wrapper">
-        <input type="text" placeholder="Type your message" ng-model="data.message" on-focus="inputUp()"/>
+        <input type="text" placeholder="Type your message" ng-model="data.message" detect-focus focusOnBlur="true"
+                   on-focus="scrollContentToBottom()" on-blur="scrollContentToBottom()"/>
       </label>
       <button class="button button-clear" ng-click="sendMessage()">
         Send

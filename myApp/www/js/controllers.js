@@ -59,7 +59,7 @@ angular.module('starter.controllers', [])
                         }).then(function(authData) {
                             // This is all asynchronous
                             $rootScope.fbAuthData = authData;
-                            $rootScope.email = email;
+                            //$rootScope.email = email;
 
                             console.log("Logged in as: " + authData.uid);
 
@@ -556,9 +556,10 @@ angular.module('starter.controllers', [])
             Status: true
         });
 
-        // Writing UserID under CircleID and set Status to true
+        // Writing UserID under CircleID and set Status to true and initialize notification counter badge to 0
         fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
-            Status: true
+            Status: true,
+            badgeCounter: 0
         });
 
         // Save the timestamp to trigger the circle-start-scheduler
@@ -694,7 +695,9 @@ angular.module('starter.controllers', [])
             }
         });
     };
-
+	
+	$scope.id = $rootScope.fbAuthData.uid;
+	console.log("IDesh: " + $scope.id);
     // Get a reference to the Firebase account
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
@@ -722,7 +725,7 @@ angular.module('starter.controllers', [])
             var acceptedCircleVal = output;
 
             // Get the reference for the push
-            var fbAcceptedCirclePushRef = fbUserAcceptedCircles.push();
+            var fbAcceptedCirclePushRef = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + data.key());
 
             // Update the location(temporary cache)
             fbAcceptedCirclePushRef.update(acceptedCircleVal);
@@ -739,13 +742,22 @@ angular.module('starter.controllers', [])
         // Obtain circle data for the pending circles
         fbCallback.fetch(fbCircles, function(output) {
             var acceptedCircleVal = output;
-
             // Check for the Pending Circle which went from Pending to Accepted/Rejected
             // and remove the corresponding entry in the "cache"
             fbUserAcceptedCircles.on('child_added', function(snapshot) {
                 if (snapshot.val().circleName == acceptedCircleVal.circleName) {
                     var fbAcceptedRemove = new Firebase(fbUserAcceptedCircles + "/" + snapshot.key());
                     console.log("Removal:" + fbAcceptedRemove);
+                    // Save chat badges before cache removal
+                    var obj = $firebaseObject(fbUserAcceptedCircles);
+                    obj.$loaded().then(function() {
+	                    angular.forEach(obj, function(value, key) {
+		                    console.log("deepesh is a monkey and badge counter =", value,key);
+		                    fbRef.child("Circles").child(key).child("Members").child($rootScope.fbAuthData.uid).update({
+			                    badgeCounter: value.Members[$rootScope.fbAuthData.uid].badgeCounter
+		                    })
+	                    });
+                    });
                     fbAcceptedRemove.remove();
                 }
             });
@@ -792,15 +804,31 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for chat
-.controller('ChatCtrl', function($scope, $stateParams, $rootScope, $timeout, $ionicScrollDelegate, $firebaseArray, $firebaseObject) {
+.controller('ChatCtrl', function($scope, $stateParams, $state, $rootScope, $timeout, $ionicScrollDelegate, $firebaseArray, $firebaseObject) {
     fbRef = new Firebase("https://walletbuddies.firebaseio.com/Circles/" + $stateParams.circleID + "/Messages/");
     // Create a synchronized array at the firebase reference
     $scope.messages = $firebaseArray(fbRef);
-
+	$scope.focusManager = { focusInputOnBlur: true };
     fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/").child($rootScope.fbAuthData.uid);
     // Create a synchronized array at the firebase reference
     var user = $firebaseObject(fbUser);
-
+	
+	// Updating chat badge counter
+	var ref = new Firebase("https://walletbuddies.firebaseio.com");
+	// Get a reference to where the User's accepted circles are going to be stored
+	var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+	fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+		fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+			badgeCounter: 0
+		})
+		ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+			badgeCounter: 0
+		})
+	});
+	
+	$scope.myGoBack = function() {
+		$state.go('tab.wallet');
+	}
     // Scroll down the content automatically
     $scope.$on('$ionicView.enter', function() {
         console.log('$ionicView.enter');
@@ -828,7 +856,9 @@ angular.module('starter.controllers', [])
             time: d,
             name: user.firstname
         });
-
+		
+		$ionicScrollDelegate.scrollBottom(true);
+		
         fbMembers = new Firebase("https://walletbuddies.firebaseio.com/Circles/").child($stateParams.circleID);
         fbPush = new Firebase("https://walletbuddies.firebaseio.com/");
         var obj = $firebaseObject(fbMembers);
@@ -837,12 +867,20 @@ angular.module('starter.controllers', [])
             // To iterate the key/value pairs of the object, use angular.forEach()
             angular.forEach(obj.Members, function(value, key) {
                 console.log("key and value pair: " + value + key);
-                fbPush.child('Users').child($rootScope.fbAuthData.uid).on('value', function(name) {
-                    fbPush.child('PushNotifications').push({
-                        uid: key,
-                        message: name.val().firstname + ' @ ' + obj.circleName + ': ' + $scope.data.message
-                    });
-                });
+                if ($rootScope.fbAuthData.uid == key) {
+	                //do nothing
+	                console.log("Doing nothing to me");
+                }
+                else {
+	            	fbPush.child('Users').child($rootScope.fbAuthData.uid).on('value', function(name) {
+	                    fbPush.child('PushNotifications').push({
+	                        uid: key,
+	                        message: name.val().firstname + ' @ ' + obj.circleName + ': ' + $scope.data.message,
+	                        payload: $stateParams.circleID,
+	                        tab: "chat"
+	                    });
+	                });    
+                }
             });
             delete $scope.data.message;
         })
@@ -960,9 +998,10 @@ angular.module('starter.controllers', [])
         fbUser.once("value", function(data) {
             // Check if user's bank account is linked and KYC info verified before the user can accept an invite
             if (data.child("Payments/Bank").exists() && data.child("Payments/KYC").exists()) {
-                // Change Status of the circle to "true"
+                // Change Status of the circle to "true" and initializing notification badge to 0
                 fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-                    Status: true
+                    Status: true,
+                    badgeCounter: 0
                 });
 
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({

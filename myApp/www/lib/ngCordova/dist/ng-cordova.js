@@ -5323,6 +5323,7 @@ angular.module('ngCordova.plugins.push', [])
   .factory('$cordovaPush', ['$q', '$window', '$rootScope', '$timeout', function ($q, $window, $rootScope, $timeout) {
     return {
       onNotification: function (notification) {
+	    console.log("onNotif: ng-c");
         $timeout(function () {
           $rootScope.$broadcast('$cordovaPush:notificationReceived', notification);
         });

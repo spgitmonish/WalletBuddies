@@ -4,10 +4,11 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'firebase', 'email'])
 
-.run(function($ionicPlatform, $state, $rootScope) {
-    $ionicPlatform.ready(function() {
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'firebase', 'email', 'cgNotify'])
+
+.run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify) {
+    return $ionicPlatform.ready(function() {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
         if (window.cordova && window.cordova.plugins.Keyboard) {
@@ -18,13 +19,40 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // org.apache.cordova.statusbar required
             StatusBar.styleDefault();
         }
+        
+        if (ionic.Platform.isAndroid()) {
+            androidConfig = {
+                "senderID": "456019050509" // Project number from GCM
+            };
+            $cordovaPush.register(androidConfig).then(function(deviceToken) {
+                // Success -- Registration ID is received in $notificationReceiver and sent to FireBase
+                console.log("Registration success app.js");
+            }, function(err) {
+                alert("Registration error: " + err);
+            })
+        } else if (ionic.Platform.isIOS()) {
+            var iosConfig = {
+                "badge": true,
+                "sound": true,
+                "alert": true,
+            };
+            $cordovaPush.register(iosConfig).then(function(deviceToken) {
+                // Success -- send deviceToken to FireBase
+                console.log("Registration success app.js");
+            }, function(err) {
+                alert("Registration error: " + err);
+            });
+        }
+
         // Listen and Display for New Push Notifications
-        $rootScope.$on('$cordovaPush:notificationReceived', function(event, notification) {
+        return $rootScope.$on('$cordovaPush:notificationReceived', function(event, notification) {
+	        console.log("Notification : " + JSON.stringify(notification));
 	      if (ionic.Platform.isAndroid()) {
 		      switch(notification.event) {
 		        case 'registered':
 		          if (notification.regid.length > 0 ) {
 		              console.log('registration ID = ' + notification.regid);
+		              alert("Device Registered for Push ");
 		              // Get a reference to the Firebase account
 					  var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 		              var fbUser = fbRef.child("Users").child($rootScope.fbAuthData.uid);
@@ -50,25 +78,139 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		      }
 	      }
 	      else if (ionic.Platform.isIOS()) {
-		  	  if (notification.alert) {
-		  	  	navigator.notification.alert(notification.alert);
+		      console.log("Notification : " + JSON.stringify(notification));
+		      // Push Notifications for when app is in the foreground
+		      if (notification.foreground == "1") {
+				if (notification.tab == "requests"){
+					var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
+					notify({
+				        messageTemplate: messageTemplate
+				    });
+				    $rootScope.clickedNotification = function(){
+				        notify.closeAll();
+				        $state.go('tab.requests', {
+				            circleID: notification.url
+				        });
+				    };     
+				}
+				else if (notification.tab == "chat"){
+					// Updating chat badge counter
+					var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+					// Get a reference to where the User's accepted circles are going to be stored
+					var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+					fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+						var counter = data.val().badgeCounter + 1;
+						$rootScope.walletBadge = $rootScope.walletBadge + counter;
+						console.log("Badge counter " + counter);
+						fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
+							badgeCounter: counter
+						})
+						fbRef.child("Circles").child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
+							badgeCounter: counter
+						})
+					});
+					// To display Banner Notifications
+				    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
+					notify({
+				        messageTemplate: messageTemplate
+				    });
+				    $rootScope.clickedNotification = function(){
+				        notify.closeAll();
+				        $state.go('tab.chat', {
+				            circleID: notification.url
+				        });
+				    };
+				}
+			
+			    if (notification.sound) {
+			        var snd = new Media(event.sound);
+			        snd.play();
+			    }
+			
+			    if (notification.badge) {
+			        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+			          // Success!
+			        }, function(err) {
+			          // An error occurred. Show a message to the user
+			        });
+			    }
 		      }
-		
-		      if (notification.sound) {
-		        var snd = new Media(event.sound);
-		        snd.play();
-		      }
-		
-		      if (notification.badge) {
-		        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
-		          // Success!
-		        }, function(err) {
-		          // An error occurred. Show a message to the user
-		        });
+		      else if (notification.foreground == "0"){ // if app is not open just go to page
+		        if (notification.tab == "requests"){
+					var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
+					notify({
+				        messageTemplate: messageTemplate
+				    });
+				    $rootScope.clickedNotification = function(){
+				        notify.closeAll();
+				        $state.go('tab.requests', {
+				            circleID: notification.url
+				        });
+				    };     
+				}
+				else if (notification.tab == "chat"){
+					// Updating chat badge counter
+					var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+					// Get a reference to where the User's accepted circles are going to be stored
+					var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+					fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+						var counter = data.val().badgeCounter + 1;
+						$rootScope.walletBadge = $rootScope.walletBadge + counter;
+						fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
+							badgeCounter: counter
+						})
+						fbRef.child("Circles").child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
+							badgeCounter: counter
+						})
+					});
+					// To display Banner Notifications
+				    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
+					notify({
+				        messageTemplate: messageTemplate
+				    });
+				    $rootScope.clickedNotification = function(){
+				        notify.closeAll();
+				        $state.go('tab.chat', {
+				            circleID: notification.url
+				        });
+				    };
+				}
+				
+			    if (notification.badge) {
+			        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+			          // Success!
+			        }, function(err) {
+			          // An error occurred. Show a message to the user
+			        });
+			    }
 		      }
 	      }
 	    });
     });
+})
+
+.directive("detectFocus", function () {
+    return {
+        restrict: "A",
+        scope: {
+            onFocus: '&onFocus',
+            onBlur: '&onBlur',
+            focusOnBlur: '=focusOnBlur'
+        },
+        link: function (scope, elem) {
+
+            elem.on("focus", function () {
+                scope.onFocus();
+                scope.focusOnBlur = true;  //note the reassignment here, reason why I set '=' instead of '@' above.
+            });
+
+            elem.on("blur", function () {
+                scope.onBlur();
+                if (scope.focusOnBlur)
+                    elem[0].focus();
+            });
+        }
+    }
 })
 
 .config(function($stateProvider, $urlRouterProvider) {

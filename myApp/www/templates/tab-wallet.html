@@ -8,10 +8,12 @@
             	<img ng-src="{{circle.circlePhoto}}">
                 </p><br><b>{{circle.circleName}}</b><br></p>
                 <p>${{circle.amount}} {{circle.plan}}</p>
+                
                 <i class="icon ion-chevron-right icon-accessory"></i>
                 <ion-option-button class="button-assertive" ng-click="remove(chat)">
                     Delete
                 </ion-option-button>
+                <span ng-if="circle.Members[id].badgeCounter !== 0" class="badge badge-dark">{{circle.Members[id].badgeCounter}}</span>
             </ion-item>
         </ion-list>
     </ion-content>

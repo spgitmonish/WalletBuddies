@@ -4,5 +4,8 @@
   "devDependencies": {
     "ionic": "driftyco/ionic-bower#1.0.0-beta.14",
     "platform": "~1.3.0"
+  },
+  "dependencies": {
+    "angular-notify": "~2.5.0"
   }
 }
