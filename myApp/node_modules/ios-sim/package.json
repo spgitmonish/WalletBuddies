@@ -1,0 +1,68 @@
+{
+  "name": "ios-sim",
+  "version": "4.1.1",
+  "os": [
+    "darwin"
+  ],
+  "preferGlobal": "true",
+  "description": "launch iOS apps into the iOS Simulator from the command line (Xcode 6.0+)",
+  "main": "ios-sim",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phonegap/ios-sim"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "keywords": [
+    "ios-sim",
+    "iOS Simulator"
+  ],
+  "bin": {
+    "ios-sim": "./bin/ios-sim"
+  },
+  "bugs": {
+    "url": "https://github.com/phonegap/ios-sim/issues"
+  },
+  "author": {
+    "name": "Shazron Abdullah"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "simctl": "^0.0.6",
+    "nopt": "1.0.9",
+    "bplist-parser": "^0.0.6"
+  },
+  "gitHead": "a0f2e2d8e4deca377b70041f3cbb2a529f6fa5e5",
+  "homepage": "https://github.com/phonegap/ios-sim",
+  "_id": "ios-sim@4.1.1",
+  "scripts": {},
+  "_shasum": "3458eca5e5d5e97ae11f19e35f6768584dcbf7cd",
+  "_from": "ios-sim@*",
+  "_npmVersion": "2.5.1",
+  "_nodeVersion": "0.12.0",
+  "_npmUser": {
+    "name": "shazron",
+    "email": "shazron@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "shazron",
+      "email": "shazron@gmail.com"
+    },
+    {
+      "name": "purplecabbage",
+      "email": "purplecabbage@gmail.com"
+    },
+    {
+      "name": "stevegill",
+      "email": "stevengill97@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "3458eca5e5d5e97ae11f19e35f6768584dcbf7cd",
+    "tarball": "http://registry.npmjs.org/ios-sim/-/ios-sim-4.1.1.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/ios-sim/-/ios-sim-4.1.1.tgz"
+}

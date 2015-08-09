@@ -59,7 +59,11 @@ angular.module('starter.controllers', [])
                         }).then(function(authData) {
                             // This is all asynchronous
                             $rootScope.fbAuthData = authData;
+<<<<<<< HEAD
                             //$rootScope.email = email;
+=======
+                            $rootScope.email = account.email;
+>>>>>>> origin/master
 
                             console.log("Logged in as: " + authData.uid);
 
@@ -82,9 +86,9 @@ angular.module('starter.controllers', [])
                             // Converting string to integer
                             var temp = parseInt(account.phonenumber);
                             account.phonenumber = temp;
-                            console.log("Phones:   " + account.phonenumber);
+                            console.log("Phone:   " + account.phonenumber);
                             var id = hashids.encode(account.phonenumber);
-                            console.log("Hashids: " + hashids + id);
+                            console.log("ID after encode: " + id);
 
                             // Write the user's unique hash to registered users and save his UID
                             var fbHashRef = new Firebase(fbRef + "/RegisteredUsers/");
@@ -181,6 +185,16 @@ angular.module('starter.controllers', [])
                             account.email = '';
                             account.phonenumber = '';
                             account.password = '';
+
+                            // Get a reference to the NewsFeed of the user
+                            var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+                            var feedToPush = "Welcome to WalletBuddies, your account was succesfully set up!";
+
+                            // Append new data to this FB link
+                            fbNewsFeedRef.push({
+                                feed: feedToPush
+                            });
 
                             // Switch to the Wallet Tab
                             $state.go('tab.wallet');
@@ -322,7 +336,7 @@ angular.module('starter.controllers', [])
                         $rootScope.fbAuthData = authData;
                         $rootScope.email = email;
 
-                        // Hard coded to be false
+                      // Hard coded to be false
                         if (false) {
                             var fbInvites = new Firebase(fbRef + "/Invites/" + token);
                             console.log("Token Hmmm: " + token);
@@ -516,8 +530,13 @@ angular.module('starter.controllers', [])
             console.log("Before str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
             $scope.data.selectedContacts[i].phones[0].value = str.replace(/\D/g, '');
             console.log("After str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
-            var temp = parseInt($scope.data.selectedContacts[i].phones[0].value);
-            $scope.data.selectedContacts[i].phones[0].value = temp;
+            var temp = $scope.data.selectedContacts[i].phones[0].value;
+            // Removing 1 from the phone number
+            /*if (temp.length > 10){
+                var temp_int = parseInt(temp.substring(1));
+                console.log(" second temp_int =" + temp_int);
+            }
+            $scope.data.selectedContacts[i].phones[0].value = temp_int;*/
         }
 
         // Save data to a local var
@@ -579,9 +598,11 @@ angular.module('starter.controllers', [])
             (function(i) {
                 // Use the secret key and set the id length to be 4
                 var hashids = new Hashids("SecretMonkey", 4);
-                console.log("Phones:   " + $scope.data.selectedContacts[i].phones[0].value);
-                var id = hashids.encode($scope.data.selectedContacts[i].phones[0].value);
-                console.log("Hashids: " + hashids + id);
+                console.log("HashID: " + hashids);
+                var temp = parseInt($scope.data.selectedContacts[i].phones[0].value);
+                console.log("Phones:   " + temp);
+                var id = hashids.encode(temp);
+                console.log("ID after encode: " + id);
 
                 // Get the link to the Registered User
                 var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
@@ -670,6 +691,16 @@ angular.module('starter.controllers', [])
         $ionicPopup.alert({
             title: "Whooosh!",
             template: "Your invites are one their way. :)"
+        });
+
+        // Get a reference to the NewsFeed of the user
+        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+        var feedToPush = "You created a new social group " + groupName;
+
+        // Append new data to this FB link
+        fbNewsFeedRef.push({
+            feed: feedToPush
         });
 
         // The data is ready, switch to the Wallet tab
@@ -1015,6 +1046,16 @@ angular.module('starter.controllers', [])
                 });
             }
         });
+
+         // Get a reference to the NewsFeed of the user
+        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+        var feedToPush = "You accepted an invite to the social circle: " + $scope.circle.circleName;
+
+        // Append new data to this FB link
+        fbNewsFeedRef.push({
+            feed: feedToPush
+        });
     }
 
     // Called when user clicks "Decline"
@@ -1036,6 +1077,17 @@ angular.module('starter.controllers', [])
                 text: "This message is to confirm that you have declined to join the Circle " + data.val().circleName + ". \n\n- WalletBuddies"
             });
         });
+
+         // Get a reference to the NewsFeed of the user
+        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+        var feedToPush = "You declined an invite to the social circle: " + $scope.circle.circleName;
+
+        // Append new data to this FB link
+        fbNewsFeedRef.push({
+            feed: feedToPush
+        });
+
         $state.go('tab.requests');
     }
 })
@@ -1238,6 +1290,7 @@ angular.module('starter.controllers', [])
 
     $scope.connect = function(user) {
         console.log("Bank ID: " + user.id);
+
         fbRef.child("Payments").once('value', function(data) {
             // $http post for Bank Login
             $http.post('https://sandbox.synapsepay.com/api/v3/node/add', {
@@ -1519,6 +1572,17 @@ angular.module('starter.controllers', [])
                     oid: payload.data.user._id.$oid,
                     clientid: payload.data.user.client.id
                 });
+
+                // Get a reference to the NewsFeed of the user
+                var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+                var feedToPush = "Your bank account was linked successfully!";
+
+                // Append new data to this FB link
+                fbNewsFeedRef.push({
+                    feed: feedToPush
+                });
+
                 $state.go("tab.settings");
             }).catch(function(err) {
                 console.log("Got an error in MFA - QuestionCtrl.");
@@ -1639,12 +1703,15 @@ angular.module('starter.controllers', [])
 })
 
 .controller('HomeCtrl', function($scope, $rootScope, $firebaseArray) {
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("Transactions");
-    // download the data from a Firebase database reference into a (pseudo read-only) array
-    // all server changes are applied in realtime
-    $scope.transactions = $firebaseArray(fbRef);
+    console.log("Home Ctrl");
+    // Get a reference to the NewsFeed of the user
+    var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
+    // Get only the last 25 feed messages
+    var fbLimitedFeed = fbNewsFeedRef.orderByChild("timestamp").limitToLast(25);
 
+    // Link to $scope to have 3-way data binding
+    $scope.newsfeed = $firebaseArray(fbLimitedFeed);
 })
 
 // Function to modify the email address to create a unique link based on the user

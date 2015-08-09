@@ -22,12 +22,6 @@ myApp/hooks/after_platform_add/010_install_plugins.js
 myApp/hooks/after_plugin_add/010_register_plugin.js
 
 myApp/hooks/after_plugin_rm/010_deregister_plugin.js
-<<<<<<< HEAD
-*.json
-=======
-
-myApp/npm-debug.log
->>>>>>> 5b2903ad039c653a485cec5ca10aa07f88491a8d
 
 myApp/node_modules/sendgrid/node_modules/.bin/mime
 
@@ -51,4 +45,4 @@ myApp/www/css/ionic.app.css
 myApp/www/css/ionic.app.css
 myApp/www/css/ionic.app.css
 *.css
-myApp/node_modules/express/node_modules/send/node_modules/.bin/mime
+
