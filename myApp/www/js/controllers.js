@@ -59,11 +59,7 @@ angular.module('starter.controllers', [])
                         }).then(function(authData) {
                             // This is all asynchronous
                             $rootScope.fbAuthData = authData;
-<<<<<<< HEAD
-                            //$rootScope.email = email;
-=======
                             $rootScope.email = account.email;
->>>>>>> origin/master
 
                             console.log("Logged in as: " + authData.uid);
 
@@ -910,7 +906,7 @@ angular.module('starter.controllers', [])
 	                        payload: $stateParams.circleID,
 	                        tab: "chat"
 	                    });
-	                });    
+	                });
                 }
             });
             delete $scope.data.message;
