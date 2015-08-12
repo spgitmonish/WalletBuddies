@@ -19,7 +19,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // org.apache.cordova.statusbar required
             StatusBar.styleDefault();
         }
-        
+
         if (ionic.Platform.isAndroid()) {
             androidConfig = {
                 "senderID": "456019050509" // Project number from GCM
@@ -91,7 +91,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				        $state.go('tab.requests', {
 				            circleID: notification.url
 				        });
-				    };     
+				    };
 				}
 				else if (notification.tab == "chat"){
 					// Updating chat badge counter
@@ -146,7 +146,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				        $state.go('tab.requests', {
 				            circleID: notification.url
 				        });
-				    };     
+				    };
 				}
 				else if (notification.tab == "chat"){
 					// Updating chat badge counter
@@ -310,6 +310,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         url: '/reset-password',
         templateUrl: 'templates/reset-password.html',
         controller: 'ResetPassCtrl'
+    })
+
+    .state('surveypage', {
+        url: '/survey-page',
+        templateUrl: 'templates/survey-page.html',
+        controller: 'SurveyPageCtrl'
     })
 	
     .state('tab.socialcircle', {
