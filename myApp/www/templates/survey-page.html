@@ -1,0 +1,29 @@
+<ion-view view-title="Survey">
+    <ion-content padding="true">
+        <div class="list">
+            <H3>{{ questionList[0].text }}</H3>
+            <ion-radio name="question1" ng-repeat="item in answer1List" ng-value="item.value" ng-model="question1.answer" ng-change="questionChosen1(item)">
+                {{ item.text }}
+            </ion-radio>
+            <H3>{{ questionList[1].text }}</H3>
+            <ion-radio name="question2" ng-repeat="item in answer2List" ng-value="item.value" ng-model="question2.answer" ng-change="questionChosen2(item)">
+                {{ item.text }}
+            </ion-radio>
+            <H3>{{ questionList[2].text }}</H3>
+            <ion-radio name="question3" ng-repeat="item in answer3List" ng-value="item.value" ng-model="question3.answer" ng-change="questionChosen3(item)">
+                {{ item.text }}
+            </ion-radio>
+            <H3>{{ questionList[3].text }}</H3>
+            <ion-radio name="question4" ng-repeat="item in answer4List" ng-value="item.value" ng-model="question4.answer" ng-change="questionChosen4(item)">
+                {{ item.text }}
+            </ion-radio>
+            <H3>{{ questionList[4].text }}</H3>
+            <ion-radio name="question5" ng-repeat="item in answer5List" ng-value="item.value" ng-model="question5.answer" ng-change="questionChosen5(item)">
+                {{ item.text }}
+            </ion-radio>
+        </div>
+        <button class="button button-block button-positive" ng-click="submitSurvey()">
+            Done!
+        </button>
+    </ion-content>
+</ion-view>

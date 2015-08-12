@@ -57,7 +57,7 @@ angular.module('starter.controllers', [])
                             email: account.email,
                             password: account.password
                         }).then(function(authData) {
-                            // This is all asynchronous
+                            // Store information for easier access across controllers
                             $rootScope.fbAuthData = authData;
                             $rootScope.email = account.email;
 
@@ -72,7 +72,8 @@ angular.module('starter.controllers', [])
                                 firstname: account.firstname,
                                 lastname: account.lastname,
                                 email: account.email,
-                                phonenumber: account.phonenumber
+                                phonenumber: account.phonenumber,
+                                survey: false
                             });
 
                             // Create user's unique Hash and save under the Registered Users folder
@@ -175,6 +176,7 @@ angular.module('starter.controllers', [])
                                 console.log("An error occured while communicating with Synapse");
                                 console.log(JSON.stringify(err));
                             });
+
                             // Clear the form
                             account.firstname = '';
                             account.lastname = '';
@@ -288,6 +290,7 @@ angular.module('starter.controllers', [])
         });
     }
 })
+
 
 // Controller for Sign In
 .controller('SignInCtrl', ['$scope', '$state', '$rootScope', 'fbCallback',
@@ -900,7 +903,7 @@ angular.module('starter.controllers', [])
 	                        payload: $stateParams.circleID,
 	                        tab: "chat"
 	                    });
-	                });    
+	                });
                 }
             });
             delete $scope.data.message;
@@ -1083,9 +1086,9 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tab-settings
-.controller('SettingsCtrl', function($scope, $ionicHistory, $ionicNavBarDelegate, $state, $rootScope, $stateParams) {
+.controller('SettingsCtrl', function($scope, $ionicHistory, $ionicNavBarDelegate, $state, $rootScope, $stateParams, $ionicPopup) {
     // Create a firebase reference
-    var ref = new Firebase("https://walletbuddies.firebaseio.com");
+    var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
 
     // Go to tab-account
     $scope.account = function() {
@@ -1101,26 +1104,160 @@ angular.module('starter.controllers', [])
     // Signout from the app
     $scope.signOut = function() {
         // Get a reference to where the User's pending circles are going to be stored
-        var fbUserPendingCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/");
+        var fbUserPendingCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/");
 
         // Delete all the pending circles cached data
         fbUserPendingCircles.remove();
 
         // Get a reference to where the User's accepted circles are going to be stored
-        var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/");
+        var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/");
 
         // Delete all the accepted circles cached data
         fbUserAcceptedCircles.remove();
 
         $state.go('launch');
-        //$scope.$on('$ionicView.afterLeave', function(){
         $ionicHistory.clearCache();
         $ionicHistory.clearHistory();
-        //$ionicNavBarDelegate.showBackButton(false);
         console.log("History" + JSON.stringify($ionicHistory.viewHistory()));
-        ref.unauth();
-        //});
+        fbRef.unauth();
     };
+
+    // Called when the user clicks the "Reset Password" button
+    $scope.survey = function() {
+        fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
+            // If the user hasn't answered the survey page, take them to the survey page
+            if( userData.val().survey === false ){
+                // Go to the survey page
+                $state.go('surveypage');
+            }
+            else{
+                $ionicPopup.alert({
+                    title: "Thanks!",
+                    template: "You have already completed our survey :)"
+                });
+            }
+        });
+    }
+})
+
+// Controller for Reset Password
+.controller('SurveyPageCtrl', function($scope, $state, $rootScope, fbCallback, $ionicPopup) {
+    // Create a firebase reference
+    var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+
+    console.log("SurveyPageCtrl");
+
+    $scope.questionList = [
+        { text: "How big was your Savings Circle?", value: "Question1" },
+        { text: "Which plan did you select for the Social Circle?", value: "Question2" },
+        { text: "What was the amount selected for the Social Circle?", value: "Question3" },
+        { text: "What did you spend the money on after you got your share?", value: "Question4" },
+        { text: "If you had an option on our app to spend the money you got paid from your circle? Would you be willing to use it? Similar to the credit card cashback redeem option. ", value: "Question5" },
+    ]
+
+    $scope.answer1List = [
+        { text: "1-3", value: "1-3" },
+        { text: "4-6", value: "4-6" },
+        { text: "7-10", value: "7-10" },
+        { text: "11-15", value: "11-15" },
+        { text: "15 or more", value: "15 or more" }
+    ];
+
+    $scope.answer2List = [
+        { text: "Daily", value: "Daily" },
+        { text: "Weekly", value: "Weekly" },
+        { text: "Biweekly", value: "Biweekly" },
+        { text: "Monthly", value: "Monthly" }
+    ];
+
+    $scope.answer3List = [
+        { text: "1-10", value: "1-10" },
+        { text: "11-19", value: "11-19" },
+        { text: "20-29", value: "20-29" },
+        { text: "30-59", value: "30-59" },
+        { text: "60-99", value: "60-99" },
+        { text: "100 or more", value: "100 or more" }
+    ];
+
+    $scope.answer4List = [
+        { text: "Savings", value: "Savings" },
+        { text: "Online Shopping", value: "Online Shopping" },
+        { text: "Travel", value: "Travel" },
+        { text: "Food", value: "Food" },
+        { text: "Investments", value: "Investments" },
+        { text: "Gift Cards", value: "Gift Cards" },
+        { text: "Other", value: "Other" }
+    ];
+
+    $scope.answer5List = [
+        { text: "Yes", value: "Yes" },
+        { text: "No", value: "No" },
+        { text: "May be", value: "May be" }
+    ];
+
+    $scope.question1 = {
+        answer: 'ng'
+    };
+
+    $scope.question2 = $scope.question3 = $scope.question4 = $scope.question5;
+
+    $scope.questionChosen1 = function(item) {
+        $scope.question1 = {
+            answer: item.value
+        };
+        console.log("Answer(1) to be store:",$scope.question1.answer );
+    }
+
+    $scope.questionChosen2 = function(item) {
+        $scope.question2 = {
+            answer: item.value
+        };
+        console.log("Answer(2) to be store:",$scope.question2.answer );
+    }
+
+    $scope.questionChosen3 = function(item) {
+        $scope.question3 = {
+            answer: item.value
+        };
+        console.log("Answer(3) to be store:",$scope.question3.answer );
+    }
+
+    $scope.questionChosen4 = function(item) {
+        $scope.question4 = {
+            answer: item.value
+        };
+        console.log("Answer(4) to be store:",$scope.question4.answer );
+    }
+
+    $scope.questionChosen5 = function(item) {
+        $scope.question5 = {
+            answer: item.value
+        };
+        console.log("Answer(5) to be store:",$scope.question5.answer );
+    }
+
+    $scope.submitSurvey = function(){
+        // Get the Firebase link for this user
+        var fbUser = fbRef.child("Users").child($rootScope.fbAuthData.uid);
+
+        // Store the user information
+        fbUser.update({
+            survey: true
+        });
+
+        var fbUserSurveyResults = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/SurveyResults/");
+
+        // Store the survey information
+        fbUserSurveyResults.update({
+            question1: $scope.question1.answer,
+            question2: $scope.question2.answer,
+            question3: $scope.question3.answer,
+            question4: $scope.question4.answer,
+            question5: $scope.question5.answer
+        });
+
+        $state.go("tab.settings");
+    }
 })
 
 // Controller for tabs
