@@ -1,8 +1,12 @@
-<ion-view class="messaging-view" view-title="Chat">
+<ion-view class="messaging-view" hide-back-button="false" view-title="Chat">
+	<ion-nav-bar class="bar-balanced">
+	  <ion-nav-back-button ng-click="goBack()">
+	  	Wallet
+	  </ion-nav-back-button>
+	</ion-nav-bar>
     <ion-content class="content-stable"
                  on-swipe-left="hideTime = false"
                  on-swipe-right="hideTime = true">
-
       <div ng-repeat="message in messages" class="message-wrapper">
 	  	<div ng-if="uid !== message.userId">
 	
@@ -37,10 +41,9 @@
 
 	</ion-content>
 
-    <ion-footer-bar keyboard-attach class="bar-stable item-input-inset message-footer" keyboard-attach>
+    <ion-footer-bar keyboard-attach class="bar-stable item-input-inset message-footer">
       <label class="item-input-wrapper">
-        <input type="text" placeholder="Type your message" ng-model="data.message" detect-focus focusOnBlur="true"
-                   on-focus="scrollContentToBottom()" on-blur="scrollContentToBottom()"/>
+        <input type="text" placeholder="Type your message" ng-model="data.message" is-focused="false"/>
       </label>
       <button class="button button-clear" ng-click="sendMessage()">
         Send

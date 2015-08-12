@@ -59,11 +59,7 @@ angular.module('starter.controllers', [])
                         }).then(function(authData) {
                             // This is all asynchronous
                             $rootScope.fbAuthData = authData;
-<<<<<<< HEAD
-                            //$rootScope.email = email;
-=======
                             $rootScope.email = account.email;
->>>>>>> origin/master
 
                             console.log("Logged in as: " + authData.uid);
 
@@ -628,7 +624,10 @@ angular.module('starter.controllers', [])
                             fbName = output.firstname;
                             fbRef.child('PushNotifications').push({
                                 uid: data.uid,
-                                message: fbName + " has invited you to form a Circle on WalletBuddies."
+                                message: fbName + " has invited you to form a Circle on WalletBuddies.",
+                                payload: groupID,
+								tab: "requests"
+
                             });
                         });
                     }
@@ -779,16 +778,6 @@ angular.module('starter.controllers', [])
                 if (snapshot.val().circleName == acceptedCircleVal.circleName) {
                     var fbAcceptedRemove = new Firebase(fbUserAcceptedCircles + "/" + snapshot.key());
                     console.log("Removal:" + fbAcceptedRemove);
-                    // Save chat badges before cache removal
-                    var obj = $firebaseObject(fbUserAcceptedCircles);
-                    obj.$loaded().then(function() {
-	                    angular.forEach(obj, function(value, key) {
-		                    console.log("deepesh is a monkey and badge counter =", value,key);
-		                    fbRef.child("Circles").child(key).child("Members").child($rootScope.fbAuthData.uid).update({
-			                    badgeCounter: value.Members[$rootScope.fbAuthData.uid].badgeCounter
-		                    })
-	                    });
-                    });
                     fbAcceptedRemove.remove();
                 }
             });
@@ -835,7 +824,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for chat
-.controller('ChatCtrl', function($scope, $stateParams, $state, $rootScope, $timeout, $ionicScrollDelegate, $firebaseArray, $firebaseObject) {
+.controller('ChatCtrl', function($scope, $stateParams, $state, $rootScope, $ionicNavBarDelegate, $timeout, $ionicScrollDelegate, $firebaseArray, $firebaseObject) {
     fbRef = new Firebase("https://walletbuddies.firebaseio.com/Circles/" + $stateParams.circleID + "/Messages/");
     // Create a synchronized array at the firebase reference
     $scope.messages = $firebaseArray(fbRef);
@@ -849,6 +838,7 @@ angular.module('starter.controllers', [])
 	// Get a reference to where the User's accepted circles are going to be stored
 	var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 	fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+		$rootScope.walletCount = $rootScope.walletCount - data.val().badgeCounter;
 		fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
 			badgeCounter: 0
 		})
@@ -857,12 +847,14 @@ angular.module('starter.controllers', [])
 		})
 	});
 	
-	$scope.myGoBack = function() {
+	$scope.goBack = function() {
+		console.log("Going");
 		$state.go('tab.wallet');
 	}
     // Scroll down the content automatically
     $scope.$on('$ionicView.enter', function() {
-        console.log('$ionicView.enter');
+	    console.log("Ionic.view enter");
+	    $ionicNavBarDelegate.showBackButton(true);
         $ionicScrollDelegate.scrollBottom(true);
         cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
     });
@@ -894,16 +886,14 @@ angular.module('starter.controllers', [])
         fbPush = new Firebase("https://walletbuddies.firebaseio.com/");
         var obj = $firebaseObject(fbMembers);
         obj.$loaded().then(function() {
-            console.log("loaded record for CircleId:", obj.$id, obj.Members);
             // To iterate the key/value pairs of the object, use angular.forEach()
             angular.forEach(obj.Members, function(value, key) {
                 console.log("key and value pair: " + value + key);
                 if ($rootScope.fbAuthData.uid == key) {
 	                //do nothing
-	                console.log("Doing nothing to me");
                 }
                 else {
-	            	fbPush.child('Users').child($rootScope.fbAuthData.uid).on('value', function(name) {
+	            	fbPush.child('Users').child($rootScope.fbAuthData.uid).once('value', function(name) {
 	                    fbPush.child('PushNotifications').push({
 	                        uid: key,
 	                        message: name.val().firstname + ' @ ' + obj.circleName + ': ' + $scope.data.message,
@@ -1134,7 +1124,22 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tabs
-.controller('TabsCtrl', function($scope, $state) {
+.controller('TabsCtrl', function($scope, $rootScope, $firebaseObject, $state) {
+	
+    setTimeout(function () {
+        // Updating chat badge counter
+		var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+		// Get a reference to where the User's accepted circles are going to be stored
+		var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+		var obj = $firebaseObject(fbUserAcceptedCircles);
+	    obj.$loaded().then(function() {
+	        $rootScope.walletCount = 0;
+	        angular.forEach(obj, function(value, key) {
+	            $rootScope.walletCount = $rootScope.walletCount + value.Members[$rootScope.fbAuthData.uid].badgeCounter;
+	        });
+	    });
+    }, 1000);
+	
     // Define all the views that do not need the tab bar at the bottom
     $scope.shouldHide = function() {
         switch ($state.current.name) {
@@ -1492,7 +1497,7 @@ angular.module('starter.controllers', [])
                         'name_first': data.val().firstname,
                         'name_last': data.val().lastname,
                         'address_street1': user.street,
-                        'address_city': user.city,
+                        //'address_city': user.city,
                         'address_postal_code': user.zip,
                         'address_country_code': 'US',
                         'document_value': user.ssn.toString(),

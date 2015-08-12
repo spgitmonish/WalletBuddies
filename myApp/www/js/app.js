@@ -7,7 +7,7 @@
 
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'firebase', 'email', 'cgNotify'])
 
-.run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify) {
+.run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory) {
     return $ionicPlatform.ready(function() {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
@@ -52,7 +52,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		        case 'registered':
 		          if (notification.regid.length > 0 ) {
 		              console.log('registration ID = ' + notification.regid);
-		              alert("Device Registered for Push ");
+		              //alert("Device Registered for Push ");
 		              // Get a reference to the Firebase account
 					  var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 		              var fbUser = fbRef.child("Users").child($rootScope.fbAuthData.uid);
@@ -64,8 +64,122 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		          break;
 		
 		        case 'message':
-		          // this is the actual push notification. its format depends on the data model from the push server
-		          alert('message = ' + notification.message + ' msgCount = ' + notification.msgcnt);
+		          // Push Notifications for when app is in the foreground
+			      if (notification.foreground == true) {
+					if (notification.payload.tab == "requests"){
+						var messageTemplate = '<span ng-click="clickedNotification()">' + notification.message + '</span>';
+						notify({
+					        messageTemplate: messageTemplate
+					    });
+					    $rootScope.clickedNotification = function(){
+					        notify.closeAll();
+					        $state.go('tab.requests', {
+					            circleID: notification.payload.url
+					        });
+					    };     
+					}
+					else if (notification.payload.tab == "chat"){
+						// Updating chat badge counter
+						var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+						// Get a reference to where the User's accepted circles are going to be stored
+						var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+						fbUserAcceptedCircles.child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+							var counter = data.val().badgeCounter + 1;
+							console.log("Badge counter " + counter);
+							fbUserAcceptedCircles.child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).update({
+								badgeCounter: counter
+							})
+							fbRef.child("Circles").child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).update({
+								badgeCounter: counter
+							})
+							$rootScope.walletCount = $rootScope.walletCount + 1;
+						});
+						// To display Banner Notifications
+					    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.message + '</span>';
+						notify({
+					        messageTemplate: messageTemplate
+					    });
+					    $rootScope.clickedNotification = function(){
+					        notify.closeAll();
+					        // Current ionic build does not show a back button when navigating to chat page from another tab apart from tab.wallet(since chat belongs to this stack)
+							// Hence clicking on a chat notification will be taken to tab.wallet if the user's current view is not currently in the tab.wallet stack
+					        if ($ionicHistory.currentStateName() == "tab.wallet") {
+						        $state.go('tab.chat', {
+						            circleID: notification.payload.url
+						        });
+					        }
+					        else if ($ionicHistory.currentStateName() == "tab.chat") {
+						        $state.go('tab.chat', {
+						            circleID: notification.payload.url
+						        });
+					        }
+					        else if ($ionicHistory.currentStateName() == "tab.wallet-detail") {
+						        $state.go('tab.chat', {
+						            circleID: notification.payload.url
+						        });
+					        }
+					        else {
+						        $state.go('tab.wallet');
+					        }
+					    };
+					}
+				
+				    if (notification.sound) {
+				        var snd = new Media(event.sound);
+				        snd.play();
+				    }
+			      }
+			      else if (notification.foreground == false){ // if app is not open just go to page
+			        if (notification.payload.tab == "requests"){
+				        $state.go('tab.requests', {
+				            circleID: notification.payload.url
+				        });
+					}
+					else if (notification.payload.tab == "chat"){
+						// Updating chat badge counter
+						var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+						// Get a reference to where the User's accepted circles are going to be stored
+						var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+						fbUserAcceptedCircles.child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+							var counter = data.val().badgeCounter + 1;
+							fbUserAcceptedCircles.child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).update({
+								badgeCounter: counter
+							})
+							fbRef.child("Circles").child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).update({
+								badgeCounter: counter
+							})
+							$rootScope.walletCount = $rootScope.walletCount + 1;
+						});
+						// Current ionic build does not show a back button when navigating to chat page from another tab apart from tab.wallet(since chat belongs to this stack)
+						// Hence clicking on a chat notification will be taken to tab.wallet if the user's current view is not currently in the tab.wallet stack
+					    if ($ionicHistory.currentStateName() == "tab.wallet") {
+					        $state.go('tab.chat', {
+					            circleID: notification.payload.url
+					        });
+				        }
+				        else if ($ionicHistory.currentStateName() == "tab.chat") {
+					        $state.go('tab.chat', {
+					            circleID: notification.payload.url
+					        });
+				        }
+				        else if ($ionicHistory.currentStateName() == "tab.wallet-detail") {
+					        $state.go('tab.chat', {
+					            circleID: notification.payload.url
+					        });
+				        }
+				        else {
+					        $state.go('tab.wallet');
+				        }
+					}
+					
+				    if (notification.badge) {
+				        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+				          // Success!
+				        }, function(err) {
+				          // An error occurred. Show a message to the user
+				        });
+				    }
+			      }
 		          break;
 		
 		        case 'error':
@@ -78,7 +192,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		      }
 	      }
 	      else if (ionic.Platform.isIOS()) {
-		      console.log("Notification : " + JSON.stringify(notification));
 		      // Push Notifications for when app is in the foreground
 		      if (notification.foreground == "1") {
 				if (notification.tab == "requests"){
@@ -100,7 +213,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 					fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
 						var counter = data.val().badgeCounter + 1;
-						$rootScope.walletBadge = $rootScope.walletBadge + counter;
 						console.log("Badge counter " + counter);
 						fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
 							badgeCounter: counter
@@ -108,6 +220,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 						fbRef.child("Circles").child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
 							badgeCounter: counter
 						})
+						$rootScope.walletCount = $rootScope.walletCount + 1;
 					});
 					// To display Banner Notifications
 				    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
@@ -116,9 +229,24 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				    });
 				    $rootScope.clickedNotification = function(){
 				        notify.closeAll();
-				        $state.go('tab.chat', {
-				            circleID: notification.url
-				        });
+				        if ($ionicHistory.currentStateName() == "tab.wallet") {
+					        $state.go('tab.chat', {
+					            circleID: notification.url
+					        });
+				        }
+				        else if ($ionicHistory.currentStateName() == "tab.chat") {
+					        $state.go('tab.chat', {
+					            circleID: notification.url
+					        });
+				        }
+				        else if ($ionicHistory.currentStateName() == "tab.wallet-detail") {
+					        $state.go('tab.chat', {
+					            circleID: notification.url
+					        });
+				        }
+				        else {
+					        $state.go('tab.wallet');
+				        }
 				    };
 				}
 			
@@ -126,27 +254,13 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			        var snd = new Media(event.sound);
 			        snd.play();
 			    }
-			
-			    if (notification.badge) {
-			        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
-			          // Success!
-			        }, function(err) {
-			          // An error occurred. Show a message to the user
-			        });
-			    }
 		      }
 		      else if (notification.foreground == "0"){ // if app is not open just go to page
 		        if (notification.tab == "requests"){
-					var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
-					notify({
-				        messageTemplate: messageTemplate
-				    });
-				    $rootScope.clickedNotification = function(){
-				        notify.closeAll();
-				        $state.go('tab.requests', {
-				            circleID: notification.url
-				        });
-				    };     
+					
+			        $state.go('tab.requests', {
+			            circleID: notification.url
+			        });
 				}
 				else if (notification.tab == "chat"){
 					// Updating chat badge counter
@@ -155,25 +269,34 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 					fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
 						var counter = data.val().badgeCounter + 1;
-						$rootScope.walletBadge = $rootScope.walletBadge + counter;
 						fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
 							badgeCounter: counter
 						})
 						fbRef.child("Circles").child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
 							badgeCounter: counter
 						})
+						$rootScope.walletCount = $rootScope.walletCount + 1;
 					});
-					// To display Banner Notifications
-				    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
-					notify({
-				        messageTemplate: messageTemplate
-				    });
-				    $rootScope.clickedNotification = function(){
-				        notify.closeAll();
+					// Current ionic build does not show a back button when navigating to chat page from another tab apart from tab.wallet(since chat belongs to this stack)
+					// Hence clicking on a chat notification will be taken to tab.wallet if the user's current view is not currently in the tab.wallet stack
+					if ($ionicHistory.currentStateName() == "tab.wallet") {
 				        $state.go('tab.chat', {
 				            circleID: notification.url
 				        });
-				    };
+			        }
+			        else if ($ionicHistory.currentStateName() == "tab.chat") {
+				        $state.go('tab.chat', {
+				            circleID: notification.url
+				        });
+			        }
+			        else if ($ionicHistory.currentStateName() == "tab.wallet-detail") {
+				        $state.go('tab.chat', {
+				            circleID: notification.url
+				        });
+			        }
+			        else {
+				        $state.go('tab.wallet');
+			        }
 				}
 				
 			    if (notification.badge) {
@@ -189,28 +312,24 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     });
 })
 
-.directive("detectFocus", function () {
-    return {
-        restrict: "A",
-        scope: {
-            onFocus: '&onFocus',
-            onBlur: '&onBlur',
-            focusOnBlur: '=focusOnBlur'
-        },
-        link: function (scope, elem) {
-
-            elem.on("focus", function () {
-                scope.onFocus();
-                scope.focusOnBlur = true;  //note the reassignment here, reason why I set '=' instead of '@' above.
+// Directive for keeping the keyboard open while in chat
+.directive('isFocused', function($timeout) {
+  return {
+    scope: { trigger: '@isFocused' },
+    link: function(scope, element) {
+      scope.$watch('trigger', function(value) {
+        if(value === "true") {
+	        console.log("here-o-o");
+          $timeout(function() {
+            element[0].focus();
+            element.on('blur', function() {
+              element[0].focus();
             });
-
-            elem.on("blur", function () {
-                scope.onBlur();
-                if (scope.focusOnBlur)
-                    elem[0].focus();
-            });
+          });
         }
+      });
     }
+  };
 })
 
 .config(function($stateProvider, $urlRouterProvider) {
