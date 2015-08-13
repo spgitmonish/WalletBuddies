@@ -1122,7 +1122,7 @@ angular.module('starter.controllers', [])
         fbRef.unauth();
     };
 
-    // Called when the user clicks the "Reset Password" button
+    // Called when the user clicks the "Survey" button
     $scope.survey = function() {
         fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
             // If the user hasn't answered the survey page, take them to the survey page
@@ -1205,35 +1205,35 @@ angular.module('starter.controllers', [])
         $scope.question1 = {
             answer: item.value
         };
-        console.log("Answer(1) to be store:",$scope.question1.answer );
+        console.log("Answer(1) to be stored:",$scope.question1.answer );
     }
 
     $scope.questionChosen2 = function(item) {
         $scope.question2 = {
             answer: item.value
         };
-        console.log("Answer(2) to be store:",$scope.question2.answer );
+        console.log("Answer(2) to be stored:",$scope.question2.answer );
     }
 
     $scope.questionChosen3 = function(item) {
         $scope.question3 = {
             answer: item.value
         };
-        console.log("Answer(3) to be store:",$scope.question3.answer );
+        console.log("Answer(3) to be stored:",$scope.question3.answer );
     }
 
     $scope.questionChosen4 = function(item) {
         $scope.question4 = {
             answer: item.value
         };
-        console.log("Answer(4) to be store:",$scope.question4.answer );
+        console.log("Answer(4) to be stored:",$scope.question4.answer );
     }
 
     $scope.questionChosen5 = function(item) {
         $scope.question5 = {
             answer: item.value
         };
-        console.log("Answer(5) to be store:",$scope.question5.answer );
+        console.log("Answer(5) to be stored:",$scope.question5.answer );
     }
 
     $scope.submitSurvey = function(){

@@ -1,5 +1,4 @@
 <ion-view view-title="New Social Circle">
-
     <ion-content>
         <ion-list class="padding">
             <div class="list">
@@ -9,14 +8,14 @@
 			      <p>Select a photo</p>
                 </label>
             </div>
-            
+
             <div class="list">
 	            <p><b>&nbsp&nbspGive your circle a name</b></p>
                 <label class="item item-input">
                     <input ng-model='user.groupName' type="text" placeholder="Eg. Sunday Brunch">
                 </label>
             </div>
-            
+
             <div class="list">
 	            <p><b>&nbsp&nbspPick your plan</b></p>
                 <label class="item item-input item-select">
@@ -24,9 +23,12 @@
                         <p>Click to select a plan</p>
                     </div>
                     <select ng-model='user.plan'>
-                        <option>weekly</option>
+                        <!-- <option>weekly</option>
                         <option selected>biweekly</option>
-                        <option>monthly</option>
+                        <option>monthly</option> -->
+                        <option>daily</option>
+                        <option>semiweekly</option>
+                        <option>weekly</option>
                     </select>
                 </label>
             </div>
