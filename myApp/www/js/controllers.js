@@ -18,7 +18,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $firebaseObject, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush) {
+.controller('AccountCtrl', function($scope, $firebaseObject, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush, $cipherFactory) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -123,59 +123,65 @@ angular.module('starter.controllers', [])
                             });
 
                             //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
-
-                            // Create a SynapsePay user account
-                            $http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
-                                "client": {
-                                    //your client ID and secret
-                                    "client_id": "LM4weOevsNqafZftKmaR",
-                                    "client_secret": "98Ae6qNVF63MXxHqiqyd7zPMqNL9IAjjyoI6zcQB"
-                                },
-                                "logins": [
-                                    //email and password of the user. Passwords are optional.
-                                    //yes you can add multiple emails and multiple users for one account here
-                                    {
-                                        "email": account.email,
-                                        "read_only": false
-                                    }
-                                ],
-                                "phone_numbers": [
-                                    //user's mobile numbers. Can be used for 2FA
-                                    account.phonenumber.toString()
-                                ],
-                                "legal_names": [
-                                    //user's legal names. If multiple user's are being added, add multiple legal names.
-                                    //If business account, add the name of the person creating the account and the name of the company
-                                    account.firstname + " " + account.lastname
-                                ],
-                                "fingerprints": [
-                                    //fingerprints of the devices that you will be accessing this account from
-                                    {
-                                        "fingerprint": "suasusau21324redakufejfjsf"
-                                    }
-                                ],
-                                "ips": [
-                                    //user's IP addresses
-                                    "192.168.1.1"
-                                ],
-                                "extra": {
-                                    //optional fields
-                                    "note": "WalletBuddies User",
-                                    "supp_id": "No IDs Here",
-                                    //toggle to true if its a business account
-                                    "is_business": false
-                                }
-                            }).then(function(response) {
-                                fbUser.child("Payments").update({
-                                    oauth: response.data.oauth, // We need this for making bank transactions, every user has a unique key.
-                                    client_id: response.data.user.client.id,
-                                    fingerprint: "suasusau21324redakufejfjsf"
-                                });
-
-                            }).catch(function(err) {
-                                console.log("An error occured while communicating with Synapse");
-                                console.log(JSON.stringify(err));
-                            });
+							
+							fbRef.child('SynapsePay').once('value', function(data) {
+								// Create a SynapsePay user account
+	                            $http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
+	                                "client": {
+	                                    //your client ID and secret
+	                                    "client_id": data.val().client_id,
+	                                    "client_secret": data.val().client_secret
+	                                },
+	                                "logins": [
+	                                    //email and password of the user. Passwords are optional.
+	                                    //yes you can add multiple emails and multiple users for one account here
+	                                    {
+	                                        "email": account.email,
+	                                        "read_only": false
+	                                    }
+	                                ],
+	                                "phone_numbers": [
+	                                    //user's mobile numbers. Can be used for 2FA
+	                                    account.phonenumber.toString()
+	                                ],
+	                                "legal_names": [
+	                                    //user's legal names. If multiple user's are being added, add multiple legal names.
+	                                    //If business account, add the name of the person creating the account and the name of the company
+	                                    account.firstname + " " + account.lastname
+	                                ],
+	                                "fingerprints": [
+	                                    //fingerprints of the devices that you will be accessing this account from
+	                                    {
+	                                        "fingerprint": "suasusau21324redakufejfjsf"
+	                                    }
+	                                ],
+	                                "ips": [
+	                                    //user's IP addresses
+	                                    "192.168.1.1"
+	                                ],
+	                                "extra": {
+	                                    //optional fields
+	                                    "note": "WalletBuddies User",
+	                                    "supp_id": "No IDs Here",
+	                                    //toggle to true if its a business account
+	                                    "is_business": false
+	                                }
+	                            }).then(function(response) {
+		                            console.log("SYNAPSEPAY response " + JSON.stringify(response));
+	                                fbUser.child("Payments/oauth").update({
+	                                    oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
+	                                    refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
+	                                    expires_at: response.data.oauth.expires_at,
+	                                    expires_in: response.data.oauth.expires_in,
+	                                    client_id: response.data.user.client.id,
+	                                    fingerprint: "suasusau21324redakufejfjsf"
+	                                });
+	
+	                            }).catch(function(err) {
+	                                console.log("An error occured while communicating with Synapse");
+	                                console.log(JSON.stringify(err));
+	                            });	
+							})
 
                             // Clear the form
                             account.firstname = '';
@@ -1292,7 +1298,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tab-Account
-.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $http, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
+.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $cipherFactory, $http, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
     $scope.user = {
         type: '',
         username: 'synapse_nomfa',
@@ -1433,14 +1439,18 @@ angular.module('starter.controllers', [])
     $scope.connect = function(user) {
         console.log("Bank ID: " + user.id);
 
-        fbRef.child("Payments").once('value', function(data) {
+        fbRef.child("Payments/oauth").once('value', function(data) {
+	        //Decipher oauth keys before POST
+	        var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
+	        console.log("oauth_key " + oauth_key);
+	        
             // $http post for Bank Login
             $http.post('https://sandbox.synapsepay.com/api/v3/node/add', {
                 'login': {
-                    'oauth_key': data.val().oauth.oauth_key
+                    'oauth_key': oauth_key
                 },
                 'user': {
-                    'fingerprint': 'suasusau21324redakufejfjsf'
+                    'fingerprint': data.val().fingerprint
                 },
                 'node': {
                     'type': 'ACH-US',
@@ -1457,14 +1467,11 @@ angular.module('starter.controllers', [])
                     username: '',
                     password: ''
                 };
-                console.log("Payload " + payload.data.success);
                 if (payload.data.success) {
                     if (payload.data.nodes[0].allowed == null) {
-                        console.log("MFA QUESTION: " + JSON.stringify(payload.data));
                         $rootScope.question = payload.data;
                         $state.go('tab.auth-question');
                     } else {
-                        console.log("Bank Account Details: " + JSON.stringify(payload.data));
                         $rootScope.data = payload.data;
                         $state.go('tab.choose-account');
                     }
@@ -1476,108 +1483,10 @@ angular.module('starter.controllers', [])
             });
         });
     };
-
-    /*
-    // Test code for making a transaction
-    $scope.testDebit = function() {
-	    fbRef.child("Payments").once('value', function(data) {
-		    $http.post('https://sandbox.synapsepay.com/api/v3/trans/add', {
-			  'login':{
-			    'oauth_key': data.val().oauth.oauth_key
-			  },
-			  'user':{
-			    'fingerprint':'suasusau21324redakufejfjsf'
-			  },
-			  'trans':{
-			      //where you wish to debit funds from. This should belong to the user who's OAUTH key you have supplied in login
-			      'from':{
-			      'type': data.val().Bank.type,
-			      'id': data.val().Bank.oid
-			  	  },
-				  //where you wish to send funds to
-				  'to':{
-				      'type':'ACH-US',
-				      'id': '557f7a7186c2736fb1c60c09'
-				  },
-				  'amount':{
-				      //'amount': (11).toFixed(2),
-				      'amount': parseFloat("10.11"),
-				      'currency':'USD'
-				  },
-				  //process on lets you supply the date when you wish to process this transaction. This is delta time, which means 1 for tomorrow, 2 means dayafter, and so on
-				  //Finally the IP address of the transaction
-				  'extra':{
-				      'supp_id':'',
-				      'note':'Debited from WB user',
-				      'webhook':'',
-				      'process_on':0,
-				      'ip':'192.168.1.1',
-				  },
-				  //this lets you add a facilitator fee to the transaction, once the transaction settles, you will get a part of the transaction
-				  'fees':[{
-				      'fee': parseFloat(fee + ".01"),
-				      'note':'Facilitator Fee',
-				      'to':{
-				        'id':'557f7a7186c2736fb1c60c09'
-				      }
-				  }]
-			  }
-		    }).then(function(payload) {
-			    console.log("Transaction Successful with and with deatils: " + JSON.stringify(payload.data));
-			    $ionicPopup.alert({
-				    title: "Did it happen?",
-				    template: "You tell me!... INCOMING DATA: " + JSON.stringify(payload.data)
-				})
-		    }).catch(function(err) {
-			    console.log("Got an error in transaction");
-			    console.log(JSON.stringify(err));
-			    console.log(err);
-			    alert(err.statusText);
-		    });
-
-	    })
-    };
-
-    $scope.viewTran = function() {
-	    fbRef.child("Payments").once('value', function(data) {
-		    $http.post('https://sandbox.synapsepay.com/api/v3/trans/show', {
-			  'login':{
-			    'oauth_key': data.val().oauth.oauth_key
-			  },
-			  'user':{
-			    'fingerprint':'suasusau21324redakufejfjsf'
-			  }
-			  //this is all optional stuff. You can provide one field or all.
-			  //Filter object allows you to filter information the way you see fit
-
-  		    }).then(function(payload) {
-			    console.log("Transaction Successful with and with deatils: " + JSON.stringify(payload.data));
-			    $ionicPopup.alert({
-				    title: "Did it happen?",
-				    template: "You tell me!... INCOMING DATA: " + JSON.stringify(payload.data)
-				})
-		    }).catch(function(err) {
-			    console.log("Got an error in transaction");
-			    console.log(JSON.stringify(err));
-			    alert(err.statusText);
-		    });
-
-	    })
-    };
-
-    $scope.signOut = function () {
-	    $ionicHistory.clearCache();
-	    $ionicHistory.clearHistory();
-	    $ionicNavBarDelegate.showBackButton(false);
-	    console.log("History" + $ionicHistory.viewHistory());
-	    ref.unauth();
-	    $state.go('launch');
-    };
-    */
 })
 
 // Controller for Choose-Account
-.controller('ChooseAccCtrl', function($scope, $rootScope, $state, $ionicPopup) {
+.controller('ChooseAccCtrl', function($scope, $rootScope, $state, $cipherFactory, $ionicPopup) {
 
     $scope.data = $rootScope.data;
 
@@ -1604,7 +1513,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for providing KYC details.
-.controller('KycCtrl', function($scope, $rootScope, $state, $http, $ionicPopup) {
+.controller('KycCtrl', function($scope, $rootScope, $state, $cipherFactory, $http, $ionicPopup) {
 
     $scope.data = $rootScope.data;
 
@@ -1622,9 +1531,12 @@ angular.module('starter.controllers', [])
 
     $scope.validateUser = function(user) {
         fbRef.once("value", function(data) {
+	        //Decipher oauth keys before POST
+	        var oauth_key = $cipherFactory.decrypt(data.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().Payments.oauth.oauth_key.salt, data.val().Payments.oauth.oauth_key.iv);
+	        
             $http.post('https://sandbox.synapsepay.com/api/v3/user/doc/add', {
                 'login': {
-                    'oauth_key': data.val().Payments.oauth.oauth_key
+                    'oauth_key': oauth_key
                 },
                 'user': {
                     'doc': {
@@ -1640,11 +1552,9 @@ angular.module('starter.controllers', [])
                         'document_value': user.ssn.toString(),
                         'document_type': 'SSN',
                     },
-                    'fingerprint': 'suasusau21324redakufejfjsf'
+                    'fingerprint': data.val().Payments.oauth.fingerprint
                 }
             }).then(function(payload) {
-                console.log("KYC response " + payload.data.message.en);
-                console.log(JSON.stringify(payload.data));
                 if (payload.data.message.en == "SSN information verified") {
                     $ionicPopup.alert({
                         title: "You're all set!",
@@ -1668,8 +1578,7 @@ angular.module('starter.controllers', [])
     };
 })
 
-// Controller for Choose-Account
-.controller('KycQuestionCtrl', function($scope, $rootScope, $state, $http, $ionicPopup) {
+.controller('KycQuestionCtrl', function($scope, $rootScope, $state, $cipherFactory, $http, $ionicPopup) {
 
     $scope.data = $rootScope.kycQuestions.question_set;
     console.log("Questions: ", $scope.data.questions);
@@ -1677,10 +1586,13 @@ angular.module('starter.controllers', [])
 
     $scope.validate = function() {
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
-        fbRef.child("Payments").once('value', function(data) {
+        fbRef.child("Payments/oauth").once('value', function(data) {
+	        //Decipher oauth keys before POST
+	        var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
+	        
             $http.post('https://sandbox.synapsepay.com/api/v3/user/doc/verify', {
                 'login': {
-                    'oauth_key': data.val().oauth.oauth_key
+                    'oauth_key': oauth_key
                 },
                 'user': {
                     'doc': {
@@ -1702,10 +1614,9 @@ angular.module('starter.controllers', [])
                             'answer_id': $scope.selection.answer[5]
                         }]
                     },
-                    'fingerprint': 'suasusau21324redakufejfjsf'
+                    'fingerprint': data.val().fingerprint
                 }
             }).then(function(payload) {
-                console.log("KYC Questions Response: " + JSON.stringify(payload.data));
                 $ionicPopup.alert({
                     title: "You're all set!",
                     template: "Your SSN information was verified."
@@ -1724,8 +1635,8 @@ angular.module('starter.controllers', [])
                 fbNewsFeedRef.push({
                     feed: feedToPush
                 });
-
                 $state.go("tab.settings");
+                
             }).catch(function(err) {
                 console.log("Got an error in MFA - QuestionCtrl.");
                 console.log(err);
@@ -1745,21 +1656,23 @@ angular.module('starter.controllers', [])
     };
 })
 
-// Controller for Auth-Question page
-.controller('QuestionCtrl', function($scope, $rootScope, $state, $http, $ionicPopup) {
+// Controller for Auth-Question
+.controller('QuestionCtrl', function($scope, $rootScope, $state, $cipherFactory, $http, $ionicPopup) {
 
     $scope.question = $rootScope.question;
     console.log("QUESTION: " + $scope.question.nodes[0].extra.mfa.message);
     $scope.authStep = function(user) {
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
-        fbRef.child("Payments").once('value', function(data) {
-            console.log("POST DATA: " + data.val().oauth.oauth_key + " " + $scope.question.nodes[0]._id.$oid + " " + user.answer);
+        fbRef.child("Payments/oauth").once('value', function(data) {
+	        //Decipher oauth keys before POST
+	        var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
+	        
             $http.post('https://sandbox.synapsepay.com/api/v3/node/verify', {
                 'login': {
-                    'oauth_key': data.val().oauth.oauth_key
+                    'oauth_key': oauth_key
                 },
                 'user': {
-                    'fingerprint': 'suasusau21324redakufejfjsf'
+                    'fingerprint': data.val().fingerprint
                 },
                 'node': {
                     '_id': {
@@ -1796,19 +1709,21 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Auth-Question page
-.controller('MFACtrl', function($scope, $rootScope, $state, $http, $ionicPopup) {
+.controller('MFACtrl', function($scope, $rootScope, $state, $cipherFactory, $http, $ionicPopup) {
 
     $scope.mfa = $rootScope.mfa;
     $scope.authStep = function(user) {
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
-        fbRef.once('value', function(data) {
+        fbRef.child("Payments/oauth").once('value', function(data) {
+	        //Decipher oauth keys before POST
+	        var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
+	        
             $http.post('https://sandbox.synapsepay.com/api/v2/bank/mfa', {
                 access_token: $scope.mfa.response.access_token,
                 mfa: user.answer,
                 bank: $rootScope.bank,
-                oauth_consumer_key: data.val().oauthkey
+                oauth_consumer_key: oauth_key
             }).then(function(payload) {
-                console.log("Bank Account Details: " + JSON.stringify(payload.data));
                 $rootScope.data = payload.data;
                 $state.go('tab.choose-account');
             }).catch(function(err) {
