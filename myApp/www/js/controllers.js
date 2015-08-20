@@ -121,11 +121,17 @@ angular.module('starter.controllers', [])
                                 text: "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)" +
                                     "\n\n Team Wallet Buddies"
                             });
-
-                            //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
 							
+							var email = account.email;
+							var number = account.phonenumber.toString();
+							var first = account.firstname;
+							var last = account.lastname;
+							
+                            //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
+							console.log("SynapsePay User1: " + account.email, account.phonenumber.toString(), account.firstname + " " + account.lastname);
 							fbRef.child('SynapsePay').once('value', function(data) {
 								// Create a SynapsePay user account
+								console.log("SynapsePay User: " + data.val().client_id + data.val().client_secret + email + number + first + " " + last);
 	                            $http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
 	                                "client": {
 	                                    //your client ID and secret
@@ -136,18 +142,18 @@ angular.module('starter.controllers', [])
 	                                    //email and password of the user. Passwords are optional.
 	                                    //yes you can add multiple emails and multiple users for one account here
 	                                    {
-	                                        "email": account.email,
+	                                        "email": email,
 	                                        "read_only": false
 	                                    }
 	                                ],
 	                                "phone_numbers": [
 	                                    //user's mobile numbers. Can be used for 2FA
-	                                    account.phonenumber.toString()
+	                                    number
 	                                ],
 	                                "legal_names": [
 	                                    //user's legal names. If multiple user's are being added, add multiple legal names.
 	                                    //If business account, add the name of the person creating the account and the name of the company
-	                                    account.firstname + " " + account.lastname
+	                                    first + " " + last
 	                                ],
 	                                "fingerprints": [
 	                                    //fingerprints of the devices that you will be accessing this account from
@@ -174,7 +180,8 @@ angular.module('starter.controllers', [])
 	                                    expires_at: response.data.oauth.expires_at,
 	                                    expires_in: response.data.oauth.expires_in,
 	                                    client_id: response.data.user.client.id,
-	                                    fingerprint: "suasusau21324redakufejfjsf"
+	                                    fingerprint: "suasusau21324redakufejfjsf",
+	                                    oid: response.data.user._id.$oid
 	                                });
 	
 	                            }).catch(function(err) {
@@ -1308,17 +1315,6 @@ angular.module('starter.controllers', [])
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
     var ref = new Firebase("https://walletbuddies.firebaseio.com");
 
-    /*
-    $http.get('https://sandbox.synapsepay.com/api/v2/bankstatus/show').then(function(response) {
-    	$scope.institutions = response.data.banks;
-    	console.log(JSON.stringify(response.data.banks));
-    }).catch(function(err) {
-      console.log("Got an error in list of banks.");
-      console.log(err);
-      alert(err.statusText);
-    });
-    */
-
     // List of supported institutions
     $scope.institutions = {
         "banks": [{
@@ -1513,7 +1509,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for providing KYC details.
-.controller('KycCtrl', function($scope, $rootScope, $state, $cipherFactory, $http, $ionicPopup) {
+.controller('KycCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
 
     $scope.data = $rootScope.data;
 
@@ -1528,12 +1524,84 @@ angular.module('starter.controllers', [])
         zip: "20740",
         ssn: 3333
     };
+    
+        // For selecting a photo
+    $scope.selectPicture = function() {
+        // Show the action sheet
+        var hideSheet = $ionicActionSheet.show({
+            buttons: [{
+                text: 'Choose Photo'
+            }, {
+                text: 'Take Photo'
+            }],
+            cancelText: 'Cancel',
+            cancel: function() {
+                // add cancel code..
+            },
+            buttonClicked: function(index) {
+                if (index == 0) {
+                    hideSheet();
+                    var options = {
+                        quality: 50,
+                        destinationType: Camera.DestinationType.DATA_URL,
+                        sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+                        allowEdit: true,
+                        encodingType: Camera.EncodingType.JPEG,
+                        targetWidth: 100,
+                        targetHeight: 100,
+                        popoverOptions: CameraPopoverOptions,
+                        saveToPhotoAlbum: false
+                    };
+
+                    $cordovaCamera.getPicture(options).then(function(imageData) {
+                        var image = document.getElementById('myImage');
+                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        $scope.imageDoc = "data:image/jpeg;base64," + imageData;
+                    }, function(err) {
+                        // error
+                        $ionicLoading.show({
+                            template: 'Error choosing photo',
+                            duration: 500
+                        });
+                    });
+                }
+                
+                if (index == 1) {
+                    hideSheet();
+                    var options = {
+                        quality: 50,
+                        destinationType: Camera.DestinationType.DATA_URL,
+                        sourceType: Camera.PictureSourceType.CAMERA,
+                        allowEdit: true,
+                        encodingType: Camera.EncodingType.JPEG,
+                        targetWidth: 100,
+                        targetHeight: 100,
+                        popoverOptions: CameraPopoverOptions,
+                        saveToPhotoAlbum: false
+                    };
+
+                    $cordovaCamera.getPicture(options).then(function(imageData) {
+                        var image = document.getElementById('myImage');
+                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        $scope.imageDoc = "data:image/jpeg;base64," + imageData;
+                    }, function(err) {
+                        // error
+                        $ionicLoading.show({
+                            template: 'Error choosing photo',
+                            duration: 500
+                        });
+                    });
+                }
+            }
+        });
+    };
 
     $scope.validateUser = function(user) {
         fbRef.once("value", function(data) {
 	        //Decipher oauth keys before POST
 	        var oauth_key = $cipherFactory.decrypt(data.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().Payments.oauth.oauth_key.salt, data.val().Payments.oauth.oauth_key.iv);
-	        
+	        console.log("USER IMAGE: " + $scope.imageDoc);
+            
             $http.post('https://sandbox.synapsepay.com/api/v3/user/doc/add', {
                 'login': {
                     'oauth_key': oauth_key
@@ -1555,6 +1623,27 @@ angular.module('starter.controllers', [])
                     'fingerprint': data.val().Payments.oauth.fingerprint
                 }
             }).then(function(payload) {
+	            console.log("KYC" + JSON.stringify(payload));
+	            // POST for submitting user image
+	            $http.post('https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add', {
+	                'login': {
+	                    'oauth_key': oauth_key
+	                },
+	                'user': {
+	                    'doc': {
+	                        'attachment': $scope.imageDoc
+	                    },
+	                    'fingerprint': data.val().Payments.oauth.fingerprint
+	                }
+	            }).then(function(data) {
+		            console.log(data);
+	                console.log("DOCUMENT: " + JSON.stringify(data));
+	            }).catch(function(err) {
+	                console.log(err);
+	                console.log(JSON.stringify(err));
+	                alert(err.statusText);
+	            });
+	            
                 if (payload.data.message.en == "SSN information verified") {
                     $ionicPopup.alert({
                         title: "You're all set!",
@@ -1571,7 +1660,7 @@ angular.module('starter.controllers', [])
                 }
             }).catch(function(err) {
                 console.log(err);
-                console.log(JSON.stringify(err));
+                console.log("Attachment" + JSON.stringify(err));
                 alert(err.statusText);
             });
         });
@@ -1617,6 +1706,7 @@ angular.module('starter.controllers', [])
                     'fingerprint': data.val().fingerprint
                 }
             }).then(function(payload) {
+	            console.log("QUESTION: " + payload);
                 $ionicPopup.alert({
                     title: "You're all set!",
                     template: "Your SSN information was verified."

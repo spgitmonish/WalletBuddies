@@ -20,8 +20,14 @@
                     <span class="input-label">Password</span>
                     <input type="password" placeholder="Password" ng-model="user.password" ng-required="true">
                 </label>
+                <ion-list>
+                    <div class="checkbox required item-text-wrap">
+                        <ion-checkbox ng-model="isChecked"> By clicking here, I agree to authorize WalletBuddies Inc., to debit and credit funds on my behalf from my bank account for services provided by WalletBuddies App. Click here <a href = "http://walletbuddies.co/TOS/TOS.pdf">[Terms and Conditions] </a>for details.</ion-checkbox>
+                    </div>
+                </ion-list>
             </div>
         </div>
+        
         <button ng-click="connect(user)" class="button button-full button-balanced">Connect</button>        
     </ion-content>
 </ion-view>

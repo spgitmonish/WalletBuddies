@@ -1,6 +1,13 @@
 <ion-view view-title="Customer Verification">
     <ion-content>
     	<div class="card">
+	    	<div class="item item-divider item-text-wrap">
+                Your photo
+            </div>
+            <label class="item item-avatar" ng-click="selectPicture()">
+              <img ng-src="{{imageSrc}}">
+		      <p>Select a photo</p>
+            </label>
             <div class="item item-divider item-text-wrap">
                 Date of birth
             </div>
