@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $log, $firebaseAuth, $http) {
+.controller('AccountCtrl', function($scope, $firebaseObject, $state, $rootScope, $log, $firebaseAuth, $ionicView, $cordovaPush, $http) {
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
         // Make sure all the fields have a value
@@ -165,6 +165,18 @@ angular.module('starter.controllers', [])
 
                             // Switch to the Wallet Tab
                             $state.go('tab.wallet');
+                            
+                            // Register device for push notifications
+                            $scope.$on('$ionicView.afterLeave', function() {
+						      $cordovaPush.register(iosConfig).then(function(deviceToken) {
+						      	  // Success -- send deviceToken to firebase, and store for future use
+						      	  console.log("deviceToken: " + deviceToken);
+						      	  fbUser.update({deviceToken: deviceToken});
+							  }, function(err) {
+							      alert("Registration error: " + err)
+							  });
+						    });
+                            
                         }).catch(function(error) {
                             console.error("Authentication failed: " + error);
                         });

@@ -19,7 +19,11 @@
     "http://github.com/don/cordova-filechooser.git",
     "org.apache.cordova.camera",
     "org.apache.cordova.contacts",
-    "cordova-plugin-camera"
+    "cordova-plugin-camera",
+    {
+      "locator": "https://github.com/phonegap-build/PushPlugin.git",
+      "id": "com.phonegap.plugins.PushPlugin"
+    }
   ],
   "cordovaPlatforms": [
     "ios"
