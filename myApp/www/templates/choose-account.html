@@ -1,16 +1,28 @@
 <ion-view view-title="Choose An Account">
-    <ion-content>
-    					
-			<ul class="list">
-			  <li class="item item-checkbox" ng-repeat="account in data.nodes">
-			     <label class="checkbox">
-			       <input type="radio" ng-required="true" ng-change="checkSelect($index)" ng-model="account.info.bank_name">
-			     </label>
-			     {{account.info.class}} {{account.info.type}} xxxx-xxxx-{{account.info.account_num}} {{account.info.bank_name}}
-			  </li>
-			</ul>
-			<!--<ion-radio ng-repeat="account in data.banks" ng-change="checkSelect($index)" ng-model="account.balance">{{account.nickname}} ${{account.balance}}</ion-radio>
-	        -->
-	        <button ng-click="validateUser(user)" class="button button-block button-balanced">Link</button>
+    <ion-content class="pageBG" padding="true">
+    	<br>
+    	<p align="center" style="color: #595858"><b>Choose an account you would like to link with WalletBuddies.</b></p>
+    	<br>
+		<ul class="list">
+		  <li class="item item-checkbox" ng-repeat="account in data.nodes">
+		     <label class="checkbox">
+		       <input type="radio" ng-required="true" ng-change="checkSelect($index)" ng-model="account.info.bank_name">
+		     </label>
+		     {{account.info.class}} {{account.info.type}} xxxx-xxxx-{{account.info.account_num}} {{account.info.bank_name}}
+		  </li>
+		</ul>
+		<!--<ion-radio ng-repeat="account in data.banks" ng-change="checkSelect($index)" ng-model="account.balance">{{account.nickname}} ${{account.balance}}</ion-radio>
+        -->
+        <br>
+        <div class="row">
+	        <div class="col">
+		        <i class="icon ion-ios7-locked-outline my-icon"></i>
+	        </div>
+	        <div class="col col-90">
+		        <p align="justify" style="color: #595858">We use bank-level security and data encryption. Your account information is not stored, we use tokens provided by our banking partner to make transactions.</p>
+	        </div>
+        </div>
+		<br>
+        <button ng-click="validateUser(user)" class="button button-block button-balanced">Link</button>
     </ion-content>
 </ion-view>

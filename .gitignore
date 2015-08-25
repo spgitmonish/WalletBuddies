@@ -47,3 +47,5 @@ myApp/www/css/ionic.app.css
 *.css
 myApp/www/js/.DS_Store
 *.json
+
+myApp/circle-start-scheduler.js

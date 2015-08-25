@@ -29,7 +29,11 @@ angular.module('starter.controllers', [])
 
             // Get a reference to the Firebase account
             var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
-
+            // Validating if phone number has 10 digits
+            if (account.phonenumber.length > 10) {
+                alert("Please enter a valid 10 digit phone number.");
+                return;
+            }
             // Create the User
             fbRef.createUser({
                     email: account.email,
@@ -342,13 +346,12 @@ angular.module('starter.controllers', [])
                     if (error) {
                         alert("Login Error! Try again.");
                     } else {
-                        console.log("Sign In successful");
 
                         // Saving auth data to be used across controllers
                         $rootScope.fbAuthData = authData;
                         $rootScope.email = email;
 
-                      // Hard coded to be false
+						// Hard coded to be false
                         if (false) {
                             var fbInvites = new Firebase(fbRef + "/Invites/" + token);
                             console.log("Token Hmmm: " + token);
@@ -543,12 +546,14 @@ angular.module('starter.controllers', [])
             $scope.data.selectedContacts[i].phones[0].value = str.replace(/\D/g, '');
             console.log("After str.replace: " + $scope.data.selectedContacts[i].phones[0].value);
             var temp = $scope.data.selectedContacts[i].phones[0].value;
+            var temp = $scope.data.selectedContacts[i].phones[0].value;
+            console.log(" second temp_int =" + temp.length);
             // Removing 1 from the phone number
-            /*if (temp.length > 10){
-                var temp_int = parseInt(temp.substring(1));
-                console.log(" second temp_int =" + temp_int);
+            if (temp.length > 10){
+               var temp = temp.substring(1);
+               var temp_int = parseInt(temp);
             }
-            $scope.data.selectedContacts[i].phones[0].value = temp_int;*/
+            $scope.data.selectedContacts[i].phones[0].value = temp_int;
         }
 
         // Save data to a local var
@@ -769,7 +774,6 @@ angular.module('starter.controllers', [])
         // Obtain circle data for the pending circles
         fbCallback.fetch(fbCircles, function(output) {
             var acceptedCircleVal = output;
-
             // Get the reference for the push
             var fbAcceptedCirclePushRef = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + data.key());
 
@@ -809,7 +813,7 @@ angular.module('starter.controllers', [])
     var obj = $firebaseObject(fbCircles);
     // Creare a link to a CircleMembers under this circle
     var fbCircleMembers = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Members/" + $stateParams.circleID + "/CircleMembers/");
-
+	console.log("FBCIRCLE MEMBERS: " + fbCircleMembers);
     // Clear all the data
     fbCircleMembers.remove();
 
@@ -817,13 +821,13 @@ angular.module('starter.controllers', [])
     $scope.members = $firebaseArray(fbCircleMembers);
 
     obj.$loaded().then(function() {
-        console.log("loaded record for CircleId:", obj.$id, obj.Members);
+        console.log("loaded record for FBCIRCLE MEMBERS:", obj.$id, obj.Members);
         // To iterate the key/value pairs of the object, use angular.forEach()
         angular.forEach(obj.Members, function(value, key) {
             fbRef.child("Users").child(key).once('value', function(data) {
                 // Get the reference for the push
                 var fbCircleMembersPushRef = fbCircleMembers.push();
-
+				console.log("FBCIRCLE MEMBERS: " + fbCircleMembersPushRef);
                 // Update the location(temporary cache)
                 fbCircleMembersPushRef.update({firstName: data.val().firstname});
             });
@@ -1099,7 +1103,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tab-settings
-.controller('SettingsCtrl', function($scope, $ionicHistory, $ionicNavBarDelegate, $state, $rootScope, $stateParams, $ionicPopup) {
+.controller('SettingsCtrl', function($scope, $ionicHistory, $ionicNavBarDelegate, $state, $rootScope, $stateParams, $ionicLoading) {
     // Create a firebase reference
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
 
@@ -1116,6 +1120,10 @@ angular.module('starter.controllers', [])
 
     // Signout from the app
     $scope.signOut = function() {
+	    $ionicLoading.show({
+            template: '<p><ion-spinner icon="ripple"></ion-spinner>Signing out..See ya!</p>',
+            duration: 1000
+        });
         // Get a reference to where the User's pending circles are going to be stored
         var fbUserPendingCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/");
 
@@ -1127,12 +1135,11 @@ angular.module('starter.controllers', [])
 
         // Delete all the accepted circles cached data
         fbUserAcceptedCircles.remove();
-
-        $state.go('launch');
-        $ionicHistory.clearCache();
-        $ionicHistory.clearHistory();
-        console.log("History" + JSON.stringify($ionicHistory.viewHistory()));
-        fbRef.unauth();
+        
+    	$ionicHistory.clearCache();
+		$ionicHistory.clearHistory();
+		fbRef.unauth();
+		$state.go('launch');        
     };
 
     // Called when the user clicks the "Survey" button
@@ -1305,7 +1312,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tab-Account
-.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $cipherFactory, $http, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
+.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $cipherFactory, $http, , $ionicLoading, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
     $scope.user = {
         type: '',
         username: 'synapse_nomfa',
@@ -1433,8 +1440,9 @@ angular.module('starter.controllers', [])
     }
 
     $scope.connect = function(user) {
-        console.log("Bank ID: " + user.id);
-
+		$ionicLoading.show({
+            template: '<p><ion-spinner icon="ripple"></ion-spinner>  Loading..</p>'
+        });
         fbRef.child("Payments/oauth").once('value', function(data) {
 	        //Decipher oauth keys before POST
 	        var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
@@ -1466,13 +1474,16 @@ angular.module('starter.controllers', [])
                 if (payload.data.success) {
                     if (payload.data.nodes[0].allowed == null) {
                         $rootScope.question = payload.data;
+                        $ionicLoading.hide();
                         $state.go('tab.auth-question');
                     } else {
                         $rootScope.data = payload.data;
+                        $ionicLoading.hide();
                         $state.go('tab.choose-account');
                     }
                 }
             }).catch(function(err) {
+	            $ionicLoading.hide();
                 console.log("Got an error in bank login.");
                 console.log(err);
                 alert(err.statusText);
@@ -1597,6 +1608,9 @@ angular.module('starter.controllers', [])
     };
 
     $scope.validateUser = function(user) {
+	    $ionicLoading.show({
+            template: '<p><ion-spinner icon="ripple"></ion-spinner>  Loading..</p>'
+        });
         fbRef.once("value", function(data) {
 	        //Decipher oauth keys before POST
 	        var oauth_key = $cipherFactory.decrypt(data.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().Payments.oauth.oauth_key.salt, data.val().Payments.oauth.oauth_key.iv);
@@ -1645,12 +1659,14 @@ angular.module('starter.controllers', [])
 	            });
 	            
                 if (payload.data.message.en == "SSN information verified") {
+	                $ionicLoading.hide();
                     $ionicPopup.alert({
                         title: "You're all set!",
                         template: "Your verification is complete"
                     });
                     $state.go("tab.settings");
                 } else {
+	                $ionicLoading.hide();
                     $ionicPopup.alert({
                         title: "We need a little more info from you",
                         template: "Please bear with us :)"
@@ -1659,6 +1675,7 @@ angular.module('starter.controllers', [])
                     $state.go("tab.kyc-questions");
                 }
             }).catch(function(err) {
+	            $ionicLoading.hide();
                 console.log(err);
                 console.log("Attachment" + JSON.stringify(err));
                 alert(err.statusText);
@@ -1667,13 +1684,16 @@ angular.module('starter.controllers', [])
     };
 })
 
-.controller('KycQuestionCtrl', function($scope, $rootScope, $state, $cipherFactory, $http, $ionicPopup) {
+.controller('KycQuestionCtrl', function($scope, $rootScope, $state, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
 
     $scope.data = $rootScope.kycQuestions.question_set;
     console.log("Questions: ", $scope.data.questions);
     $scope.selection = {};
 
     $scope.validate = function() {
+	    $ionicLoading.show({
+            template: '<p><ion-spinner icon="ripple"></ion-spinner>  Loading..</p>'
+        });
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
         fbRef.child("Payments/oauth").once('value', function(data) {
 	        //Decipher oauth keys before POST
@@ -1706,7 +1726,7 @@ angular.module('starter.controllers', [])
                     'fingerprint': data.val().fingerprint
                 }
             }).then(function(payload) {
-	            console.log("QUESTION: " + payload);
+	            $ionicLoading.hide();
                 $ionicPopup.alert({
                     title: "You're all set!",
                     template: "Your SSN information was verified."
@@ -1728,12 +1748,13 @@ angular.module('starter.controllers', [])
                 $state.go("tab.settings");
                 
             }).catch(function(err) {
-                console.log("Got an error in MFA - QuestionCtrl.");
+	            $ionicLoading.hide();
                 console.log(err);
                 console.log("Error Message in JSON: " + JSON.stringify(err));
 
                 // Popup for wrong answer
                 if (err.status == 400) {
+	                $ionicLoading.hide();
                     $ionicPopup.alert({
                         title: "Wrong Answer!",
                         template: "Please try again."

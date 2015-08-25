@@ -1,5 +1,8 @@
 <ion-view  hide-back-button="true" view-title="Verification Question">
-    <ion-content padding="false">
+    <ion-content class="pageBG" padding="false">
+    	<br>
+    	<p align="center" style="color: #595858"><b>We need additional information for verifying your identity. Please answer the following questions correctly.</b></p>
+    	<br>
         <div class="card">
             <label class="item item-input item-text-wrap item-select" ng-repeat="question in data.questions">
                 <div class="input-label">
@@ -10,7 +13,16 @@
                 </select>
             </label>
         </div>
+        <br>
+        <div class="row">
+	        <div class="col">
+		        <i class="icon ion-ios7-locked-outline my-icon"></i>
+	        </div>
+	        <div class="col col-90">
+		        <p align="justify" style="color: #595858">The information you provide on this page is solely for identity verification only.</p>
+	        </div>
+        </div>
+		<br>
 		<button ng-click="validate()" class="button button-block button-balanced">Finish</button>
-
     </ion-content>
 </ion-view>

@@ -1,9 +1,12 @@
 <ion-view view-title="Link your account">
-    <ion-content padding="true">
+    <ion-content class="pageBG" padding="true">
+    	<br>
+    	<p align="center" style="color: #595858"><b>Use your online banking username and password to connect your account.</b></p>
+    	<br>
         <div class="card">
             <div class="item">
                 <label class="item item-input item-select">
-                    <div class="input-label">
+                    <div class="input-label balanced">
                         Select your bank
                     </div>
                     <select ng-model="user.id" ng-required="true">
@@ -12,22 +15,31 @@
                 </label>
 
                 <label class="item item-input item-floating-label">
-                    <span class="input-label">Online ID</span>
+                    <span class="input-label balanced">Online ID</span>
                     <input type="text" placeholder="Online ID" ng-model="user.username" ng-required="true">
                 </label>
 
                 <label class="item item-input item-floating-label">
-                    <span class="input-label">Password</span>
+                    <span class="input-label balanced">Password</span>
                     <input type="password" placeholder="Password" ng-model="user.password" ng-required="true">
                 </label>
-                <ion-list>
+                <!--<ion-list>
                     <div class="checkbox required item-text-wrap">
                         <ion-checkbox ng-model="isChecked"> By clicking here, I agree to authorize WalletBuddies Inc., to debit and credit funds on my behalf from my bank account for services provided by WalletBuddies App. Click here <a href = "http://walletbuddies.co/TOS/TOS.pdf">[Terms and Conditions] </a>for details.</ion-checkbox>
                     </div>
-                </ion-list>
+                </ion-list>-->
             </div>
         </div>
-        
+        <br>
+        <div class="row">
+	        <div class="col">
+		        <i class="icon ion-ios7-locked-outline my-icon"></i>
+	        </div>
+	        <div class="col col-90">
+		        <p align="justify" style="color: #595858">We do not store any information you provide on this page. This information is requested to connect to your bank.</p>
+	        </div>
+        </div>
+		<br> 
         <button ng-click="connect(user)" class="button button-full button-balanced">Connect</button>        
     </ion-content>
 </ion-view>

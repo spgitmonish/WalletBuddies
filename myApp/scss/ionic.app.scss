@@ -306,6 +306,24 @@ a.autolinker {
     border: 0;
 }
 
+.spinner svg {
+  width: 28px;
+  height: 28px;
+  stroke: #30c0cb;
+  fill: #30c0cb;
+}
+
+// Background color for a page
+.pageBG {
+	background-color: #f8f8f8;
+}
+
+.my-icon{
+  font-size:35px !important;
+  display:block !important;
+  color: #0dbd45
+}
+
 // Include all of Ionic
 @import "www/lib/ionic/scss/ionic";
 
