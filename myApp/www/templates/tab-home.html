@@ -1,37 +1,42 @@
 <ion-view hide-back-button="true" view-title="Home">
-    <ion-content class="class=" card "">
-        <div ng-repeat="message in newsfeed" class="item item-text-wrap">
-            {{message.feed}}
+    <ion-content class="pageBG">
+    	<div class="card" ng-repeat="message in newsfeed">
+		    <div class="item item-text-wrap">
+			    <div class="row">
+				    <div class="col">
+		        	<i class="icon {{message.icon}} my-icon"></i>
+				    </div>
+				    <div class="col col-80">
+		        	{{message.feed}}
+				    </div>
+		    	</div>
+	    	</div>
+    	</div>
+        <div class="card" ng-repeat="transaction in transactions">
+            <div ng-if="transaction.type === 'Debit'">
+	            <div class="item item-body">
+		            <div class="row">
+					    <div class="col">
+				        	<i class="icon {{transaction.icon}} my-icon"></i>
+						</div>
+						<div class="col col-80">
+							<b>${{transaction.amount}}</b> was <b>debited</b> from your account as part of the <b>{{transaction.circle}}</b> circle.
+		            	</div>
+		            </div>
+	            </div>
+            </div>
+            <div ng-if="transaction.type === 'Credit'">
+	            <div class="item item-body">
+		            <div class="row">
+					    <div class="col">
+				        	<i class="icon {{transaction.icon}} my-icon"></i>
+						</div>
+						<div class="col col-80">
+							Woohoo! You just got paid for the <b>{{transaction.circle}}</b> circle. <b>${{transaction.amount}}</b> was <b>credited</b> to your account.
+						</div>
+		            </div>
+	            </div>
+            </div>
         </div>
-        <!--
-            <div class="item item-body" ng-if="transaction.type === 'Debit'">
-                <p style="color: black">
-                    <b>${{transaction.amount}}</b> was debited from your account as part of the <b>{{transaction.circle}}</b> circle.
-                </p>
-                <p>
-                    <a href="#" class="subdued">1 Like</a>
-                    <a href="#" class="subdued">5 Comments</a>
-                </p>
-            </div>
-            <div class="item item-body" ng-if="transaction.type === 'Credit'">
-                <p style="color: black">
-                    Woohoo! You just got paid for the <b>{{transaction.circle}}</b> circle. <b>${{transaction.amount}}</b> was <b>credited</b> to your account.
-                </p>
-                <p>
-                    <a href="#" class="subdued">1 Like</a>
-                    <a href="#" class="subdued">5 Comments</a>
-                </p>
-            </div>
-            <div class="item tabs tabs-secondary tabs-icon-left">
-                <a class="tab-item" href="#">
-                    <i class="icon ion-thumbsup"></i> Like
-                </a>
-                <a class="tab-item" href="#">
-                    <i class="icon ion-chatbox"></i> Comment
-                </a>
-                <a class="tab-item" href="#">
-                    <i class="icon ion-share"></i> Share
-                </a>
-            </div>-->
     </ion-content>
 </ion-view>

@@ -18,239 +18,256 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $firebaseObject, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush, $cipherFactory) {
+.controller('AccountCtrl', function($scope, $firebaseObject, $ionicPopup, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush, $cipherFactory) {
+	
+	$scope.check = {data:true};
+	$scope.TC = function(index) {
+        console.log('array index is ' + index + $scope.check.data);
+        var checked = index;
+    }
+	    
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
-        // Make sure all the fields have a value
-        if (!account.email || !account.password || !account.firstname || !account.lastname || !account.phonenumber) {
-            alert("Please enter all credentials");
-        } else {
-            console.log("All fields entered");
-
-            // Get a reference to the Firebase account
-            var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
-            // Validating if phone number has 10 digits
-            if (account.phonenumber.length > 10) {
-                alert("Please enter a valid 10 digit phone number.");
-                return;
-            }
-            // Create the User
-            fbRef.createUser({
-                    email: account.email,
-                    password: account.password
-                },
-                function(error, userData) {
-                    // Handle all the error cases
-                    if (error) {
-                        switch (error.code) {
-                            case "EMAIL_TAKEN":
-                                alert("The new user account cannot be created because the email is already in use.");
-                                break;
-                            case "INVALID_EMAIL":
-                                alert("The specified email is not a valid email.");
-                                break;
-                            default:
-                                alert("Error creating user.");
-                        }
-                    } else {
-                        // Get the Authorization object using the Firebase link
-                        var fbAuth = $firebaseAuth(fbRef);
-
-                        // Check for authorization
-                        fbAuth.$authWithPassword({
-                            email: account.email,
-                            password: account.password
-                        }).then(function(authData) {
-                            // Store information for easier access across controllers
-                            $rootScope.fbAuthData = authData;
-                            $rootScope.email = account.email;
-
-                            console.log("Logged in as: " + authData.uid);
-
-                            // Get the Firebase link for this user
-                            var fbUser = fbRef.child("Users").child(authData.uid);
-                            console.log("Link: " + fbUser);
-
-                            // Store the user information
-                            fbUser.update({
-                                firstname: account.firstname,
-                                lastname: account.lastname,
-                                email: account.email,
-                                phonenumber: account.phonenumber,
-                                survey: false
-                            });
-
-                            // Create user's unique Hash and save under the Registered Users folder
-                            // Use a secret string and set the id length to be 4
-                            var hashids = new Hashids("SecretMonkey", 4);
-                            // Use the user's phone number
-                            // Converting string to integer
-                            var temp = parseInt(account.phonenumber);
-                            account.phonenumber = temp;
-                            console.log("Phone:   " + account.phonenumber);
-                            var id = hashids.encode(account.phonenumber);
-                            console.log("ID after encode: " + id);
-
-                            // Write the user's unique hash to registered users and save his UID
-                            var fbHashRef = new Firebase(fbRef + "/RegisteredUsers/");
-                            fbHashRef.child(id).update({
-                                uid: authData.uid
-                            });
-
-                            // Check to see if user has invites
-                            var fbInvites = new Firebase(fbRef + "/Invites/" + id);
-                            if (fbInvites != null) {
-                                var obj = $firebaseObject(fbInvites);
-
-                                obj.$loaded().then(function() {
-                                    console.log("loaded record:", obj.$id);
-
-                                    // To iterate the key/value pairs of the object, use angular.forEach()
-                                    angular.forEach(obj, function(value, key) {
-                                        console.log(key, value);
-                                        var circleID = value;
-                                        console.log("Invites path: " + fbInvites + circleID);
-                                        fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
-                                            Status: "pending"
-                                        });
-                                    })
-                                })
-                            }
-
-                            // Write email info to /Sendgrid folder to trigger the server to send email
-                            fbRef.child('Sendgrid').push({
-                                from: 'hello@walletbuddies.co',
-                                to: account.email,
-                                subject: account.firstname + "! You're all set.",
-                                text: "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)" +
-                                    "\n\n Team Wallet Buddies"
-                            });
-							
-							var email = account.email;
-							var number = account.phonenumber.toString();
-							var first = account.firstname;
-							var last = account.lastname;
-							
-                            //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
-							console.log("SynapsePay User1: " + account.email, account.phonenumber.toString(), account.firstname + " " + account.lastname);
-							fbRef.child('SynapsePay').once('value', function(data) {
-								// Create a SynapsePay user account
-								console.log("SynapsePay User: " + data.val().client_id + data.val().client_secret + email + number + first + " " + last);
-	                            $http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
-	                                "client": {
-	                                    //your client ID and secret
-	                                    "client_id": data.val().client_id,
-	                                    "client_secret": data.val().client_secret
-	                                },
-	                                "logins": [
-	                                    //email and password of the user. Passwords are optional.
-	                                    //yes you can add multiple emails and multiple users for one account here
-	                                    {
-	                                        "email": email,
-	                                        "read_only": false
-	                                    }
-	                                ],
-	                                "phone_numbers": [
-	                                    //user's mobile numbers. Can be used for 2FA
-	                                    number
-	                                ],
-	                                "legal_names": [
-	                                    //user's legal names. If multiple user's are being added, add multiple legal names.
-	                                    //If business account, add the name of the person creating the account and the name of the company
-	                                    first + " " + last
-	                                ],
-	                                "fingerprints": [
-	                                    //fingerprints of the devices that you will be accessing this account from
-	                                    {
-	                                        "fingerprint": "suasusau21324redakufejfjsf"
-	                                    }
-	                                ],
-	                                "ips": [
-	                                    //user's IP addresses
-	                                    "192.168.1.1"
-	                                ],
-	                                "extra": {
-	                                    //optional fields
-	                                    "note": "WalletBuddies User",
-	                                    "supp_id": "No IDs Here",
-	                                    //toggle to true if its a business account
-	                                    "is_business": false
-	                                }
-	                            }).then(function(response) {
-		                            console.log("SYNAPSEPAY response " + JSON.stringify(response));
-	                                fbUser.child("Payments/oauth").update({
-	                                    oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
-	                                    refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
-	                                    expires_at: response.data.oauth.expires_at,
-	                                    expires_in: response.data.oauth.expires_in,
-	                                    client_id: response.data.user.client.id,
-	                                    fingerprint: "suasusau21324redakufejfjsf",
-	                                    oid: response.data.user._id.$oid
-	                                });
+	    // Check if terms and conditions are accepted
+		if($scope.check.data) {
+	        // Make sure all the fields have a value
+	        if (!account.email || !account.password || !account.firstname || !account.lastname || !account.phonenumber) {
+	            alert("Please enter all credentials");
+	        } else {
+	            console.log("All fields entered");
 	
-	                            }).catch(function(err) {
-	                                console.log("An error occured while communicating with Synapse");
-	                                console.log(JSON.stringify(err));
-	                            });	
-							})
-
-                            // Clear the form
-                            account.firstname = '';
-                            account.lastname = '';
-                            account.email = '';
-                            account.phonenumber = '';
-                            account.password = '';
-
-                            // Get a reference to the NewsFeed of the user
-                            var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
-
-                            var feedToPush = "Welcome to WalletBuddies, your account was succesfully set up!";
-
-                            // Append new data to this FB link
-                            fbNewsFeedRef.push({
-                                feed: feedToPush
-                            });
-
-                            // Switch to the Wallet Tab
-                            $state.go('tab.wallet');
-
-                            // To request permission for Push Notifications
-                            $scope.$on('$ionicView.afterLeave', function() {
-                                // Register device for push notifications
-                                if (ionic.Platform.isAndroid()) {
-                                    androidConfig = {
-                                        "senderID": "456019050509" // Project number from GCM
-                                    };
-                                    $cordovaPush.register(androidConfig).then(function(deviceToken) {
-                                        // Success -- Registration ID is received in $notificationReceiver and sent to FireBase
-                                        console.log("Success: " + deviceToken);
-                                    }, function(err) {
-                                        alert("Registration error: " + err);
-                                    })
-                                } else if (ionic.Platform.isIOS()) {
-                                    var iosConfig = {
-                                        "badge": true,
-                                        "sound": true,
-                                        "alert": true,
-                                    };
-                                    $cordovaPush.register(iosConfig).then(function(deviceToken) {
-                                        // Success -- send deviceToken to FireBase
-                                        console.log("deviceToken: " + deviceToken);
-                                        fbUser.update({
-                                            deviceToken: deviceToken,
-                                            device: "iOS"
-                                        });
-                                    }, function(err) {
-                                        alert("Registration error: " + err);
-                                    });
-                                }
-                            });
-                        }).catch(function(error) {
-                            console.error("Authentication failed: " + error);
-                        });
-                    }
-                });
-        }
+	            // Get a reference to the Firebase account
+	            var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+	            // Validating if phone number has 10 digits
+	            if (account.phonenumber.length > 10) {
+	                alert("Please enter a valid 10 digit phone number.");
+	                return;
+	            }
+	            // Create the User
+	            fbRef.createUser({
+	                    email: account.email,
+	                    password: account.password
+	                },
+	                function(error, userData) {
+	                    // Handle all the error cases
+	                    if (error) {
+	                        switch (error.code) {
+	                            case "EMAIL_TAKEN":
+	                                alert("The new user account cannot be created because the email is already in use.");
+	                                break;
+	                            case "INVALID_EMAIL":
+	                                alert("The specified email is not a valid email.");
+	                                break;
+	                            default:
+	                                alert("Error creating user.");
+	                        }
+	                    } else {
+	                        // Get the Authorization object using the Firebase link
+	                        var fbAuth = $firebaseAuth(fbRef);
+	
+	                        // Check for authorization
+	                        fbAuth.$authWithPassword({
+	                            email: account.email,
+	                            password: account.password
+	                        }).then(function(authData) {
+	                            // Store information for easier access across controllers
+	                            $rootScope.fbAuthData = authData;
+	                            $rootScope.email = account.email;
+	
+	                            console.log("Logged in as: " + authData.uid);
+	
+	                            // Get the Firebase link for this user
+	                            var fbUser = fbRef.child("Users").child(authData.uid);
+	                            console.log("Link: " + fbUser);
+	
+	                            // Store the user information
+	                            fbUser.update({
+	                                firstname: account.firstname,
+	                                lastname: account.lastname,
+	                                email: account.email,
+	                                phonenumber: account.phonenumber,
+	                                survey: false
+	                            });
+	
+	                            // Create user's unique Hash and save under the Registered Users folder
+	                            // Use a secret string and set the id length to be 4
+	                            var hashids = new Hashids("SecretMonkey", 4);
+	                            // Use the user's phone number
+	                            // Converting string to integer
+	                            var temp = parseInt(account.phonenumber);
+	                            account.phonenumber = temp;
+	                            console.log("Phone:   " + account.phonenumber);
+	                            var id = hashids.encode(account.phonenumber);
+	                            console.log("ID after encode: " + id);
+	
+	                            // Write the user's unique hash to registered users and save his UID
+	                            var fbHashRef = new Firebase(fbRef + "/RegisteredUsers/");
+	                            fbHashRef.child(id).update({
+	                                uid: authData.uid
+	                            });
+	
+	                            // Check to see if user has invites
+	                            var fbInvites = new Firebase(fbRef + "/Invites/" + id);
+	                            if (fbInvites != null) {
+	                                var obj = $firebaseObject(fbInvites);
+	
+	                                obj.$loaded().then(function() {
+	                                    console.log("loaded record:", obj.$id);
+	
+	                                    // To iterate the key/value pairs of the object, use angular.forEach()
+	                                    angular.forEach(obj, function(value, key) {
+	                                        console.log(key, value);
+	                                        var circleID = value;
+	                                        console.log("Invites path: " + fbInvites + circleID);
+	                                        fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
+	                                            Status: "pending"
+	                                        });
+	                                    })
+	                                })
+	                            }
+	
+	                            // Write email info to /Sendgrid folder to trigger the server to send email
+	                            fbRef.child('Sendgrid').push({
+	                                from: 'hello@walletbuddies.co',
+	                                to: account.email,
+	                                subject: account.firstname + "! You're all set.",
+	                                text: "Thanks for signing up with Wallet Buddies, you can now start saving with your buddies - we hope you have fun saving :)" +
+	                                    "\n\n Team Wallet Buddies"
+	                            });
+								
+								var email = account.email;
+								var number = account.phonenumber.toString();
+								var first = account.firstname;
+								var last = account.lastname;
+								
+	                            //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
+								console.log("SynapsePay User1: " + account.email, account.phonenumber.toString(), account.firstname + " " + account.lastname);
+								fbRef.child('SynapsePay').once('value', function(data) {
+									// Create a SynapsePay user account
+									console.log("SynapsePay User: " + data.val().client_id + data.val().client_secret + email + number + first + " " + last);
+		                            $http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
+		                                "client": {
+		                                    //your client ID and secret
+		                                    "client_id": data.val().client_id,
+		                                    "client_secret": data.val().client_secret
+		                                },
+		                                "logins": [
+		                                    //email and password of the user. Passwords are optional.
+		                                    //yes you can add multiple emails and multiple users for one account here
+		                                    {
+		                                        "email": email,
+		                                        "read_only": false
+		                                    }
+		                                ],
+		                                "phone_numbers": [
+		                                    //user's mobile numbers. Can be used for 2FA
+		                                    number
+		                                ],
+		                                "legal_names": [
+		                                    //user's legal names. If multiple user's are being added, add multiple legal names.
+		                                    //If business account, add the name of the person creating the account and the name of the company
+		                                    first + " " + last
+		                                ],
+		                                "fingerprints": [
+		                                    //fingerprints of the devices that you will be accessing this account from
+		                                    {
+		                                        "fingerprint": "suasusau21324redakufejfjsf"
+		                                    }
+		                                ],
+		                                "ips": [
+		                                    //user's IP addresses
+		                                    "192.168.1.1"
+		                                ],
+		                                "extra": {
+		                                    //optional fields
+		                                    "note": "WalletBuddies User",
+		                                    "supp_id": "No IDs Here",
+		                                    //toggle to true if its a business account
+		                                    "is_business": false
+		                                }
+		                            }).then(function(response) {
+			                            console.log("SYNAPSEPAY response " + JSON.stringify(response));
+		                                fbUser.child("Payments/oauth").update({
+		                                    oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
+		                                    refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
+		                                    expires_at: response.data.oauth.expires_at,
+		                                    expires_in: response.data.oauth.expires_in,
+		                                    client_id: response.data.user.client.id,
+		                                    fingerprint: "suasusau21324redakufejfjsf",
+		                                    oid: response.data.user._id.$oid
+		                                });
+		
+		                            }).catch(function(err) {
+		                                console.log("An error occured while communicating with Synapse");
+		                                console.log(JSON.stringify(err));
+		                            });	
+								})
+	
+	                            // Clear the form
+	                            account.firstname = '';
+	                            account.lastname = '';
+	                            account.email = '';
+	                            account.phonenumber = '';
+	                            account.password = '';
+	
+	                            // Get a reference to the NewsFeed of the user
+	                            var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+	
+	                            var feedToPush = "Welcome to WalletBuddies, your account was succesfully set up!";
+	
+	                            // Append new data to this FB link
+	                            fbNewsFeedRef.push({
+	                                feed: feedToPush,
+	                                icon: "ion-happy-outline"
+	                            });
+	
+	                            // Switch to the Wallet Tab
+	                            $state.go('tab.wallet');
+	
+	                            // To request permission for Push Notifications
+	                            $scope.$on('$ionicView.afterLeave', function() {
+	                                // Register device for push notifications
+	                                if (ionic.Platform.isAndroid()) {
+	                                    androidConfig = {
+	                                        "senderID": "456019050509" // Project number from GCM
+	                                    };
+	                                    $cordovaPush.register(androidConfig).then(function(deviceToken) {
+	                                        // Success -- Registration ID is received in $notificationReceiver and sent to FireBase
+	                                        console.log("Success: " + deviceToken);
+	                                    }, function(err) {
+	                                        alert("Registration error: " + err);
+	                                    })
+	                                } else if (ionic.Platform.isIOS()) {
+	                                    var iosConfig = {
+	                                        "badge": true,
+	                                        "sound": true,
+	                                        "alert": true,
+	                                    };
+	                                    $cordovaPush.register(iosConfig).then(function(deviceToken) {
+	                                        // Success -- send deviceToken to FireBase
+	                                        console.log("deviceToken: " + deviceToken);
+	                                        fbUser.update({
+	                                            deviceToken: deviceToken,
+	                                            device: "iOS"
+	                                        });
+	                                    }, function(err) {
+	                                        alert("Registration error: " + err);
+	                                    });
+	                                }
+	                            });
+	                        }).catch(function(error) {
+	                            console.error("Authentication failed: " + error);
+	                        });
+	                    }
+	                });
+	        }
+	    }
+	    else {
+		    $ionicPopup.alert({
+	            title: "Terms and Conditions",
+	            template: "You need to agree to terms and conditions in order to continue!"
+	        });
+	    }    
     }
 })
 
@@ -474,7 +491,7 @@ angular.module('starter.controllers', [])
                         // error
                         $ionicLoading.show({
                             template: 'Error choosing photo',
-                            duration: 500
+                            duration: 1000
                         });
                     });
                 }
@@ -499,7 +516,7 @@ angular.module('starter.controllers', [])
                         // error
                         $ionicLoading.show({
                             template: 'Error choosing photo',
-                            duration: 500
+                            duration: 1000
                         });
                     });
                 }
@@ -583,7 +600,8 @@ angular.module('starter.controllers', [])
         fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
             // Save invitor name
             fbCirclePushRef.update({
-                invitorName: userData.val().firstname
+                invitorName: userData.val().firstname + userData.val().lastname,
+                invitorPhoto: userData.val().profilePhoto
             });
         });
 
@@ -716,11 +734,12 @@ angular.module('starter.controllers', [])
         // Get a reference to the NewsFeed of the user
         var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
-        var feedToPush = "You created a new social group " + groupName;
+        var feedToPush = "You created a new social group " + "<b>" + groupName + "</b>";
 
         // Append new data to this FB link
         fbNewsFeedRef.push({
-            feed: feedToPush
+            feed: feedToPush,
+            icon: "ion-ios7-chatboxes-outline"
         });
 
         // The data is ready, switch to the Wallet tab
@@ -806,11 +825,88 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for wallet-detail page
-.controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, $ionicPopup, $firebaseArray) {
+.controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $cordovaCamera, $ionicActionSheet, $rootScope, $state, $ionicPopup, $firebaseArray) {
     // Get a reference to the Firebase account
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
     var fbCircles = new Firebase(fbRef + "/Circles/" + $stateParams.circleID);
     var obj = $firebaseObject(fbCircles);
+    
+    obj.$bindTo($scope, "circle");
+    
+    // For selecting a profile photo
+    $scope.selectPicture = function() {
+        // Show the action sheet
+        var hideSheet = $ionicActionSheet.show({
+            buttons: [{
+                text: 'Choose Photo'
+            }, {
+                text: 'Take Photo'
+            }],
+            cancelText: 'Cancel',
+            cancel: function() {
+                // add cancel code..
+            },
+            buttonClicked: function(index) {
+                if (index == 0) {
+                    hideSheet();
+                    var options = {
+                        quality: 50,
+                        destinationType: Camera.DestinationType.DATA_URL,
+                        sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+                        allowEdit: true,
+                        encodingType: Camera.EncodingType.JPEG,
+                        targetWidth: 100,
+                        targetHeight: 100,
+                        popoverOptions: CameraPopoverOptions,
+                        saveToPhotoAlbum: false
+                    };
+
+                    $cordovaCamera.getPicture(options).then(function(imageData) {
+                        var image = document.getElementById('myImage');
+                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        fbCircles.update({
+	                    	circlePhoto: $scope.imageSrc
+                        });
+                    }, function(err) {
+                        // error
+                        $ionicLoading.show({
+                            template: 'Error choosing photo',
+                            duration: 1000
+                        });
+                    });
+                }
+                if (index == 1) {
+                    hideSheet();
+                    var options = {
+                        quality: 50,
+                        destinationType: Camera.DestinationType.DATA_URL,
+                        sourceType: Camera.PictureSourceType.CAMERA,
+                        allowEdit: true,
+                        encodingType: Camera.EncodingType.JPEG,
+                        targetWidth: 100,
+                        targetHeight: 100,
+                        popoverOptions: CameraPopoverOptions,
+                        saveToPhotoAlbum: false
+                    };
+
+                    $cordovaCamera.getPicture(options).then(function(imageData) {
+                        var image = document.getElementById('myImage');
+                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        fbCircles.update({
+	                    	circlePhoto: $scope.imageSrc
+                        });
+                    }, function(err) {
+                        // error
+                        $ionicLoading.show({
+                            template: 'Error choosing photo',
+                            duration: 1000
+                        });
+                    });
+                }
+            }
+        });
+    };
+    
     // Creare a link to a CircleMembers under this circle
     var fbCircleMembers = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Members/" + $stateParams.circleID + "/CircleMembers/");
 	console.log("FBCIRCLE MEMBERS: " + fbCircleMembers);
@@ -833,8 +929,6 @@ angular.module('starter.controllers', [])
             });
         })
     })
-
-    obj.$bindTo($scope, "circle");
 
     $scope.chat = function() {
         $state.go('tab.chat', {
@@ -1060,11 +1154,12 @@ angular.module('starter.controllers', [])
          // Get a reference to the NewsFeed of the user
         var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
-        var feedToPush = "You accepted an invite to the social circle: " + $scope.circle.circleName;
+        var feedToPush = "You accepted an invite to the social circle <b>" + $scope.circle.circleName + "</b>";
 
         // Append new data to this FB link
         fbNewsFeedRef.push({
-            feed: feedToPush
+            feed: feedToPush,
+            icon: "ion-ios7-heart-outline"
         });
     }
 
@@ -1091,11 +1186,12 @@ angular.module('starter.controllers', [])
          // Get a reference to the NewsFeed of the user
         var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
-        var feedToPush = "You declined an invite to the social circle: " + $scope.circle.circleName;
+        var feedToPush = "You declined an invite to the social circle <b>" + $scope.circle.circleName + "</b>";
 
         // Append new data to this FB link
         fbNewsFeedRef.push({
-            feed: feedToPush
+            feed: feedToPush,
+            icon: "ion-heart-broken"
         });
 
         $state.go('tab.requests');
@@ -1103,10 +1199,88 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tab-settings
-.controller('SettingsCtrl', function($scope, $ionicHistory, $ionicNavBarDelegate, $state, $rootScope, $stateParams, $ionicLoading) {
+.controller('SettingsCtrl', function($scope, $firebaseObject, $ionicHistory, $ionicActionSheet, $cordovaCamera, $ionicNavBarDelegate, $state, $rootScope, $stateParams, $ionicLoading) {
     // Create a firebase reference
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+	
+	var profile = $firebaseObject(fbRef.child("Users").child($rootScope.fbAuthData.uid));
+	
+	profile.$bindTo($scope, "data");
+	
+	// For selecting a profile photo
+    $scope.selectPicture = function() {
+        // Show the action sheet
+        var hideSheet = $ionicActionSheet.show({
+            buttons: [{
+                text: 'Choose Photo'
+            }, {
+                text: 'Take Photo'
+            }],
+            cancelText: 'Cancel',
+            cancel: function() {
+                // add cancel code..
+            },
+            buttonClicked: function(index) {
+                if (index == 0) {
+                    hideSheet();
+                    var options = {
+                        quality: 50,
+                        destinationType: Camera.DestinationType.DATA_URL,
+                        sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+                        allowEdit: true,
+                        encodingType: Camera.EncodingType.JPEG,
+                        targetWidth: 100,
+                        targetHeight: 100,
+                        popoverOptions: CameraPopoverOptions,
+                        saveToPhotoAlbum: false
+                    };
 
+                    $cordovaCamera.getPicture(options).then(function(imageData) {
+                        var image = document.getElementById('myImage');
+                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
+	                    	profilePhoto: $scope.imageSrc
+                        });
+                    }, function(err) {
+                        // error
+                        $ionicLoading.show({
+                            template: 'Error choosing photo',
+                            duration: 1000
+                        });
+                    });
+                }
+                if (index == 1) {
+                    hideSheet();
+                    var options = {
+                        quality: 50,
+                        destinationType: Camera.DestinationType.DATA_URL,
+                        sourceType: Camera.PictureSourceType.CAMERA,
+                        allowEdit: true,
+                        encodingType: Camera.EncodingType.JPEG,
+                        targetWidth: 100,
+                        targetHeight: 100,
+                        popoverOptions: CameraPopoverOptions,
+                        saveToPhotoAlbum: false
+                    };
+
+                    $cordovaCamera.getPicture(options).then(function(imageData) {
+                        var image = document.getElementById('myImage');
+                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
+	                    	profilePhoto: $scope.imageSrc
+                        });
+                    }, function(err) {
+                        // error
+                        $ionicLoading.show({
+                            template: 'Error choosing photo',
+                            duration: 1000
+                        });
+                    });
+                }
+            }
+        });
+    };
+	
     // Go to tab-account
     $scope.account = function() {
         $state.go("tab.account");
@@ -1115,13 +1289,13 @@ angular.module('starter.controllers', [])
     // Called when the user clicks the "Reset Password" button
     $scope.newPassword = function() {
         // Go to the forgot password page
-        $state.go('resetpassword');
+        $state.go('tab.resetpassword');
     }
 
     // Signout from the app
     $scope.signOut = function() {
 	    $ionicLoading.show({
-            template: '<p><ion-spinner icon="ripple"></ion-spinner>Signing out..See ya!</p>',
+            template: 'Signing out..See ya!',
             duration: 1000
         });
         // Get a reference to where the User's pending circles are going to be stored
@@ -1148,7 +1322,7 @@ angular.module('starter.controllers', [])
             // If the user hasn't answered the survey page, take them to the survey page
             if( userData.val().survey === false ){
                 // Go to the survey page
-                $state.go('surveypage');
+                $state.go('tab.surveypage');
             }
             else{
                 $ionicPopup.alert({
@@ -1312,11 +1486,11 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tab-Account
-.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $cipherFactory, $http, , $ionicLoading, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
+.controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $firebaseArray, $cipherFactory, $http, $ionicLoading, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
     $scope.user = {
         type: '',
-        username: 'synapse_nomfa',
-        password: 'test1234'
+        username: '',
+        password: ''
     };
 
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
@@ -1441,7 +1615,7 @@ angular.module('starter.controllers', [])
 
     $scope.connect = function(user) {
 		$ionicLoading.show({
-            template: '<p><ion-spinner icon="ripple"></ion-spinner>  Loading..</p>'
+            template: 'Loading..Hold tight.'
         });
         fbRef.child("Payments/oauth").once('value', function(data) {
 	        //Decipher oauth keys before POST
@@ -1501,21 +1675,34 @@ angular.module('starter.controllers', [])
         console.log('array index is ' + index);
         $scope.temp = index;
     }
-
+	
+	$scope.check = {data:true};
+	$scope.TC = function(index) {
+        console.log('array index is ' + index + $scope.check.data);
+        var checked = index;
+    }
+	
     $scope.validateUser = function() {
-        //alert("Your " + $scope.data.banks[$scope.temp].nickname + " account is now linked.");
-        $ionicPopup.alert({
-            title: "Alright!",
-            template: "Your " + $scope.data.nodes[$scope.temp].info.class + " " + $scope.data.nodes[$scope.temp].info.type + " account is now linked."
-        });
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid).child("Payments").child("Bank");
-        fbRef.update({
-            account_num: $scope.data.nodes[$scope.temp].info.account_num,
-            routing: $scope.data.nodes[$scope.temp].info.routing_num,
-            type: $scope.data.nodes[$scope.temp].type,
-            oid: $scope.data.nodes[$scope.temp]._id.$oid
-        });
-        $state.go('tab.kyc-details');
+	    if($scope.check.data) {
+		    $ionicPopup.alert({
+	            title: "Alright!",
+	            template: "Your " + $scope.data.nodes[$scope.temp].info.class + " " + $scope.data.nodes[$scope.temp].info.type + " account is now linked."
+	        });
+	        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid).child("Payments").child("Bank");
+	        fbRef.update({
+	            account_num: $scope.data.nodes[$scope.temp].info.account_num,
+	            routing: $scope.data.nodes[$scope.temp].info.routing_num,
+	            type: $scope.data.nodes[$scope.temp].type,
+	            oid: $scope.data.nodes[$scope.temp]._id.$oid
+	        });
+	        $state.go('tab.kyc-details');
+	    }
+        else {
+	        $ionicPopup.alert({
+	            title: "Terms and Conditions",
+	            template: "You need to agree to terms and conditions in order to continue!"
+	        });
+        }
     };
 })
 
@@ -1525,7 +1712,8 @@ angular.module('starter.controllers', [])
     $scope.data = $rootScope.data;
 
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
-
+	
+	/*
     $scope.user = {
         day: 26,
         month: 12,
@@ -1535,6 +1723,7 @@ angular.module('starter.controllers', [])
         zip: "20740",
         ssn: 3333
     };
+    */
     
         // For selecting a photo
     $scope.selectPicture = function() {
@@ -1572,7 +1761,7 @@ angular.module('starter.controllers', [])
                         // error
                         $ionicLoading.show({
                             template: 'Error choosing photo',
-                            duration: 500
+                            duration: 1000
                         });
                     });
                 }
@@ -1599,7 +1788,7 @@ angular.module('starter.controllers', [])
                         // error
                         $ionicLoading.show({
                             template: 'Error choosing photo',
-                            duration: 500
+                            duration: 1000
                         });
                     });
                 }
@@ -1609,7 +1798,7 @@ angular.module('starter.controllers', [])
 
     $scope.validateUser = function(user) {
 	    $ionicLoading.show({
-            template: '<p><ion-spinner icon="ripple"></ion-spinner>  Loading..</p>'
+            template: 'Loading..Hold tight.'
         });
         fbRef.once("value", function(data) {
 	        //Decipher oauth keys before POST
@@ -1692,7 +1881,7 @@ angular.module('starter.controllers', [])
 
     $scope.validate = function() {
 	    $ionicLoading.show({
-            template: '<p><ion-spinner icon="ripple"></ion-spinner>  Loading..</p>'
+            template: 'Loading..Hold tight.'
         });
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
         fbRef.child("Payments/oauth").once('value', function(data) {
@@ -1743,7 +1932,8 @@ angular.module('starter.controllers', [])
 
                 // Append new data to this FB link
                 fbNewsFeedRef.push({
-                    feed: feedToPush
+                    feed: feedToPush,
+                    icon: "ion-android-checkbox-outline"
                 });
                 $state.go("tab.settings");
                 
@@ -1871,7 +2061,6 @@ angular.module('starter.controllers', [])
 })
 
 .controller('HomeCtrl', function($scope, $rootScope, $firebaseArray) {
-    console.log("Home Ctrl");
     // Get a reference to the NewsFeed of the user
     var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
@@ -1880,6 +2069,10 @@ angular.module('starter.controllers', [])
 
     // Link to $scope to have 3-way data binding
     $scope.newsfeed = $firebaseArray(fbLimitedFeed);
+    
+    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("Transactions");
+    // all server changes are applied in realtime
+    $scope.transactions = $firebaseArray(fbRef);
 })
 
 // Function to modify the email address to create a unique link based on the user

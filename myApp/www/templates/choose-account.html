@@ -8,11 +8,20 @@
 		     <label class="checkbox">
 		       <input type="radio" ng-required="true" ng-change="checkSelect($index)" ng-model="account.info.bank_name">
 		     </label>
-		     {{account.info.class}} {{account.info.type}} xxxx-xxxx-{{account.info.account_num}} {{account.info.bank_name}}
+		     {{account.info.class}} {{account.info.type}} ending-{{account.info.account_num}} {{account.info.bank_name}}
 		  </li>
 		</ul>
 		<!--<ion-radio ng-repeat="account in data.banks" ng-change="checkSelect($index)" ng-model="account.balance">{{account.nickname}} ${{account.balance}}</ion-radio>
         -->
+        <br>
+        <div class="row">
+	        <div class="col">
+				<div class="checkbox required"><input type="checkbox" ng-model="check.data" ng-required="true" ng-change="TC($index)"></div>
+	        </div>
+	        <div class="col col-80">
+		        <p align="justify">By clicking here, I agree to authorize WalletBuddies Inc. to debit and credit funds on my behalf for its services.</p>
+	        </div>
+        </div>
         <br>
         <div class="row">
 	        <div class="col">

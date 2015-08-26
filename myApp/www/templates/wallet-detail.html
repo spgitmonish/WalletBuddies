@@ -4,6 +4,13 @@
     </ion-nav-title>
     <ion-content>
     	<div class="card">
+			<label class="item item-thumbnail-left" ng-click="selectPicture()">
+		        <img ng-src="{{circle.circlePhoto}}">
+		        <br>
+			    <h2>Circle Photo</h2>
+			    <p ng-if="circle.circlePhoto">Edit</p>
+			    <p ng-if="!circle.circlePhoto">Add Photo</p>
+		    </label>
 			<div class="item item-divider" style="color: #30c0cb">		
 			    Buddies
 			</div>

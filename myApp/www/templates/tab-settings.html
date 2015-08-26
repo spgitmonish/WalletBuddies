@@ -1,22 +1,43 @@
 <ion-view hide-back-button="true" view-title="Settings">
     <ion-content class="pageBG" padding="true">
     	<div class="list card">
+	      <div class="item item-divider item-dark">
+		      {{data.firstname}} {{data.lastname}}'s Profile
+	      </div>
+	      <label class="item item-thumbnail-left" ng-click="selectPicture()">
+	        <img ng-src="{{data.profilePhoto}}">
+	        <br>
+		    <h2>Profile Photo</h2>
+		    <p ng-if="data.profilePhoto">Edit</p>
+		    <p ng-if="!data.profilePhoto">Add Photo</p>
+	      </label>
+	      <label class="item item-input">
+			  <input ng-model='data.email' type="text" placeholder="Email">
+		      <i class="icon ion-edit"></i> &nbsp &nbsp &nbsp
+          </label>
+          <label class="item item-input">
+			  <input ng-model='data.phonenumber' type="text" placeholder="Phone">
+		      <i class="icon ion-edit"></i> &nbsp &nbsp &nbsp
+          </label>
 		  <a ng-click="account()" class="item item-icon-left">
 		    <i class="icon ion-card"></i>
 		    Link your bank account
+		    <p ng-if="data.Payments.Bank.account_num">Linked Account: xxxx-xxxx-{{data.Payments.Bank.account_num}}</p>
+		    <p ng-if="!data.Payments.Bank.account_num">No account linked</p>
 		  </a>	
 		  <a ng-click="newPassword()" class="item item-icon-left">
-		    <i class="icon ion-unlocked"></i>
+		    <i class="icon ion-ios7-unlocked"></i>
 		    Reset Password
 		  </a>	
-		  <a ng-click="signOut()" class="item item-icon-left">
-		    <i class="icon ion-log-out"></i>
-		    Sign out
-		  </a>
 		  <a ng-click="survey()" class="item item-icon-left">
 		    <i class="icon ion-checkmark-circled"></i>
 		    Survey
 		  </a>		
 		</div>
+		<div align="center">
+    	<button class="button button-outline button-dark" ng-click="signOut()">
+		  Sign out
+		</button>
+    	</div>
     </ion-content>
 </ion-view>

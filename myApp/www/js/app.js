@@ -423,18 +423,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-
-    .state('resetpassword', {
-        url: '/reset-password',
-        templateUrl: 'templates/reset-password.html',
-        controller: 'ResetPassCtrl'
-    })
-
-    .state('surveypage', {
-        url: '/survey-page',
-        templateUrl: 'templates/survey-page.html',
-        controller: 'SurveyPageCtrl'
-    })
 	
     .state('tab.socialcircle', {
         url: '/socialcircle',
@@ -485,7 +473,27 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-
+	
+	.state('tab.surveypage', {
+        url: '/survey-page',
+        views: {
+            'tab-settings': {
+        templateUrl: 'templates/survey-page.html',
+        controller: 'SurveyPageCtrl'
+        	}
+        }
+    })
+    
+    .state('tab.resetpassword', {
+        url: '/reset-password',
+        views: {
+            'tab-settings': {
+        templateUrl: 'templates/reset-password.html',
+        controller: 'ResetPassCtrl'
+        	}
+        }
+    })
+	
     .state('tab.account', {
         url: '/account',
         views: {
@@ -495,7 +503,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-
+	
     .state('tab.choose-account', {
         url: '/choose-account',
         views: {

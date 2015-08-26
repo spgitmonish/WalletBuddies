@@ -44,11 +44,16 @@
                 </label>
             </div>
         </ion-list>
-		<ion-list>
-           <div class="list list-inset item-text-wrap">
-                <ion-checkbox ng-model="isChecked"> I agree with the terms and conditions <a href = "http://walletbuddies.co/TOS/TOS.pdf">[Terms and Conditions] </a>for details.</ion-checkbox>
-           </div>
-       </ion-list>
+		<br>
+        <div class="row">
+	        <div class="col">
+				<div class="checkbox required"><input type="checkbox" ng-model="check.data" ng-required="true" ng-change="TC($index)"></div>
+	        </div>
+	        <div class="col col-80">
+		        <p align="justify">I agree to terms and conditions. See <a href = "http://walletbuddies.co/TOS/TOS.pdf" style="color: blue">Terms and Conditions</a> for details.</p>
+	        </div>
+        </div>
+           
         <ion-list class="padding">
             <div class="list">
                 <button class="button button-block button-balanced" ng-click="addAccount(account)">Create Account</button>
