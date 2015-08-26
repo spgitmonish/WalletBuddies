@@ -145,7 +145,7 @@ angular.module('starter.controllers', [])
 								fbRef.child('SynapsePay').once('value', function(data) {
 									// Create a SynapsePay user account
 									console.log("SynapsePay User: " + data.val().client_id + data.val().client_secret + email + number + first + " " + last);
-		                            $http.post('https://sandbox.synapsepay.com/api/v3/user/create', {
+		                            $http.post('https://synapsepay.com/api/v3/user/create', {
 		                                "client": {
 		                                    //your client ID and secret
 		                                    "client_id": data.val().client_id,
@@ -1623,7 +1623,7 @@ angular.module('starter.controllers', [])
 	        console.log("oauth_key " + oauth_key);
 	        
             // $http post for Bank Login
-            $http.post('https://sandbox.synapsepay.com/api/v3/node/add', {
+            $http.post('https://synapsepay.com/api/v3/node/add', {
                 'login': {
                     'oauth_key': oauth_key
                 },
@@ -1805,7 +1805,7 @@ angular.module('starter.controllers', [])
 	        var oauth_key = $cipherFactory.decrypt(data.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().Payments.oauth.oauth_key.salt, data.val().Payments.oauth.oauth_key.iv);
 	        console.log("USER IMAGE: " + $scope.imageDoc);
             
-            $http.post('https://sandbox.synapsepay.com/api/v3/user/doc/add', {
+            $http.post('https://synapsepay.com/api/v3/user/doc/add', {
                 'login': {
                     'oauth_key': oauth_key
                 },
@@ -1828,7 +1828,7 @@ angular.module('starter.controllers', [])
             }).then(function(payload) {
 	            console.log("KYC" + JSON.stringify(payload));
 	            // POST for submitting user image
-	            $http.post('https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add', {
+	            $http.post('https://synapsepay.com/api/v3/user/doc/attachments/add', {
 	                'login': {
 	                    'oauth_key': oauth_key
 	                },
@@ -1888,7 +1888,7 @@ angular.module('starter.controllers', [])
 	        //Decipher oauth keys before POST
 	        var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
 	        
-            $http.post('https://sandbox.synapsepay.com/api/v3/user/doc/verify', {
+            $http.post('https://synapsepay.com/api/v3/user/doc/verify', {
                 'login': {
                     'oauth_key': oauth_key
                 },
@@ -1968,7 +1968,7 @@ angular.module('starter.controllers', [])
 	        //Decipher oauth keys before POST
 	        var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
 	        
-            $http.post('https://sandbox.synapsepay.com/api/v3/node/verify', {
+            $http.post('https://synapsepay.com/api/v3/node/verify', {
                 'login': {
                     'oauth_key': oauth_key
                 },
@@ -2019,7 +2019,7 @@ angular.module('starter.controllers', [])
 	        //Decipher oauth keys before POST
 	        var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
 	        
-            $http.post('https://sandbox.synapsepay.com/api/v2/bank/mfa', {
+            $http.post('https://synapsepay.com/api/v2/bank/mfa', {
                 access_token: $scope.mfa.response.access_token,
                 mfa: user.answer,
                 bank: $rootScope.bank,
