@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Launch page
-.controller('LaunchCtrl', function($scope, $state, $rootScope) {
+.controller('LaunchCtrl', function($scope, $state, $rootScope, $ionicHistory) {
     $scope.$on('$ionicView.beforeEnter', function() {
         var ref = new Firebase("https://walletbuddies.firebaseio.com/");
         var authData = ref.getAuth();
@@ -12,6 +12,8 @@ angular.module('starter.controllers', [])
             // Switch to the Wallet Tab
             $state.go('tab.wallet');
         } else {
+	        $ionicHistory.clearCache();
+			$ionicHistory.clearHistory();
             console.log("Not authenticated");
         }
     });
@@ -218,7 +220,8 @@ angular.module('starter.controllers', [])
 	                            // Append new data to this FB link
 	                            fbNewsFeedRef.push({
 	                                feed: feedToPush,
-	                                icon: "ion-happy-outline"
+	                                icon: "ion-happy",
+	                                color: "melon-icon"
 	                            });
 	
 	                            // Switch to the Wallet Tab
@@ -327,14 +330,18 @@ angular.module('starter.controllers', [])
 
 
 // Controller for Sign In
-.controller('SignInCtrl', ['$scope', '$state', '$rootScope', 'fbCallback',
-    function($scope, $state, $rootScope, fbCallback, $ionicHistory) {
+.controller('SignInCtrl', ['$scope', '$ionicHistory','$state', '$rootScope', 'fbCallback',
+    function($scope, $ionicHistory, $state, $rootScope, fbCallback) {
 
+		$scope.$on('$ionicView.enter', function() {
+			$ionicHistory.clearCache();
+			$ionicHistory.clearHistory();
+	    });
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
         $scope.user = {
-            email: "sunku@fb.com",
-            password: "deepesh"
+            email: "",
+            password: ""
         };
 
         // Called when the user clicks the "Forgot Password" button
@@ -739,7 +746,8 @@ angular.module('starter.controllers', [])
         // Append new data to this FB link
         fbNewsFeedRef.push({
             feed: feedToPush,
-            icon: "ion-ios7-chatboxes-outline"
+            icon: "ion-ios7-chatboxes",
+            color: "orange-icon"
         });
 
         // The data is ready, switch to the Wallet tab
@@ -1159,7 +1167,8 @@ angular.module('starter.controllers', [])
         // Append new data to this FB link
         fbNewsFeedRef.push({
             feed: feedToPush,
-            icon: "ion-ios7-heart-outline"
+            icon: "ion-ios7-heart",
+            color: "melon-icon"
         });
     }
 
@@ -1191,7 +1200,8 @@ angular.module('starter.controllers', [])
         // Append new data to this FB link
         fbNewsFeedRef.push({
             feed: feedToPush,
-            icon: "ion-heart-broken"
+            icon: "ion-heart-broken",
+            color: "melon-icon"
         });
 
         $state.go('tab.requests');
@@ -1313,7 +1323,7 @@ angular.module('starter.controllers', [])
     	$ionicHistory.clearCache();
 		$ionicHistory.clearHistory();
 		fbRef.unauth();
-		$state.go('launch');        
+		$state.go('launch');       
     };
 
     // Called when the user clicks the "Survey" button
@@ -1848,11 +1858,28 @@ angular.module('starter.controllers', [])
 	            });
 	            
                 if (payload.data.message.en == "SSN information verified") {
+	                fbRef.child("Payments").child("KYC").update({
+	                    oid: payload.data.user._id.$oid,
+	                    clientid: payload.data.user.client.id
+	                });
 	                $ionicLoading.hide();
                     $ionicPopup.alert({
                         title: "You're all set!",
                         template: "Your verification is complete"
                     });
+                    
+                    // Get a reference to the NewsFeed of the user
+	                var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+	
+	                var feedToPush = "Your bank account was linked successfully!";
+	
+	                // Append new data to this FB link
+	                fbNewsFeedRef.push({
+	                    feed: feedToPush,
+	                    icon: "ion-checkmark",
+	                    color: "my-icon"
+	                });
+                    
                     $state.go("tab.settings");
                 } else {
 	                $ionicLoading.hide();
@@ -1933,7 +1960,8 @@ angular.module('starter.controllers', [])
                 // Append new data to this FB link
                 fbNewsFeedRef.push({
                     feed: feedToPush,
-                    icon: "ion-android-checkbox-outline"
+                    icon: "ion-checkmark",
+                    color: "my-icon"
                 });
                 $state.go("tab.settings");
                 
@@ -1958,11 +1986,13 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Auth-Question
-.controller('QuestionCtrl', function($scope, $rootScope, $state, $cipherFactory, $http, $ionicPopup) {
+.controller('QuestionCtrl', function($scope, $rootScope, $ionicLoading, $state, $cipherFactory, $http, $ionicPopup) {
 
     $scope.question = $rootScope.question;
-    console.log("QUESTION: " + $scope.question.nodes[0].extra.mfa.message);
     $scope.authStep = function(user) {
+	    $ionicLoading.show({
+            template: 'Loading..Hold tight.'
+        });
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
         fbRef.child("Payments/oauth").once('value', function(data) {
 	        //Decipher oauth keys before POST
@@ -1984,10 +2014,11 @@ angular.module('starter.controllers', [])
                     }
                 }
             }).then(function(payload) {
-                console.log("Bank Account Details: " + JSON.stringify(payload.data));
+	            $ionicLoading.hide();
                 $rootScope.data = payload.data;
                 $state.go('tab.choose-account');
             }).catch(function(err) {
+	            $ionicLoading.hide();
                 console.log("Got an error in MFA - QuestionCtrl.");
                 console.log(err);
                 console.log("Error Message in JSON: " + JSON.stringify(err));
@@ -2010,10 +2041,13 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Auth-Question page
-.controller('MFACtrl', function($scope, $rootScope, $state, $cipherFactory, $http, $ionicPopup) {
+.controller('MFACtrl', function($scope, $rootScope, $ionicLoading, $state, $cipherFactory, $http, $ionicPopup) {
 
     $scope.mfa = $rootScope.mfa;
     $scope.authStep = function(user) {
+	    $ionicLoading.show({
+            template: 'Loading..Hold tight.'
+        });
         var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
         fbRef.child("Payments/oauth").once('value', function(data) {
 	        //Decipher oauth keys before POST
@@ -2025,9 +2059,11 @@ angular.module('starter.controllers', [])
                 bank: $rootScope.bank,
                 oauth_consumer_key: oauth_key
             }).then(function(payload) {
+	            $ionicLoading.hide();
                 $rootScope.data = payload.data;
                 $state.go('tab.choose-account');
             }).catch(function(err) {
+	            $ionicLoading.hide();
                 console.log("Got an error in MFA - QuestionCtrl.");
                 console.log(err);
 

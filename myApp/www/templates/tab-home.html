@@ -1,10 +1,10 @@
-<ion-view hide-back-button="true" view-title="Home">
+<ion-view hide-back-button="true" view-title="Feed">
     <ion-content class="pageBG">
     	<div class="card" ng-repeat="message in newsfeed">
 		    <div class="item item-text-wrap">
 			    <div class="row">
 				    <div class="col">
-		        	<i class="icon {{message.icon}} my-icon"></i>
+		        	<i class="icon {{message.icon}} {{message.color}}"></i>
 				    </div>
 				    <div class="col col-80">
 		        	{{message.feed}}
@@ -29,10 +29,10 @@
 	            <div class="item item-body">
 		            <div class="row">
 					    <div class="col">
-				        	<i class="icon {{transaction.icon}} my-icon"></i>
+				        	<i class="icon {{transaction.icon}} orange-icon"></i>
 						</div>
 						<div class="col col-80">
-							Woohoo! You just got paid for the <b>{{transaction.circle}}</b> circle. <b>${{transaction.amount}}</b> was <b>credited</b> to your account.
+							Cheers! You just got paid for the <b>{{transaction.circle}}</b> circle. <b>${{transaction.amount}}</b> was <b>credited</b> to your account.
 						</div>
 		            </div>
 	            </div>
