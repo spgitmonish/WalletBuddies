@@ -36,6 +36,8 @@ myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node
 myApp/node_modules/sendgrid/node_modules/request/node_modules/har-validator/node_modules/chalk/node_modules/.bin/supports-color
 *.zip
 myApp/bower_components/*
+myApp/node_modules/cordova/*
+myApp/node_modules/cordova/node_modules*
 *.node
 *.obj
 *.lastbuildstate
@@ -49,3 +51,5 @@ myApp/www/js/.DS_Store
 *.json
 
 myApp/circle-start-scheduler.js
+myApp/node_modules/.bin/cordova
+myApp/node_modules/.bin/cordova.cmd
