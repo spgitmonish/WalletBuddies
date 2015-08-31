@@ -741,7 +741,7 @@ angular.module('starter.controllers', [])
         // Get a reference to the NewsFeed of the user
         var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
-        var feedToPush = "You created a new social group " + "<b>" + groupName + "</b>";
+        var feedToPush = "You created a new social group " + groupName + ".";
 
         // Append new data to this FB link
         fbNewsFeedRef.push({
@@ -956,21 +956,22 @@ angular.module('starter.controllers', [])
     var user = $firebaseObject(fbUser);
 	
 	// Updating chat badge counter
-	var ref = new Firebase("https://walletbuddies.firebaseio.com");
-	// Get a reference to where the User's accepted circles are going to be stored
-	var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
-	fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
-		$rootScope.walletCount = $rootScope.walletCount - data.val().badgeCounter;
-		fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-			badgeCounter: 0
-		})
-		ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-			badgeCounter: 0
-		})
+	$scope.$on('$ionicView.enter', function() {
+		var ref = new Firebase("https://walletbuddies.firebaseio.com");
+		// Get a reference to where the User's accepted circles are going to be stored
+		var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+		fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+			$rootScope.walletCount = $rootScope.walletCount - data.val().badgeCounter;
+			fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+				badgeCounter: 0
+			})
+			ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+				badgeCounter: 0
+			})
+		});
 	});
 	
 	$scope.goBack = function() {
-		console.log("Going");
 		$state.go('tab.wallet');
 	}
     // Scroll down the content automatically
@@ -993,7 +994,8 @@ angular.module('starter.controllers', [])
         alternate = !alternate;
 
         var d = new Date();
-        d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+        console.log("DATE: " + d);
+        //d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
 
         $scope.messages.$add({
             userId: $rootScope.fbAuthData.uid,
@@ -1162,7 +1164,7 @@ angular.module('starter.controllers', [])
          // Get a reference to the NewsFeed of the user
         var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
-        var feedToPush = "You accepted an invite to the social circle <b>" + $scope.circle.circleName + "</b>";
+        var feedToPush = "You accepted an invite to the social circle " + $scope.circle.circleName + ".";
 
         // Append new data to this FB link
         fbNewsFeedRef.push({
@@ -1195,7 +1197,7 @@ angular.module('starter.controllers', [])
          // Get a reference to the NewsFeed of the user
         var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
-        var feedToPush = "You declined an invite to the social circle <b>" + $scope.circle.circleName + "</b>";
+        var feedToPush = "You declined an invite to the social circle " + $scope.circle.circleName + ".";
 
         // Append new data to this FB link
         fbNewsFeedRef.push({
