@@ -25,8 +25,8 @@
 /* log a message */
 - (void)logLevel:(CDVInvokedUrlCommand*)command
 {
-    id level = [command argumentAtIndex:0];
-    id message = [command argumentAtIndex:1];
+    id level = [command.arguments objectAtIndex:0];
+    id message = [command.arguments objectAtIndex:1];
 
     if ([level isEqualToString:@"LOG"]) {
         NSLog(@"%@", message);
