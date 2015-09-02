@@ -49,3 +49,4 @@ myApp/www/js/.DS_Store
 *.json
 
 myApp/circle-start-scheduler.js
+*.DS_Store
