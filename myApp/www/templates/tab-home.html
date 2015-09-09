@@ -1,42 +1,21 @@
 <ion-view hide-back-button="true" view-title="Feed">
     <ion-content class="pageBG">
-    	<div class="card" ng-repeat="message in newsfeed">
+        <div class="card" ng-repeat="message in newsfeed | reverse">
 		    <div class="item item-text-wrap">
 			    <div class="row">
 				    <div class="col">
 		        	<i class="icon {{message.icon}} {{message.color}}"></i>
 				    </div>
-				    <div class="col col-80">
-		        	{{message.feed}}
-				    </div>
+				    <div class="col col-80" ng-bind-html="renderHTML(message.feed)"></div>
 		    	</div>
+		    	<div class="row time-detail">
+			    	<div class="col">
+				    </div>
+			    	<div class="col col-80">
+                  	<span>{{message.time | date:'H:mm'}} - {{message.time | date:'d MMM yyyy'}}</span>
+			    	</div>
+              	</div>
 	    	</div>
     	</div>
-        <div class="card" ng-repeat="transaction in transactions">
-            <div ng-if="transaction.type === 'Debit'">
-	            <div class="item item-body">
-		            <div class="row">
-					    <div class="col">
-				        	<i class="icon {{transaction.icon}} my-icon"></i>
-						</div>
-						<div class="col col-80">
-							<b>${{transaction.amount}}</b> was <b>debited</b> from your account as part of the <b>{{transaction.circle}}</b> circle.
-		            	</div>
-		            </div>
-	            </div>
-            </div>
-            <div ng-if="transaction.type === 'Credit'">
-	            <div class="item item-body">
-		            <div class="row">
-					    <div class="col">
-				        	<i class="icon {{transaction.icon}} orange-icon"></i>
-						</div>
-						<div class="col col-80">
-							Cheers! You just got paid for the <b>{{transaction.circle}}</b> circle. <b>${{transaction.amount}}</b> was <b>credited</b> to your account.
-						</div>
-		            </div>
-	            </div>
-            </div>
-        </div>
     </ion-content>
 </ion-view>

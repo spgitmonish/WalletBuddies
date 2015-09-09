@@ -13,7 +13,6 @@
                         <option ng-repeat="inst in institutions.banks" ng-selected="inst.id == user.id" value="{{inst.id}}">{{inst.bank_name}}</option>
                     </select>
                 </label>
-
                 <label class="item item-input item-floating-label">
                     <span class="input-label balanced">Online ID</span>
                     <input type="text" placeholder="Online ID" ng-model="user.username" ng-required="true">

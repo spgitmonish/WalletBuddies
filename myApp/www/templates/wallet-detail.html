@@ -2,7 +2,7 @@
 	<ion-nav-title>
       <h1 class="title">{{circle.circleName}}</h1>
     </ion-nav-title>
-    <ion-content>
+    <ion-content class="pageBG">
     	<div class="card">
 			<label class="item item-thumbnail-left" ng-click="selectPicture()">
 		        <img ng-src="{{circle.circlePhoto}}">
@@ -11,19 +11,19 @@
 			    <p ng-if="circle.circlePhoto">Edit</p>
 			    <p ng-if="!circle.circlePhoto">Add Photo</p>
 		    </label>
-			<div class="item item-divider" style="color: #30c0cb">		
+			<div class="item item-divider item-dark">		
 			    Buddies
 			</div>
 			<div class="item" ng-repeat="member in members">
 				{{member.firstName}}
 			</div>
-			<div class="item item-divider" style="color: #30c0cb">		
+			<div class="item item-divider item-dark">		
 			    Payday
 			</div>
 			<div class="item">
 				{{circle.plan}}
 			</div>
-			<div class="item item-divider" style="color: #30c0cb">		
+			<div class="item item-divider item-dark">		
 			    Payday Amount
 			</div>
 			<div class="item">

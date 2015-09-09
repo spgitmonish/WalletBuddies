@@ -1,5 +1,6 @@
-<ion-view view-title="New Social Circle">
+<ion-view view-title="New Circle">
     <ion-content>
+    <form name="signinForm" novalidate="" ng-submit="signIn(signinForm)">
         <ion-list class="padding">
             <div class="list">
                 <label class="item item-avatar" ng-click="selectPicture()">
@@ -11,18 +12,18 @@
 
             <div class="list">
 	            <p><b>&nbsp&nbspGive your circle a name</b></p>
-                <label class="item item-input">
-                    <input ng-model='user.groupName' type="text" placeholder="Eg. Sunday Brunch">
+                <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.groupName.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.groupName.$valid  && signinForm.$submitted}">
+                    <input ng-model='user.groupName' name="groupName" type="text" placeholder="Eg. Sunday Brunch" required>
                 </label>
             </div>
 
             <div class="list">
 	            <p><b>&nbsp&nbspPick your plan</b></p>
-                <label class="item item-input item-select">
+                <label class="item item-input item-select" ng-class="{ 'has-error-lr' : signinForm.plan.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.plan.$valid  && signinForm.$submitted}">
                     <div class="input-label">
                         <p>Click to select a plan</p>
                     </div>
-                    <select ng-model='user.plan'>
+                    <select ng-model='user.plan' name="plan" required>
                         <!-- <option>weekly</option>
                         <option selected>biweekly</option>
                         <option>monthly</option> -->
@@ -35,19 +36,23 @@
 
             <div class="list">
                 <p><b>&nbsp&nbspSet your payment amount</b></p>
-                <label class="item item-input">
-                    <input ng-model='user.amount' type="tel" placeholder="$ 50.00">
+                <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.amount.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.amount.$valid  && signinForm.$submitted}">
+                    <input ng-model='user.amount' name="amount" type="tel" placeholder="$ 50.00" required>
                 </label>
             </div>
 
             <div class="list">
                 <p><b>&nbsp&nbspSay something to your buddies</b></p>
-                <label class="item item-input">
-                    <textarea ng-model='user.groupMessage' placeholder="Brunch was fun last sunday we should do this more often. Join away!"></textarea>
+                <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.groupMessage.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.groupMessage.$valid  && signinForm.$submitted}">
+                    <textarea ng-model='user.groupMessage' name="groupMessage" placeholder="Brunch was fun last sunday we should do this more often. Join away!" required></textarea>
                 </label>
             </div>
         </ion-list>
-
+		<div class="form-errors"  
+		   ng-show="signinForm.$error && signinForm.$submitted"
+		   ng-messages="signinForm.$error"
+		   ng-messages-include="templates/form-errors.html">  
+		</div>
         <ion-list>
             <!-- Picking contacts -->
             <button class="button button-block button-dark" ng-click="pickContact()">Select Your Buddies</button>
@@ -63,5 +68,6 @@
                 <button class="button button-block button-balanced" ng-click="addGroup(user)">Invite your wallet buddies</button>
             </div>
         </ion-list>
+    </form>
     </ion-content>
 </ion-view>

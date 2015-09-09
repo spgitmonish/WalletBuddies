@@ -1,50 +1,32 @@
 <ion-view view-title="Sign Up">
-    <ion-content class="padding">
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>First Name</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.firstname' type="text" placeholder="John">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Last Name</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.lastname' type="text" placeholder="Ramalingappa">
-                </label>
-            </div>
-        </ion-list>
-
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Email</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.email' type="text" placeholder="something@something.com">
-                </label>
-            </div>
-        </ion-list>
-        
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Phone</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.phonenumber' type="tel" placeholder="7778888999">
-                </label>
-            </div>
-        </ion-list>
-        
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Password</b></p>
-                <label class="item item-input">
-                    <input ng-model='account.password' type="password" placeholder="**********">
-                </label>
-            </div>
-        </ion-list>
-		<br>
+    <ion-content class="pageBG padding">
+    <form name="signinForm" novalidate="" ng-submit="signIn(signinForm)">
+    	<br>
+    	<p align="center" style="color: #595858"><b>Enter your details below to create an account with WalletBuddies.</b></p>
+        <div class="card">
+			<div class="item">
+	            <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.firstname.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.firstname.$valid  && signinForm.$submitted}">
+	                <input ng-model='account.firstname' name="firstname" type="text" placeholder="First Name" required>
+	            </label>
+	            <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.lastname.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.lastname.$valid  && signinForm.$submitted}">
+	                <input ng-model='account.lastname' name="lastname" type="text" placeholder="Last Name" required>
+	            </label>
+	            <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.email.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.email.$valid  && signinForm.$submitted}">
+	                <input ng-model='account.email' name="email" type="text" placeholder="Email" required>
+	            </label>
+	            <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.phonenumber.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.phonenumber.$valid  && signinForm.$submitted}">
+	                <input ng-model='account.phonenumber' name="phonenumber" type="tel" placeholder="Phone" required>
+	            </label>
+	            <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.password.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.password.$valid  && signinForm.$submitted}">
+	                <input ng-model='account.password' name="password" type="password" placeholder="Password" required>
+	            </label>
+			</div>
+		</div>
+		<div class="form-errors"  
+		   ng-show="signinForm.$error && signinForm.$submitted"
+		   ng-messages="signinForm.$error"
+		   ng-messages-include="templates/form-errors.html">  
+		</div>
         <div class="row">
 	        <div class="col">
 				<div class="checkbox required"><input type="checkbox" ng-model="check.data" ng-required="true" ng-change="TC($index)"></div>
@@ -53,12 +35,11 @@
 		        <p align="justify">I agree to terms and conditions. See <a href = "http://walletbuddies.co/TOS/TOS.pdf" style="color: blue">Terms and Conditions</a> for details.</p>
 	        </div>
         </div>
-           
         <ion-list class="padding">
             <div class="list">
                 <button class="button button-block button-balanced" ng-click="addAccount(account)">Create Account</button>
             </div>
         </ion-list>
-
+    </form>
     </ion-content>
 </ion-view>

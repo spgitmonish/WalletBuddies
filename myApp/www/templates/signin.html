@@ -1,47 +1,36 @@
 <ion-view view-title="Sign In">
-    <ion-content class="padding">
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Email</b></p>
-                <label class="item item-input">
-                    <input ng-model='user.email' type="text" placeholder="john@funnymail.com">
-                </label>
-            </div>
-        </ion-list>
-        <ion-list>
-            <div class="list list-inset">
-                <p><b>Password</b></p>
-                <label class="item item-input">
-                    <input ng-model='user.password' type="password" placeholder="********">
-                </label>
-            </div>
-        </ion-list>
-        <ion-list>
-            <button class="button button-clear button-positive" ng-click="forgotPassword()">
-              Forgot Password?
-            </button>
-        </ion-list>
-
+	<ion-nav-bar class="bar-balanced">
+	  <ion-nav-back-button ng-click="goBack()">
+	  	Welcome
+	  </ion-nav-back-button>
+	</ion-nav-bar>
+    <ion-content class="pageBG padding">
+    <form name="signinForm" novalidate="" ng-submit="signIn(signinForm)">
+    	<br>
+    	<p align="center" style="color: #595858"><b>Use your email and password to sign in.</b></p>
+        <div class="card">
+			<div class="item">
+	            <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.username.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.username.$valid  && signinForm.$submitted}">
+	                <input name="username" ng-model='user.email' type="text" placeholder="Email" required>
+	            </label>
+	            <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.password.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.password.$valid  && signinForm.$submitted}">
+	                <input ng-model='user.password' type="password" name="password" placeholder="Password" required>
+	            </label>
+			</div>
+		</div>
+		<div class="form-errors"  
+		   ng-show="signinForm.$error && signinForm.$submitted"
+		   ng-messages="signinForm.$error"
+		   ng-messages-include="templates/form-errors.html">  
+		</div>
+        <button class="button button-clear button-positive" ng-click="forgotPassword()">
+          Forgot Password?
+        </button>
         <ion-list class="padding">
             <div class="list">
                 <button class="button button-block button-balanced" ng-click="validateUser()">Sign In</button>
             </div>
         </ion-list>
+    </form>
     </ion-content>
 </ion-view>
-
-<!--
-	<div class="card">
-		<div class="item">
-            <label class="item item-input item-floating-label">
-                <span class="input-label">Email</span>
-                <input ng-model='user.email' type="text" placeholder="john@funnymail.com" ng-required="true">
-            </label>
-            <label class="item item-input item-floating-label">
-                <span class="input-label">Password</span>
-                <input ng-model='user.password' type="password" placeholder="Password" ng-required="true">
-            </label>
-		</div>
-	</div>
-    <button class="button button-block button-balanced" ng-click="validateUser()">Sign In</button>
--->

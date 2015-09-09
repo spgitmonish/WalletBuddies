@@ -5,7 +5,7 @@
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
 
-angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'firebase', 'email', 'cgNotify'])
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify'])
 
 .run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory) {
     return $ionicPlatform.ready(function() {
@@ -331,6 +331,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
   };
 })
 
+.filter('reverse', function() {
+  return function(items) {
+    return items.slice().reverse();
+  };
+})
+
 .config(function($stateProvider, $urlRouterProvider) {
 
     // Ionic uses AngularUI Router which uses the concept of states
@@ -349,8 +355,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     // States for signin and signup
     .state('signin', {
         url: '/signin',
-        templateUrl: 'templates/signin.html',
-        controller: 'SignInCtrl'
+        views: {
+         	'': {
+	        	templateUrl: 'templates/signin.html',
+				controller: 'SignInCtrl'
+			}
+		}
     })
 
     .state('forgotpassword', {
@@ -453,16 +463,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-
-    /*.state('tab.friends', {
-        url: '/friends',
-        views: {
-            'tab-friends': {
-                templateUrl: 'templates/tab-friends.html',
-                controller: 'FriendsCtrl'
-            }
-        }
-    })*/
 
     .state('tab.friend-detail', {
         url: '/friend/:friendId',

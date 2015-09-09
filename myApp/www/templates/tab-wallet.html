@@ -4,7 +4,7 @@
     </ion-nav-buttons>
     <ion-content ng-show="circles != 0">
         <ion-list>
-            <ion-item class="item item-thumbnail-left item-text-wrap item-remove-animate item-icon-right" ng-repeat="circle in circles" href="#/tab/wallet/{{circle.circleID}}">
+            <ion-item class="item item-thumbnail-left item-text-wrap item-remove-animate item-icon-right" ng-repeat="circle in circles | reverse" href="#/tab/wallet/{{circle.circleID}}">
             	<img ng-src="{{circle.circlePhoto}}">
                 </p><br><b>{{circle.circleName}}</b><br></p>
                 <p>${{circle.amount}} {{circle.plan}}</p>
