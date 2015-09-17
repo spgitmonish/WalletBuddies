@@ -1,39 +1,40 @@
 <ion-view>
-	<ion-nav-title>
-      <h1 class="title">{{circle.circleName}}</h1>
+    <ion-nav-title>
+        <h1 class="title">{{circle.circleName}}</h1>
     </ion-nav-title>
     <ion-content class="pageBG">
-    	<div class="card">
-			<label class="item item-thumbnail-left" ng-click="selectPicture()">
-		        <img ng-src="{{circle.circlePhoto}}">
-		        <br>
-			    <h2>Circle Photo</h2>
-			    <p ng-if="circle.circlePhoto">Edit</p>
-			    <p ng-if="!circle.circlePhoto">Add Photo</p>
-		    </label>
-			<div class="item item-divider item-dark">		
-			    Buddies
-			</div>
-			<div class="item" ng-repeat="member in members">
-				{{member.firstName}}
-			</div>
-			<div class="item item-divider item-dark">		
-			    Payday
-			</div>
-			<div class="item">
-				{{circle.plan}}
-			</div>
-			<div class="item item-divider item-dark">		
-			    Payday Amount
-			</div>
-			<div class="item">
-				${{circle.amount * members.length}}
-			</div>
-    	</div>
-    	<div align="center">
-    	<button class="button button-outline button-balanced" ng-click="chat()">
-		  Group Chat
-		</button>
-    	</div>
+        <div align="center">
+            <div class="padding-bottom"></div>
+            <button class="button button-outline button-balanced" ng-click="chat()">
+                <span ng-if="circle.Members[id].badgeCounter !== 0" class="badge badge-dark">{{circle.Members[id].badgeCounter}}</span> Group Chat
+            </button>
+        </div>
+        <div class="card">
+            <label class="item item-thumbnail-left" ng-click="selectPicture()">
+                <img ng-src="{{circle.circlePhoto}}">
+                <br>
+                <h2>Circle Photo</h2>
+                <p ng-if="circle.circlePhoto">Edit</p>
+                <p ng-if="!circle.circlePhoto">Add Photo</p>
+            </label>
+            <div class="item item-divider item-dark">
+                Buddies
+            </div>
+            <div class="item" ng-repeat="member in members">
+                {{member.firstName}}
+            </div>
+            <div class="item item-divider item-dark">
+                Payday
+            </div>
+            <div class="item">
+                {{circle.plan}}
+            </div>
+            <div class="item item-divider item-dark">
+                Payday Amount
+            </div>
+            <div class="item">
+                ${{circle.amount * members.length}}
+            </div>
+        </div>
     </ion-content>
 </ion-view>

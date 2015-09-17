@@ -1,52 +1,50 @@
 <ion-view class="messaging-view" hide-back-button="false" view-title="Chat">
-	<ion-nav-bar class="bar-balanced">
+    <!--<ion-nav-bar class="bar-balanced">
 	  <ion-nav-back-button ng-click="goBack()">
 	  	Wallet
-	  </ion-nav-back-button>
-	</ion-nav-bar>
-    <ion-content class="content-stable"
-                 on-swipe-left="hideTime = false"
-                 on-swipe-right="hideTime = true">
-      <div ng-repeat="message in messages" class="message-wrapper">
-	  	<div ng-if="uid !== message.userId">
-	
-	          <div class="chat-bubble left">
-	
-	              <div class="message" ng-bind-html="message.text" autolinker>
-		              {{message.text}}
-	              </div>
-	
-	              <div class="message-detail">
-	                  <span>{{message.name}}, {{message.time | date:'H:mm'}}</span>
-	              </div>
-	
-	          </div>
-	    </div>
-	    <div ng-if="uid === message.userId">
+	</ion-nav-back-button>
+	</ion-nav-bar>-->
+    <ion-content class="content-stable" on-swipe-left="hideTime = false" on-swipe-right="hideTime = true">
+        <div ng-repeat="message in messages" class="message-wrapper">
+            <div ng-if="uid !== message.userId">
 
-	          <div class="chat-bubble right">
-	
-	              <div class="message" ng-bind-html="message.text" autolinker>
-		              {{message.text}}
-	              </div>
-	
-	              <div class="message-detail">
-	                  <span>{{message.name}}, {{message.time | date:'H:mm'}}</span>
-	              </div>
-	
-	          </div>
-	    </div>
-	    <div class="cf"></div>
-      </div>
+                <div class="chat-bubble left">
 
-	</ion-content>
+                    <div class="message" ng-bind-html="message.text" autolinker>
+                        {{message.text}}
+                    </div>
+
+                    <div class="message-detail">
+                        <span>{{message.name}}, {{message.time | date:'H:mm'}}</span>
+                    </div>
+
+                </div>
+            </div>
+            <div ng-if="uid === message.userId">
+
+                <div class="chat-bubble right">
+
+                    <div class="message" ng-bind-html="message.text" autolinker>
+                        {{message.text}}
+                    </div>
+
+                    <div class="message-detail">
+                        <span>{{message.name}}, {{message.time | date:'H:mm'}}</span>
+                    </div>
+
+                </div>
+            </div>
+            <div class="cf"></div>
+        </div>
+
+    </ion-content>
 
     <ion-footer-bar keyboard-attach class="bar-stable item-input-inset message-footer">
-      <label class="item-input-wrapper">
-        <input type="text" placeholder="Type your message" ng-model="data.message" is-focused="false"/>
-      </label>
-      <button class="button button-clear" ng-click="sendMessage()">
-        Send
-      </button>
+        <label class="item-input-wrapper">
+            <input type="text" placeholder="Type your message" ng-model="data.message" is-focused="false" />
+        </label>
+        <button class="button button-clear" ng-click="sendMessage()">
+            Send
+        </button>
     </ion-footer-bar>
 </ion-view>

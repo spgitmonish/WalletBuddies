@@ -21,18 +21,23 @@
           </label>
 		  <a ng-click="account()" class="item item-icon-left">
 		    <i class="icon ion-card"></i>
-		    Link your bank account
+            <div ng-if="!data.Payments.Bank.account_num">
+		        Link your bank account
+            </div>
+            <div ng-if="data.Payments.Bank.account_num">
+                Edit your bank account
+            </div>
 		    <p ng-if="data.Payments.Bank.account_num">Linked Account: xxxx-xxxx-{{data.Payments.Bank.account_num}}</p>
 		    <p ng-if="!data.Payments.Bank.account_num">No account linked</p>
-		  </a>	
+		  </a>
 		  <a ng-click="newPassword()" class="item item-icon-left">
 		    <i class="icon ion-ios7-unlocked"></i>
 		    Reset Password
-		  </a>	
+		  </a>
 		  <a ng-click="survey()" class="item item-icon-left">
 		    <i class="icon ion-checkmark-circled"></i>
 		    Survey
-		  </a>		
+		  </a>
 		</div>
 		<div align="center">
     	<button class="button button-outline button-dark" ng-click="signOut()">
