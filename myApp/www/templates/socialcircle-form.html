@@ -1,4 +1,4 @@
-<ion-view view-title="New Circle">
+ <ion-view view-title="New Circle">
     <ion-content>
     <form name="signinForm" novalidate="" ng-submit="signIn(signinForm)">
         <ion-list class="padding">
@@ -55,9 +55,16 @@
             <button class="button button-block button-dark" ng-click="pickContact()">Select Your Buddies</button>
             <div class="list">
                 <a class="item" ng-repeat="contact in data.selectedContacts">
-                    <h2>{{contact.displayName}}</h2>
-                    <p ng-if="contact.emails.length > 0">{{contact.emails[0].type}} : {{contact.emails[0].value}}</p>
-                    <p ng-if="contact.phones.length > 0">{{contact.phones[0].type}} : {{contact.phones[0].value}}</p>
+                    <div class="row">
+				    	<div class="col col-90">
+					    	<h2>{{contact.displayName}}</h2>
+							<p ng-if="contact.emails.length > 0">{{contact.emails[0].type}} : {{contact.emails[0].value}}</p>
+							<p ng-if="contact.phones.length > 0">{{contact.phones[0].type}} : {{contact.phones[0].value}}</p>
+				    	</div>
+						<div class="col">
+							<i class="icon ion-close-circled melon-icon " ng-click="contactDelete($index)"></i>
+						</div>
+		    		</div>
                 </a>
             </div>
             <!-- Picking contacts ends here -->

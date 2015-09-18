@@ -599,6 +599,10 @@ angular.module('starter.controllers', [])
             }
         );
     }
+    // Deleting contact selected in error
+    $scope.contactDelete = function(item) {
+   		$scope.data.selectedContacts.splice(item, 1);
+    };
 
     // This function is called when the "Invite your wallet buddies" button is pressed
     $scope.addGroup = function(user) {
