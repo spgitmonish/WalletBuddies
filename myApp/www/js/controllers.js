@@ -643,7 +643,8 @@ angular.module('starter.controllers', [])
                     amount: amount,
                     groupMessage: groupMessage,
                     contacts: $scope.data.selectedContacts,
-                    circlePhoto: $scope.imageSrc
+                    circlePhoto: $scope.imageSrc,
+                    circleComplete: false
                 });
 
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
