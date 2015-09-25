@@ -599,6 +599,7 @@ angular.module('starter.controllers', [])
 
             // Get the link to the user profile
             var fbProfile = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
+
             // Get the reference for the push
             var fbCirclePushRef = fbCircle.push();
 
@@ -647,6 +648,12 @@ angular.module('starter.controllers', [])
                     circleComplete: false
                 });
 
+                // Initialize the counter under CreditDates of the Circle
+                // NOTE: CreditDates will be set up once all the user accept the invites and once we hit the deadline
+                fbCirclePushRef.child('CreditDates').child('Counter').update({
+                    counter: 0
+                });
+
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
                     // Save invitor name
                     fbCirclePushRef.update({
@@ -678,7 +685,6 @@ angular.module('starter.controllers', [])
 
                 // Checking for registered users and generating new Circle invite codes for non-registered users
                 for (var i = 0; i < $scope.data.selectedContacts.length; i++) {
-
                     // This makes sure variable i is available for the callback function
                     (function(i) {
                         // Use the secret key and set the id length to be 4
@@ -802,7 +808,6 @@ angular.module('starter.controllers', [])
 
 // Controller for Wallet tab
 .controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray) {
-
     // Check if user has linked a bank account before he can start a circle
     $scope.newCircle = function() {
         var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid + "/Payments");
