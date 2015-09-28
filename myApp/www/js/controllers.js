@@ -661,11 +661,18 @@ angular.module('starter.controllers', [])
                 });
 
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
-                    // Save invitor name
-                    fbCirclePushRef.update({
-                        invitorName: userData.val().firstname + " " + userData.val().lastname,
-                        invitorPhoto: userData.val().profilePhoto
-                    });
+                    // Save invitor name photo
+                    if (userData.val().profilePhoto == null) {
+	                    fbCirclePushRef.update({
+	                        invitorName: userData.val().firstname + " " + userData.val().lastname,
+	                        invitorPhoto: $scope.imageSrc
+	                    });
+                    } else {
+	                    fbCirclePushRef.update({
+	                        invitorName: userData.val().firstname + " " + userData.val().lastname,
+	                        invitorPhoto: userData.val().profilePhoto
+	                    });
+                    }
                 });
 
                 // Writing circle ID to the user's path and set Status to true
@@ -2271,10 +2278,10 @@ angular.module('starter.controllers', [])
 
 .controller('HomeCtrl', function($scope, $rootScope, $firebaseArray, $sce) {
     // Get a reference to the NewsFeed of the user
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+    var badgeRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child('Badges');
     var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 	$scope.$on('$ionicView.enter', function() {
-		fbRef.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
+		badgeRef.update({
 			feedCounter: 0
 		});
 	});
