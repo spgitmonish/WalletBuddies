@@ -47503,12 +47503,20 @@ function($scope, scrollViewOptions, $timeout, $window, $location, $document, $io
     });
   };
 
-  self.scrollBottom = function(shouldAnimate) {
-    ionic.DomUtil.blurAll();
+  self.scrollBottom = function(shouldAnimate, avoidBlur) {
+	if (avoidBlur !== true){
+      ionic.DomUtil.blurAll();
+    }
     self.resize().then(function() {
       var max = scrollView.getScrollMax();
       scrollView.scrollTo(max.left, max.top, !!shouldAnimate);
     });
+    /* Deepesh Comments - this prevents from closing the keyboard on scroll
+    ionic.DomUtil.blurAll();
+    self.resize().then(function() {
+      var max = scrollView.getScrollMax();
+      scrollView.scrollTo(max.left, max.top, !!shouldAnimate);
+    });*/
   };
 
   self.scrollTo = function(left, top, shouldAnimate) {

@@ -52,3 +52,5 @@ myApp/circle-start-scheduler.js
 *.DS_Store
 myApp/config.xml
 *.xml
+
+myApp/sendgrid.js

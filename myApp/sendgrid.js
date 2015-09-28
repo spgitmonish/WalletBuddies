@@ -3,7 +3,8 @@ var FirebaseTokenGenerator = require("firebase-token-generator");
 var forge = require('node-forge');
 var request = require('request');
 
-var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + "simplelogin:10408/");
+//var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + "simplelogin:10408/");
+var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 var fbSynapse = new Firebase("https://walletbuddies.firebaseio.com/");
 
 console.log("User Reference: " + fbRef);
@@ -32,7 +33,7 @@ fbRef.authWithCustomToken(token, function(error, authData) {
 	    salt: forge.util.encode64(salt), 
 	    iv: forge.util.encode64(iv)
 	});*/
-	
+	/*
 	//fbRef.child("Payments").once('value', function(data) {
 	fbSynapse.child('SynapsePay').once('value', function(data) {
 		
@@ -160,6 +161,53 @@ fbRef.authWithCustomToken(token, function(error, authData) {
 			        console.log("TRANSACTION BODY: " + JSON.stringify(body));
 		        }
 		    });
-	    });*/
-	});
+	    });
+	});*/
+	/*
+	var circleStartDate = Firebase.ServerValue.TIMESTAMP;
+    fbRef.child('PaymentStart').push({
+        date: circleStartDate,
+        circleID: '-JypS07OhU4jZ6JeYFTE',
+        plan: 'daily',
+        length: 3,
+        amount: '1'
+    });
+	
+	var date = Firebase.ServerValue.TIMESTAMP;
+    fbRef.child('StartDate').push({
+        date: date,
+        circleID: "-JziVd9GKX6tUaE4uVL8",
+        plan: "daily",
+        amount: "1"
+    });
+    
+    
+    */
+    
+    var fbCircles = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles");
+    fbCircles.child('-JziVd9GKX6tUaE4uVL8').child('CreditDates').child('Counter').once('value', function(countData) {
+        console.log("countData: " + JSON.stringify(countData.val()));
+        // Store the counter value
+        var count = countData.val().counter;
+        console.log("countData.val().counter: "+countData.val().counter);
+    });
+    /*
+        fbCircles.once('value', function(circles) {
+	        //console.log("Circle : " + JSON.stringify(circles.val()));
+            circles.forEach(function(childCircle) {
+	            fbCircles.child(childCircle.key()).child('DebitDates').once('value', function(chill) {
+		            //var datesToParse = fbCircles.child(childCircle.key()).child('DebitDates');
+		            var path = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles").child(childCircle.key()).child("Members");
+		            path.orderByChild("Priority").equalTo(0).on('child_added', function(dataPay) {
+			            var poolAmt = parseInt(childCircle.val().amount) * dataPay.numChildren();
+			            console.log("poolAmt " + poolAmt + "numChild: " + dataPay.numChildren());
+		            });
+		            console.log("childCircle : " + JSON.stringify(chill.val()));
+		            chill.forEach(function(date){
+			            console.log("date.val() " + date.val().debitDate);
+		            });
+		        });
+	        });
+	    });
+	*/
 });

@@ -7,7 +7,7 @@
 
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify'])
 
-.run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory) {
+.run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory, $ionicLoading) {
     return $ionicPlatform.ready(function() {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
@@ -19,6 +19,39 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // org.apache.cordova.statusbar required
             StatusBar.styleDefault();
         }
+        
+      	/*// Updating chat badge counter
+		var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+		// Get a reference to where the User's accepted circles are going to be stored
+		var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+		//$rootScope.walletCount = $rootScope.walletCount + 1;
+		
+		fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+			var counter = data.val().badgeCounter + 1;
+			fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
+				badgeCounter: counter
+			})
+			fbRef.child("Circles").child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
+				badgeCounter: counter
+			})
+			$rootScope.walletCount = $rootScope.walletCount + 1;
+		});*/
+        
+        // listen for Online event
+	    $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
+	      var onlineState = networkState;
+	      console.log("onlineState: " + onlineState);
+	      $ionicLoading.hide();
+	    })
+	    
+	    // listen for Offline event
+	    $rootScope.$on('$cordovaNetwork:offline', function(event, networkState){
+	      var offlineState = networkState;
+	      console.log("offlineState: " + offlineState);
+	      $ionicLoading.show({
+            template: 'Your device appears to be offline.'
+          });
+	    })
 
         if (ionic.Platform.isAndroid()) {
             androidConfig = {
@@ -67,6 +100,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		          // Push Notifications for when app is in the foreground
 			      if (notification.foreground == true) {
 					if (notification.payload.tab == "requests"){
+						// Display Banner Notifications
 						var messageTemplate = '<span ng-click="clickedNotification()">' + notification.message + '</span>';
 						notify({
 					        messageTemplate: messageTemplate
@@ -79,22 +113,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					    };     
 					}
 					else if (notification.payload.tab == "chat"){
-						// Updating chat badge counter
-						var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
-						// Get a reference to where the User's accepted circles are going to be stored
-						var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
-						fbUserAcceptedCircles.child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
-							var counter = data.val().badgeCounter + 1;
-							console.log("Badge counter " + counter);
-							fbUserAcceptedCircles.child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).update({
-								badgeCounter: counter
-							})
-							fbRef.child("Circles").child(notification.payload.url).child("Members").child($rootScope.fbAuthData.uid).update({
-								badgeCounter: counter
-							})
-							$rootScope.walletCount = $rootScope.walletCount + 1;
-						});
-						// To display Banner Notifications
+						// Display Banner Notifications
 					    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.message + '</span>';
 						notify({
 					        messageTemplate: messageTemplate
@@ -123,6 +142,17 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					        }
 					    };
 					}
+					else if (notification.payload.tab == "feed"){
+						// Display Banner Notifications
+					    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.message + '</span>';
+						notify({
+					        messageTemplate: messageTemplate
+					    });
+					    $rootScope.clickedNotification = function(){
+					        notify.closeAll();
+					        $state.go('tab.home');
+					    };
+					}
 				
 				    if (notification.sound) {
 				        var snd = new Media(event.sound);
@@ -136,7 +166,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				        });
 					}
 					else if (notification.payload.tab == "chat"){
-						// Updating chat badge counter
+						/*// Updating chat badge counter
 						var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
 						// Get a reference to where the User's accepted circles are going to be stored
 						var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
@@ -149,7 +179,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 								badgeCounter: counter
 							})
 							$rootScope.walletCount = $rootScope.walletCount + 1;
-						});
+						});*/
 						// Current ionic build does not show a back button when navigating to chat page from another tab apart from tab.wallet(since chat belongs to this stack)
 						// Hence clicking on a chat notification will be taken to tab.wallet if the user's current view is not currently in the tab.wallet stack
 					    if ($ionicHistory.currentStateName() == "tab.wallet") {
@@ -170,6 +200,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				        else {
 					        $state.go('tab.wallet');
 				        }
+					}
+					else if (notification.payload.tab == "feed"){
+					    $state.go('tab.home');
 					}
 					
 				    if (notification.badge) {
@@ -207,7 +240,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				    };
 				}
 				else if (notification.tab == "chat"){
-					// Updating chat badge counter
+					/*// Updating chat badge counter
 					var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
 					// Get a reference to where the User's accepted circles are going to be stored
 					var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
@@ -221,7 +254,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 							badgeCounter: counter
 						})
 						$rootScope.walletCount = $rootScope.walletCount + 1;
-					});
+					});*/
 					// To display Banner Notifications
 				    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
 					notify({
@@ -249,6 +282,17 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				        }
 				    };
 				}
+				else if (notification.payload.tab == "feed"){
+					// Display Banner Notifications
+				    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.message + '</span>';
+					notify({
+				        messageTemplate: messageTemplate
+				    });
+				    $rootScope.clickedNotification = function(){
+				        notify.closeAll();
+				        $state.go('tab.home');
+				    };
+				}
 			
 			    if (notification.sound) {
 			        var snd = new Media(event.sound);
@@ -262,7 +306,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			        });
 				}
 				else if (notification.tab == "chat"){
-					// Updating chat badge counter
+					/*// Updating chat badge counter
 					var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
 					// Get a reference to where the User's accepted circles are going to be stored
 					var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
@@ -275,7 +319,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 							badgeCounter: counter
 						})
 						$rootScope.walletCount = $rootScope.walletCount + 1;
-					});
+					});*/
 					// Current ionic build does not show a back button when navigating to chat page from another tab apart from tab.wallet(since chat belongs to this stack)
 					// Hence clicking on a chat notification will be taken to tab.wallet if the user's current view is not currently in the tab.wallet stack
 					if ($ionicHistory.currentStateName() == "tab.wallet") {
@@ -297,10 +341,13 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				        $state.go('tab.wallet');
 			        }
 				}
+				else if (notification.payload.tab == "feed"){
+				    $state.go('tab.home');
+				}
 				
 			    if (notification.badge) {
 			        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
-			          // Success!
+			          	// Success!
 			        }, function(err) {
 			          // An error occurred. Show a message to the user
 			        });

@@ -189,7 +189,7 @@ angular.module('starter.services', [])
         // Fetch the data on child added events
         childAdded: function(path, status, callback) {
             path.orderByChild("Status").equalTo(status).on('child_added', function(data) {
-                console.log("SERVICE(Added): " + data.key());
+                //console.log("SERVICE(Added): " + data.key());
                 callback(data);
             });
         },
@@ -197,7 +197,7 @@ angular.module('starter.services', [])
         // Fetch the data on child removal events
         childRemoved: function(path, status, callback) {
             path.orderByChild("Status").equalTo(status).on('child_removed', function(data) {
-                console.log("SERVICE(Removed): " + data.key());
+                //console.log("SERVICE(Removed): " + data.key());
                 callback(data);
             });
         }

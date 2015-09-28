@@ -40,11 +40,11 @@
     </ion-content>
 
     <ion-footer-bar keyboard-attach class="bar-stable item-input-inset message-footer">
-        <label class="item-input-wrapper">
-            <input type="text" placeholder="Type your message" ng-model="data.message" is-focused="false" />
-        </label>
-        <button class="button button-clear" ng-click="sendMessage()">
-            Send
-        </button>
+      <label class="item-input-wrapper">
+        <input type="text" placeholder="Type your message" ng-model="data.message" ng-focus="text()"/>
+      </label>
+      <button class="button button-clear" ng-click="sendMessage()">
+        Send
+      </button>
     </ion-footer-bar>
 </ion-view>
