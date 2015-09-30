@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Launch page
-.controller('LaunchCtrl', function($scope, $state, $rootScope, $ionicHistory) {
+.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory) {
     $scope.$on('$ionicView.beforeEnter', function() {
         var ref = new Firebase("https://walletbuddies.firebaseio.com/");
         var authData = ref.getAuth();
@@ -20,7 +20,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $firebaseObject, $ionicPopup, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush, $cipherFactory) {
+.controller('AccountCtrl', function($scope, $firebaseObject, $ionicPopup, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush, $cipherFactory, $cordovaDevice) {
 
     $scope.check = {
         data: true
@@ -164,62 +164,73 @@ angular.module('starter.controllers', [])
 								fbRef.child('SynapsePay').once('value', function(data) {
 									// Create a SynapsePay user account
 									console.log("SynapsePay User: " + data.val().client_id + data.val().client_secret + email + number + first + " " + last);
-		                            $http.post('https://synapsepay.com/api/v3/user/create', {
-		                                "client": {
-		                                    //your client ID and secret
-		                                    "client_id": data.val().client_id,
-		                                    "client_secret": data.val().client_secret
-		                                },
-		                                "logins": [
-		                                    //email and password of the user. Passwords are optional.
-		                                    //yes you can add multiple emails and multiple users for one account here
-		                                    {
-		                                        "email": email,
-		                                        "read_only": false
-		                                    }
-		                                ],
-		                                "phone_numbers": [
-		                                    //user's mobile numbers. Can be used for 2FA
-		                                    number
-		                                ],
-		                                "legal_names": [
-		                                    //user's legal names. If multiple user's are being added, add multiple legal names.
-		                                    //If business account, add the name of the person creating the account and the name of the company
-		                                    first + " " + last
-		                                ],
-		                                "fingerprints": [
-		                                    //fingerprints of the devices that you will be accessing this account from
-		                                    {
-		                                        "fingerprint": "suasusau21324redakufejfjsf"
-		                                    }
-		                                ],
-		                                "ips": [
-		                                    //user's IP addresses
-		                                    "192.168.1.1"
-		                                ],
-		                                "extra": {
-		                                    //optional fields
-		                                    "note": "WalletBuddies User",
-		                                    "supp_id": "No IDs Here",
-		                                    //toggle to true if its a business account
-		                                    "is_business": false
-		                                }
-		                            }).then(function(response) {
-			                            console.log("SYNAPSEPAY response " + JSON.stringify(response));
-		                                fbUser.child("Payments/oauth").update({
-		                                    oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
-		                                    refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
-		                                    expires_at: response.data.oauth.expires_at,
-		                                    expires_in: response.data.oauth.expires_in,
-		                                    client_id: response.data.user.client.id,
-		                                    fingerprint: "suasusau21324redakufejfjsf",
-		                                    oid: response.data.user._id.$oid
-		                                });
-		
-		                            }).catch(function(err) {
-		                                console.log("An error occured while communicating with Synapse");
-		                                console.log(JSON.stringify(err));
-		                            });	
+									// get host ip address of client
+									var json = 'http://ipv4.myexternalip.com/json';
+									$http.get(json).then(function(result) {
+										var ip = result.data.ip;
+										var uuid = $cordovaDevice.getUUID();
+										console.log("uuid: " + uuid);
+										console.log("IP ADDRESS: " + ip);
+			                            $http.post('https://synapsepay.com/api/v3/user/create', {
+			                                "client": {
+			                                    //your client ID and secret
+			                                    "client_id": data.val().client_id,
+			                                    "client_secret": data.val().client_secret
+			                                },
+			                                "logins": [
+			                                    //email and password of the user. Passwords are optional.
+			                                    //yes you can add multiple emails and multiple users for one account here
+			                                    {
+			                                        "email": email,
+			                                        "read_only": false
+			                                    }
+			                                ],
+			                                "phone_numbers": [
+			                                    //user's mobile numbers. Can be used for 2FA
+			                                    number
+			                                ],
+			                                "legal_names": [
+			                                    //user's legal names. If multiple user's are being added, add multiple legal names.
+			                                    //If business account, add the name of the person creating the account and the name of the company
+			                                    first + " " + last
+			                                ],
+			                                "fingerprints": [
+			                                    //fingerprints of the devices that you will be accessing this account from
+			                                    {
+			                                        "fingerprint": uuid
+			                                    }
+			                                ],
+			                                "ips": [
+			                                    //user's IP addresses
+			                                    ip
+			                                ],
+			                                "extra": {
+			                                    //optional fields
+			                                    "note": "WalletBuddies User",
+			                                    "supp_id": "No IDs Here",
+			                                    //toggle to true if its a business account
+			                                    "is_business": false
+			                                }
+			                            }).then(function(response) {
+				                            console.log("SYNAPSEPAY response " + JSON.stringify(response));
+			                                fbUser.child("Payments/oauth").update({
+			                                    oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
+			                                    refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
+			                                    expires_at: response.data.oauth.expires_at,
+			                                    expires_in: response.data.oauth.expires_in,
+			                                    client_id: response.data.user.client.id,
+			                                    fingerprint: uuid,
+			                                    ip: ip,
+			                                    oid: response.data.user._id.$oid
+			                                });
+			
+			                            }).catch(function(err) {
+			                                console.log("An error occured while communicating with Synapse");
+			                                console.log(JSON.stringify(err));
+			                            });	
+		                            }, function(e) {
+										alert("An error occured while validating your ip address");
+									});
 								})
 	
 	                            // Clear the form
@@ -250,8 +261,8 @@ angular.module('starter.controllers', [])
 	                            });
 								
 								$ionicLoading.hide();
-	                            // Switch to the Wallet Tab
-	                            $state.go('tab.wallet');
+	                            // Switch to the Help Sliders Tab
+	                            $state.go('help');
 	
 	                            // To request permission for Push Notifications
 	                            $scope.$on('$ionicView.afterLeave', function() {
@@ -820,7 +831,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Wallet tab
-.controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray) {
+.controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray, $http) {
     // Check if user has linked a bank account before he can start a circle
     $scope.newCircle = function() {
         var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid + "/Payments");
@@ -2268,8 +2279,26 @@ angular.module('starter.controllers', [])
     $scope.chat = Chats.get($stateParams.chatId);
 })
 
-.controller('FriendsCtrl', function($scope, Friends) {
-    $scope.friends = Friends.all();
+.controller('HelpCtrl', function($scope, $state, $ionicSlideBoxDelegate) {
+	
+    $scope.close = function() {
+	    $state.go('tab.wallet');
+    }
+    $scope.next = function() {
+	  	$ionicSlideBoxDelegate.next();
+  	};
+  	
+  	$scope.previous = function() {
+    	$ionicSlideBoxDelegate.previous();
+  	};
+  
+  	$scope.slides = [{name:"1"},{name:"2"},{name:"3"},{name:"4"}];
+  
+  	// Called each time the slide changes
+  	$scope.slideChanged = function(index) {
+    	$scope.slideIndex = index;
+  	};
+
 })
 
 .controller('FriendDetailCtrl', function($scope, $stateParams, Friends) {

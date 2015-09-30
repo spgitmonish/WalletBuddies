@@ -5,7 +5,7 @@
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
 
-angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify'])
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify', 'ngIOS9UIWebViewPatch'])
 
 .run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory, $ionicLoading) {
     return $ionicPlatform.ready(function() {
@@ -409,7 +409,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			}
 		}
     })
-
+	
+	// State for helper slides
+    .state('help', {
+        url: '/help',
+        templateUrl: 'templates/help-slider.html',
+        controller: 'HelpCtrl'
+    })
+    
     .state('forgotpassword', {
         url: '/forgot-password',
         templateUrl: 'templates/forgot-password.html',

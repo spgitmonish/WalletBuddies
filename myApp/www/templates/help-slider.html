@@ -1,0 +1,31 @@
+<ion-view hide-nav-bar="true" view-title="Get Started">
+    <div class="leftArrow">
+        <button class="button button-light button-clear no-animation icon ion-chevron-left"
+                ng-click="" ng-if="!slideIndex">
+        </button>
+        <button class="button button-light button-clear no-animation icon ion-chevron-left"
+                ng-click="previous()" ng-if="slideIndex > 0">
+        </button>
+    </div>
+    <div class="rightArrow">
+        <button class="button button-light button-clear no-animation icon ion-chevron-right"
+            ng-click="next()" ng-if="!slideIndex">
+        </button>
+        <button class="button button-light button-clear no-animation icon ion-chevron-right"
+            ng-click="next()" ng-if="slideIndex>0"> 
+        </button>
+    </div>
+	<ion-slide-box on-slide-changed="slideChanged($index)" show-pager="true">
+	  <ion-slide class="help1-bg">
+	  </ion-slide>
+	  <ion-slide class="help2-bg">
+	  </ion-slide>
+	  <ion-slide class="help3-bg">
+	  <div style="position: absolute; bottom: 30px; width: 100%">
+        <div style="text-align: center">
+          <button class="button button-large button-balanced" ng-click="close()">Okay, got it!</button>
+        </div>
+      </div>
+	  </ion-slide>
+	</ion-slide-box>
+</ion-view>

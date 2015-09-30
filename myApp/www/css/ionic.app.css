@@ -15,8 +15,30 @@ $royal:                           #886aea !default;
 $dark:                            #444 !default;
 */
 .scroll-bg {
-  background: url('http://walletbuddies.co/walletbuddies/Slider-1.png') no-repeat center center fixed;
+  background: url('../img/Slider-2.png') no-repeat center center fixed;
   background-size: cover; }
+
+.help1-bg {
+  background: url('../img/Help-1.png') no-repeat;
+  background-size: cover;
+  background-position: center;
+  margin: auto;
+  z-index: 2; }
+
+.help2-bg {
+  background: url('../img/Help-2.png') no-repeat;
+  background-size: cover;
+  background-position: center;
+  margin: auto;
+  z-index: 2; }
+
+.help3-bg {
+  background: url('../img/Help-3.png') no-repeat;
+  background-size: cover;
+  background-position: center;
+  margin: auto;
+  z-index: 2;
+  text-align: center; }
 
 .no-data {
   display: -webkit-box;
@@ -57,7 +79,48 @@ $dark:                            #444 !default;
 
 .slider-pager {
   top: initial;
-  bottom: 60px !important; }
+  bottom: 0; }
+
+.leftArrow, .rightArrow {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-direction: normal;
+  -moz-box-direction: normal;
+  -webkit-box-orient: horizontal;
+  -moz-box-orient: horizontal;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-box-pack: center;
+  -moz-box-pack: center;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-align-content: stretch;
+  -ms-flex-line-pack: stretch;
+  align-content: stretch;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+  position: absolute;
+  height: 49%;
+  z-index: 100;
+  width: 44px;
+  background-color: rgba(0, 0, 0, 0); }
+
+.leftArrow {
+  left: 0; }
+
+.rightArrow {
+  right: 0; }
 
 .bar-footer {
   overflow: visible !important; }
