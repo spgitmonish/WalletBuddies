@@ -774,7 +774,7 @@ angular.module('starter.controllers', [])
                                             from: 'hello@walletbuddies.co',
                                             to: email.value,
                                             subject: "You've been invited to form a Circle on WalletBuddies by " + fbName,
-                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.com to join this Circle. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download the app and join this Circle. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + email.value);
                                     } else if (email) {
@@ -783,14 +783,14 @@ angular.module('starter.controllers', [])
                                             from: 'hello@walletbuddies.co',
                                             to: email.value,
                                             subject: "You've been invited to form a Circle on WalletBuddies by " + fbName,
-                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.com to join this Circle. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download and join this Circle. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + email.value);
                                     } else {
                                         // Write email info to /Sendgrid folder to trigger the server to send email
                                         fbRef.child('Twilio').push({
                                             to: phone.value,
-                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.com to join this Circle. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download and join this Circle. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + phone.value);
                                     }
@@ -1281,6 +1281,43 @@ angular.module('starter.controllers', [])
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
                     Status: true
                 });
+                
+                // Send out a push and inform users of accepted invite
+                var fbCircle = new Firebase("https://walletbuddies.firebaseio.com/Circles/");
+                var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
+                fbCircle.child($stateParams.circleID).once('value', function(circle) {
+
+                    var d = Date.now();
+					//d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+                	fbCircle.child($stateParams.circleID).child('Messages').push({
+                    	name: "WalletBuddies",
+                    	time: d,
+                    	text: data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " circle."
+            		});
+
+            		for(var uid in circle.val().Members) {
+                        if (circle.val().Members.hasOwnProperty(uid)) {
+                            fbPush.push({
+			                    uid: uid,
+								message: "WalletBuddies" + ' @ ' + circle.val().circleName + ': ' + data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " circle.",
+								payload: $stateParams.circleID,
+								tab: "chat"
+		                	});
+                        }
+                	}
+                });
+                // Get a reference to the NewsFeed of the user
+		        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+		        var dt = Date.now();
+		        var feedToPush = "You accepted an invite to the circle <b>" + $scope.circle.circleName + "</b>.";
+		
+		        // Append new data to this FB link
+		        fbNewsFeedRef.push({
+		            feed: feedToPush,
+		            icon: "ion-ios7-heart",
+		            color: "melon-icon",
+		            time: dt
+		        });
                 $state.go('tab.requests');
             } else {
                 $ionicPopup.alert({
@@ -1288,19 +1325,6 @@ angular.module('starter.controllers', [])
                     template: "You can accept a request once you've linked an account. Please go to settings to link an account."
                 });
             }
-        });
-
-        // Get a reference to the NewsFeed of the user
-        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
-        var dt = Date.now();
-        var feedToPush = "You accepted an invite to the circle <b>" + $scope.circle.circleName + "</b>.";
-
-        // Append new data to this FB link
-        fbNewsFeedRef.push({
-            feed: feedToPush,
-            icon: "ion-ios7-heart",
-            color: "melon-icon",
-            time: dt
         });
     }
 
@@ -1323,7 +1347,32 @@ angular.module('starter.controllers', [])
                 text: "This message is to confirm that you have declined to join the Circle " + data.val().circleName + ". \n\n- WalletBuddies"
             });
         });
+        
+        // Send out a push and inform users of declined invite
+        var fbCircle = new Firebase("https://walletbuddies.firebaseio.com/Circles/");
+        var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
+        fbCircle.child($stateParams.circleID).once('value', function(circle) {
 
+            var d = Date.now();
+			//d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+        	fbCircle.child($stateParams.circleID).child('Messages').push({
+            	name: "WalletBuddies",
+            	time: d,
+            	text: data.val().firstname + " has declined the invite to the " + circle.val().circleName + " circle."
+    		});
+
+    		for(var uid in circle.val().Members) {
+                if (circle.val().Members.hasOwnProperty(uid)) {
+                    fbPush.push({
+	                    uid: uid,
+						message: "WalletBuddies" + ' @ ' + circle.val().circleName + ': ' + data.val().firstname + " has declined the invite to the " + circle.val().circleName + " circle.",
+						payload: $stateParams.circleID,
+						tab: "chat"
+                	});
+                }
+        	}
+        });
+        
         // Get a reference to the NewsFeed of the user
         var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
         var dt = Date.now();
