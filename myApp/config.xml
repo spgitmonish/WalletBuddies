@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <widget id="com.ionicframework.myapp721532" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
   <name>WalletBuddies</name>
-  <description>
-  App for groups to pool in money periodically.
+  <description>&#xD;
+  App for groups to pool in money periodically.&#xD;
   </description>
-  <author email="deepesh.sunku@walletbuddies.co" href="http://walletbuddies.co/">
-      WalletBuddies
+  <author email="deepesh.sunku@walletbuddies.co" href="http://walletbuddies.co/">&#xD;
+      WalletBuddies&#xD;
     </author>
   <content src="index.html"/>
   <access origin="*"/>

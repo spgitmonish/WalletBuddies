@@ -54,3 +54,4 @@ myApp/config.xml
 *.xml
 
 myApp/sendgrid.js
+myApp/config.xml

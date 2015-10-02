@@ -24,12 +24,9 @@
                         <p>Click to select a plan</p>
                     </div>
                     <select ng-model='user.plan' name="plan" required>
-                        <!-- <option>weekly</option>
-                        <option selected>biweekly</option>
-                        <option>monthly</option> -->
-                        <option>daily</option>
-                        <option>semiweekly</option>
                         <option>weekly</option>
+                        <option>biweekly</option>
+                        <option>monthly</option>
                     </select>
                 </label>
             </div>
@@ -48,10 +45,10 @@
                 </label>
             </div>
         </ion-list>
-		<div class="form-errors"  
+		<div class="form-errors"
 		   ng-show="signinForm.$error && signinForm.$submitted"
 		   ng-messages="signinForm.$error"
-		   ng-messages-include="templates/form-errors.html">  
+		   ng-messages-include="templates/form-errors.html">
 		</div>
         <ion-list>
             <!-- Picking contacts -->
