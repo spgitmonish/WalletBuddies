@@ -1391,7 +1391,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for tab-settings
-.controller('SettingsCtrl', function($scope, $firebaseObject, $ionicHistory, $ionicActionSheet, $cordovaCamera, $ionicNavBarDelegate, $state, $rootScope, $stateParams, $ionicLoading) {
+.controller('SettingsCtrl', function($scope, $firebaseObject, $ionicHistory, $ionicActionSheet, $cordovaCamera, $ionicNavBarDelegate, $state, $rootScope, $stateParams, $ionicLoading, $ionicPopup) {
     // Create a firebase reference
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
 
