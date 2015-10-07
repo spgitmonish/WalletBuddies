@@ -20,7 +20,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $firebaseObject, $ionicPopup, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush, $cipherFactory, $cordovaDevice) {
+.controller('AccountCtrl', function($scope, $ionicHistory, $firebaseObject, $ionicPopup, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush, $cipherFactory, $cordovaDevice) {
 
     $scope.check = {
         data: true
@@ -29,6 +29,10 @@ angular.module('starter.controllers', [])
         console.log('array index is ' + index + $scope.check.data);
         var checked = index;
     }
+    $scope.$on('$ionicView.enter', function() {
+        $ionicHistory.clearCache();
+        //$ionicHistory.clearHistory();
+    });
 
     // Function to do the Sign Up and Add the Account
     $scope.addAccount = function(account) {
