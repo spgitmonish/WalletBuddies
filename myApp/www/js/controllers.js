@@ -1066,12 +1066,13 @@ angular.module('starter.controllers', [])
 						walletCounter: 0
 					});
 				}
-			})
-			fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-				badgeCounter: 0
-			})
-			ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-				badgeCounter: 0
+				// Set badgeCounter to 0
+				fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+					badgeCounter: 0
+				})
+				ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+					badgeCounter: 0
+				})
 			})
 		});
 	});
@@ -1094,12 +1095,13 @@ angular.module('starter.controllers', [])
 						walletCounter: 0
 					});
 				}
-			})
-			fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-				badgeCounter: 0
-			})
-			ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-				badgeCounter: 0
+				// Set badgeCounter to 0
+				fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+					badgeCounter: 0
+				})
+				ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+					badgeCounter: 0
+				})
 			})
 		});
 	});
