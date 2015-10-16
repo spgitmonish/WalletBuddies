@@ -1905,7 +1905,19 @@ angular.module('starter.controllers', [])
                 $ionicLoading.hide();
                 console.log("Got an error in bank login.");
                 console.log(err);
-                alert(err.statusText);
+                if (err.statusText == 'CONFLICT') {
+	                $ionicPopup.alert({
+		                title: "Incorrect Credentials",
+		                template: "Either your Online ID or password is incorrect!"
+		            });
+                }
+                if (err.statusText == 'BAD REQUEST') {
+	                $ionicPopup.alert({
+		                title: "Select your Bank",
+		                template: "Please make sure you've selected your bank from the drop down!"
+		            });
+                }
+                //alert(err.statusText);
             });
         });
     };
@@ -2261,8 +2273,16 @@ angular.module('starter.controllers', [])
                 }
             }).then(function(payload) {
                 $ionicLoading.hide();
-                $rootScope.data = payload.data;
-                $state.go('tab.choose-account');
+                if (payload.data.nodes[0].allowed == null) {
+                    $rootScope.question = payload.data;
+                    $scope.question = $rootScope.question;
+                    user.answer = '';
+                    $state.go('tab.auth-question');
+                } else {
+                    $rootScope.data = payload.data;
+                    console.log("payload: " + JSON.stringify(payload.data));
+                    $state.go('tab.choose-account');
+                }
             }).catch(function(err) {
                 $ionicLoading.hide();
                 console.log("Got an error in MFA - QuestionCtrl.");
