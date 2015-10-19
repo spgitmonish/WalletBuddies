@@ -19,13 +19,20 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // org.apache.cordova.statusbar required
             StatusBar.styleDefault();
         }
-        
+
+        // Set up Google Analytics(with the ID)
+        if(typeof analytics !== undefined) {
+            analytics.startTrackerWithId("UA-68986040-1");
+        } else {
+            console.log("Google Analytics Unavailable");
+        }
+
       	/*// Updating chat badge counter
 		var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
 		// Get a reference to where the User's accepted circles are going to be stored
 		var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 		//$rootScope.walletCount = $rootScope.walletCount + 1;
-		
+
 		fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
 			var counter = data.val().badgeCounter + 1;
 			fbUserAcceptedCircles.child(notification.url).child("Members").child($rootScope.fbAuthData.uid).update({
@@ -36,14 +43,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			})
 			$rootScope.walletCount = $rootScope.walletCount + 1;
 		});*/
-        
+
         // listen for Online event
 	    $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
 	      var onlineState = networkState;
 	      console.log("onlineState: " + onlineState);
 	      $ionicLoading.hide();
 	    })
-	    
+
 	    // listen for Offline event
 	    $rootScope.$on('$cordovaNetwork:offline', function(event, networkState){
 	      var offlineState = networkState;
@@ -95,7 +102,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 	            	  });
 		          }
 		          break;
-		
+
 		        case 'message':
 		          // Push Notifications for when app is in the foreground
 			      if (notification.foreground == true) {
@@ -110,7 +117,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					        $state.go('tab.requests', {
 					            circleID: notification.payload.url
 					        });
-					    };     
+					    };
 					}
 					else if (notification.payload.tab == "chat"){
 						// Display Banner Notifications
@@ -153,7 +160,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					        $state.go('tab.home');
 					    };
 					}
-				
+
 				    if (notification.sound) {
 				        var snd = new Media(event.sound);
 				        snd.play();
@@ -204,7 +211,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					else if (notification.payload.tab == "feed"){
 					    $state.go('tab.home');
 					}
-					
+
 				    if (notification.badge) {
 				        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
 				          // Success!
@@ -214,11 +221,11 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				    }
 			      }
 		          break;
-		
+
 		        case 'error':
 		          alert('GCM error = ' + notification.msg);
 		          break;
-		
+
 		        default:
 		          alert('An unknown GCM event has occurred');
 		          break;
@@ -293,7 +300,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				        $state.go('tab.home');
 				    };
 				}
-			
+
 			    if (notification.sound) {
 			        var snd = new Media(event.sound);
 			        snd.play();
@@ -344,7 +351,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				else if (notification.payload.tab == "feed"){
 				    $state.go('tab.home');
 				}
-				
+
 			    if (notification.badge) {
 			        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
 			          	// Success!
@@ -409,14 +416,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			}
 		}
     })
-	
+
 	// State for helper slides
     .state('help', {
         url: '/help',
         templateUrl: 'templates/help-slider.html',
         controller: 'HelpCtrl'
     })
-    
+
     .state('forgotpassword', {
         url: '/forgot-password',
         templateUrl: 'templates/forgot-password.html',
@@ -467,7 +474,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-	
+
     .state('tab.chat', {
         url: '/chat?circleID',
         views: {
@@ -477,7 +484,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-	
+
     .state('tab.settings', {
         url: '/settings',
         views: {
@@ -487,7 +494,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-	
+
     .state('tab.socialcircle', {
         url: '/socialcircle',
         views: {
@@ -527,7 +534,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-	
+
 	.state('tab.surveypage', {
         url: '/survey-page',
         views: {
@@ -537,7 +544,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         	}
         }
     })
-    
+
     .state('tab.resetpassword', {
         url: '/reset-password',
         views: {
@@ -547,7 +554,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         	}
         }
     })
-	
+
     .state('tab.account', {
         url: '/account',
         views: {
@@ -557,7 +564,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-	
+
     .state('tab.choose-account', {
         url: '/choose-account',
         views: {
