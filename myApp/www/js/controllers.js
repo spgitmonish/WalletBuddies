@@ -241,7 +241,7 @@ angular.module('starter.controllers', [])
 
 			                            }).catch(function(err) {
                                             if(typeof analytics !== undefined) {
-                                                analytics.trackEvent('SynapsePay', 'Error communicating', 'In AccountCtrl', err);
+                                                analytics.trackEvent('SynapsePay AccountCtrl', err.statusText, err.data.error.en, 1);
                                             }
 			                                console.log("An error occured while communicating with Synapse");
 			                                console.log(JSON.stringify(err));
@@ -398,6 +398,9 @@ angular.module('starter.controllers', [])
                             analytics.trackEvent('Changing Password', 'Error', 'In ResetPassCtrl', error.code);
                         }
                         console.log("Error changing password:", error);
+                        $ionicPopup.alert({
+		                    title: error
+		                });
                 }
             } else {
                 $ionicPopup.alert({
@@ -591,12 +594,8 @@ angular.module('starter.controllers', [])
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
                     }, function(err) {
-                        if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-1', 'In GroupCtrl', err);
-                        }
-                        // error
                         $ionicLoading.show({
-                            template: 'Error choosing photo',
+                            template: 'No Photo Selected',
                             duration: 1000
                         });
                     });
@@ -619,12 +618,8 @@ angular.module('starter.controllers', [])
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
                     }, function(err) {
-                        // error
-                        if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-2', 'In GroupCtrl', err);
-                        }
                         $ionicLoading.show({
-                            template: 'Error choosing photo',
+                            template: 'No Photo Selected',
                             duration: 1000
                         });
                     });
@@ -1020,12 +1015,8 @@ angular.module('starter.controllers', [])
                             circlePhoto: $scope.imageSrc
                         });
                     }, function(err) {
-                        if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-3', 'In WalletDetailCtrl', err);
-                        }
-                        // error
                         $ionicLoading.show({
-                            template: 'Error choosing photo',
+                            template: 'No Photo Selected',
                             duration: 1000
                         });
                     });
@@ -1055,12 +1046,8 @@ angular.module('starter.controllers', [])
                         });
 
                     }, function(err) {
-                        // error
-                        if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-4', 'In WalletDetailCtrl', err);
-                        }
                         $ionicLoading.show({
-                            template: 'Error choosing photo',
+                            template: 'No Photo Selected',
                             duration: 1000
                         });
                     });
@@ -1510,12 +1497,8 @@ angular.module('starter.controllers', [])
                             profilePhoto: $scope.imageSrc
                         });
                     }, function(err) {
-                        // error
-                        if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-5', 'In SettingsCtrl', 21);
-                        }
                         $ionicLoading.show({
-                            template: 'Error choosing photo',
+                            template: 'No Photo Selected',
                             duration: 1000
                         });
                     });
@@ -1541,12 +1524,8 @@ angular.module('starter.controllers', [])
                             profilePhoto: $scope.imageSrc
                         });
                     }, function(err) {
-                        // error
-                        if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-6', 'In SettingsCtrl', 22);
-                        }
                         $ionicLoading.show({
-                            template: 'Error choosing photo',
+                            template: 'No Photo Selected',
                             duration: 1000
                         });
                     });
@@ -1980,10 +1959,10 @@ angular.module('starter.controllers', [])
             }).catch(function(err) {
                 $ionicLoading.hide();
                 if(typeof analytics !== undefined) {
-                    analytics.trackEvent('Bank Login', 'Error', 'In ConnectCtrl', err);
+                    analytics.trackEvent('Bank Login ConnectCtrl', err.statusText, err.data.error.en, 1);
                 }
                 console.log("Got an error in bank login.");
-                console.log(err);
+                console.log(JSON.stringify(err));
                 if (err.statusText == 'CONFLICT') {
 	                $ionicPopup.alert({
 		                title: "Incorrect Credentials",
@@ -2095,12 +2074,8 @@ angular.module('starter.controllers', [])
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
                         $scope.imageDoc = "data:image/jpeg;base64," + imageData;
                     }, function(err) {
-                        // error
-                        if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-7', 'In KycCtrl', err);
-                        }
                         $ionicLoading.show({
-                            template: 'Error choosing photo',
+                            template: 'No Photo Selected',
                             duration: 1000
                         });
                     });
@@ -2125,12 +2100,8 @@ angular.module('starter.controllers', [])
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
                         $scope.imageDoc = "data:image/jpeg;base64," + imageData;
                     }, function(err) {
-                        // error
-                        if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-8', 'In KycCtrl', err);
-                        }
                         $ionicLoading.show({
-                            template: 'Error choosing photo',
+                            template: 'No Photo Selected',
                             duration: 1000
                         });
                     });
@@ -2193,7 +2164,7 @@ angular.module('starter.controllers', [])
                         console.log("DOCUMENT: " + JSON.stringify(data));
                     }).catch(function(err) {
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('OAUTH Keys', 'Post Error-1', 'In KycCtrl', err);
+                            analytics.trackEvent('user/doc/attachments/add In KycCtrl', err.statusText, err.data.error.en, 1);
                         }
                         console.log(err);
                         console.log(JSON.stringify(err));
@@ -2223,6 +2194,7 @@ angular.module('starter.controllers', [])
                             color: "my-icon",
                             time: dt
                         });
+
                         $state.go("tab.settings");
                     } else {
                         $ionicLoading.hide();
@@ -2231,15 +2203,13 @@ angular.module('starter.controllers', [])
                             template: "Please bear with us :)"
                         });
                         $rootScope.kycQuestions = payload.data;
-                        console.log("tab.kyc-questions: " + JSON.stringify(payload.data));
                         $state.go("tab.kyc-questions");
                     }
                 }).catch(function(err) {
                     if(typeof analytics !== undefined) {
-                        analytics.trackEvent('OAUTH Keys', 'Post Error-2', 'In KycCtrl', err);
+                        analytics.trackEvent('/v3/user/doc/add In KycCtrl', err.statusText, err.data.error.en, 1);
                     }
                     $ionicLoading.hide();
-                    console.log("Attachment" + JSON.stringify(err));
                     if (err.data.http_code == "409" || err.data.http_code == "401" && err.data.error.en != "Error verifying document. Please contact us to learn more.") {
 	                    $ionicPopup.alert({
                             title: "We were unable to verify your SSN",
@@ -2249,6 +2219,7 @@ angular.module('starter.controllers', [])
                     } else {
 	                	alert(err.data.error.en);
                     }
+                    console.log("Attachment" + JSON.stringify(err));
                 });
             });
         };
@@ -2466,7 +2437,7 @@ angular.module('starter.controllers', [])
 
             }).catch(function(err) {
                 if(typeof analytics !== undefined) {
-                    analytics.trackEvent('OAUTH Keys', 'Post Error-3', 'In KycQuestionCtrl', err);
+                    analytics.trackEvent('/v3/user/doc/verify KycQuestionCtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
                 console.log(err);
@@ -2480,10 +2451,7 @@ angular.module('starter.controllers', [])
                         template: "Please try again."
                     });
                 } else {
-                    if(typeof analytics !== undefined) {
-                        analytics.trackEvent('OAUTH Keys', 'Wrong Answer', 'In KycQuestionCtrl', err);
-                    }
-                    alert(err.statusText);
+                    alert(err.data.error.en);
                 }
             })
         });
@@ -2532,7 +2500,7 @@ angular.module('starter.controllers', [])
                 }
             }).catch(function(err) {
                 if(typeof analytics !== undefined) {
-                    analytics.trackEvent('MFA', 'Error-1', 'In QuestionCtrl', err);
+                    analytics.trackEvent('MFA QuestionCtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
                 console.log("Got an error in MFA - QuestionCtrl.");
@@ -2546,10 +2514,7 @@ angular.module('starter.controllers', [])
                         template: "Please try again."
                     });
                 } else {
-                    if(typeof analytics !== undefined) {
-                        analytics.trackEvent('MFA', 'Error-2', 'In QuestionCtrl', err);
-                    }
-                    alert(err.statusText);
+                    alert(err.data.error.en);
                 }
             });
         })
@@ -2583,7 +2548,7 @@ angular.module('starter.controllers', [])
                 $state.go('tab.choose-account');
             }).catch(function(err) {
                 if(typeof analytics !== undefined) {
-                    analytics.trackEvent('MFA', 'Error-1', 'In MFACtrl', err);
+                    analytics.trackEvent('MFA in MFACtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
                 console.log("Got an error in MFA - MFACtrl.");
@@ -2596,10 +2561,7 @@ angular.module('starter.controllers', [])
                         template: "Please try again."
                     });
                 } else {
-                    if(typeof analytics !== undefined) {
-                        analytics.trackEvent('MFA', 'Error-2', 'In MFACtrl', err);
-                    }
-                    alert(err.statusText);
+                    alert(err.data.error.en);
                 }
             });
         })
