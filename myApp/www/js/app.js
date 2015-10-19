@@ -584,6 +584,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
+    
+    .state('tab.document-upload', {
+        url: '/document-upload',
+        views: {
+            'tab-settings': {
+                templateUrl: 'templates/document-upload.html',
+                controller: 'DocUploadCtrl'
+            }
+        }
+    })
 
     .state('tab.kyc-questions', {
         url: '/kyc-questions',

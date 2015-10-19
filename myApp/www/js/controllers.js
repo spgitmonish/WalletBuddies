@@ -2200,7 +2200,7 @@ angular.module('starter.controllers', [])
                         alert(err.statusText);
                     });
 
-                    if (payload.data.message.en == "SSN information verified") {
+                    if (payload.data.http_code == "200") {
                         fbRef.child("Payments").child("KYC").update({
                             oid: payload.data.user._id.$oid,
                             clientid: payload.data.user.client.id
@@ -2223,7 +2223,6 @@ angular.module('starter.controllers', [])
                             color: "my-icon",
                             time: dt
                         });
-
                         $state.go("tab.settings");
                     } else {
                         $ionicLoading.hide();
@@ -2232,6 +2231,7 @@ angular.module('starter.controllers', [])
                             template: "Please bear with us :)"
                         });
                         $rootScope.kycQuestions = payload.data;
+                        console.log("tab.kyc-questions: " + JSON.stringify(payload.data));
                         $state.go("tab.kyc-questions");
                     }
                 }).catch(function(err) {
@@ -2239,12 +2239,162 @@ angular.module('starter.controllers', [])
                         analytics.trackEvent('OAUTH Keys', 'Post Error-2', 'In KycCtrl', err);
                     }
                     $ionicLoading.hide();
-                    console.log(err);
                     console.log("Attachment" + JSON.stringify(err));
-                    alert(err.statusText);
+                    if (err.data.http_code == "409" || err.data.http_code == "401" && err.data.error.en != "Error verifying document. Please contact us to learn more.") {
+	                    $ionicPopup.alert({
+                            title: "We were unable to verify your SSN",
+                            template: "You need to provide a picture of your Drivers License or Passport!"
+                        });
+                        $state.go("tab.document-upload");
+                    } else {
+	                	alert(err.data.error.en);
+                    }
                 });
             });
         };
+    };
+})
+
+.controller('DocUploadCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
+	
+	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+	
+	// For selecting a photo
+    $scope.selectPicture = function() {
+        // Show the action sheet
+        var hideSheet = $ionicActionSheet.show({
+            buttons: [{
+                text: 'Choose Photo'
+            }, {
+                text: 'Take Photo'
+            }],
+            cancelText: 'Cancel',
+            cancel: function() {
+                // add cancel code..
+            },
+            buttonClicked: function(index) {
+                if (index == 0) {
+                    hideSheet();
+                    var options = {
+                        quality: 75,
+                        destinationType: Camera.DestinationType.DATA_URL,
+                        sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+                        allowEdit: true,
+                        encodingType: Camera.EncodingType.JPEG,
+                        targetWidth: 600,
+                        targetHeight: 600,
+                        popoverOptions: CameraPopoverOptions,
+                        saveToPhotoAlbum: false
+                    };
+
+                    $cordovaCamera.getPicture(options).then(function(imageData) {
+                        var image = document.getElementById('myImage');
+                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        $scope.imageDoc = "data:image/jpeg;base64," + imageData;
+                    }, function(err) {
+                        // error
+                        $ionicLoading.show({
+                            template: 'No Photo Selected',
+                            duration: 1000
+                        });
+                    });
+                }
+
+                if (index == 1) {
+                    hideSheet();
+                    var options = {
+                        quality: 75,
+                        destinationType: Camera.DestinationType.DATA_URL,
+                        sourceType: Camera.PictureSourceType.CAMERA,
+                        allowEdit: true,
+                        encodingType: Camera.EncodingType.JPEG,
+                        targetWidth: 600,
+                        targetHeight: 600,
+                        popoverOptions: CameraPopoverOptions,
+                        saveToPhotoAlbum: false
+                    };
+
+                    $cordovaCamera.getPicture(options).then(function(imageData) {
+                        var image = document.getElementById('myImage');
+                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        $scope.imageDoc = "data:image/jpeg;base64," + imageData;
+                    }, function(err) {
+                        // error
+                        $ionicLoading.show({
+                            template: 'No Photo Selected',
+                            duration: 1000
+                        });
+                    });
+                }
+            }
+        });
+    };
+    
+    // When user clicks finish submit the photo
+    $scope.upload = function() {
+        // Check if user has uploaded a image
+        if ($scope.imageDoc == null) {
+            $ionicPopup.alert({
+                title: "Photo Needed",
+                template: "Please upload your photo to continue."
+            });
+        } else {
+            $ionicLoading.show({
+                template: 'Submitting your data...hold on.'
+            });
+            fbRef.once("value", function(data) {
+                //Decipher oauth keys before POST
+                var oauth_key = $cipherFactory.decrypt(data.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().Payments.oauth.oauth_key.salt, data.val().Payments.oauth.oauth_key.iv);
+                console.log("USER GOVT ID: " + $scope.imageDoc);
+                $http.post('https://synapsepay.com/api/v3/user/doc/attachments/add', {
+                    'login': {
+                        'oauth_key': oauth_key
+                    },
+                    'user': {
+                        'doc': {
+                            'attachment': $scope.imageDoc
+                        },
+                        'fingerprint': data.val().Payments.oauth.fingerprint
+                    }
+                }).then(function(res) {
+                    console.log("DOCUMENT: " + JSON.stringify(res));
+                    $ionicLoading.hide();
+                    if (res.data.http_code == "200") {
+	                    $ionicPopup.alert({
+			                title: "Thanks!! You're all set now :)",
+			                template: "And we're sorry that last step was a pain in the arse :("
+			            });
+			            fbRef.child("Payments").child("KYC").update({
+                            oid: res.data.user._id.$oid,
+                            clientid: res.data.user.client.id
+                        });
+                        // Get a reference to the NewsFeed of the user
+                        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+                        var dt = Date.now();
+                        var feedToPush = "Yay!! Your bank account was linked successfully!";
+
+                        // Append new data to this FB link
+                        fbNewsFeedRef.push({
+                            feed: feedToPush,
+                            icon: "ion-checkmark",
+                            color: "my-icon",
+                            time: dt
+                        });
+                        $state.go("tab.settings");
+                    } else {
+	                    $ionicPopup.alert({
+			                title: "Something went wrong!!",
+			                template: "We were not able to upload your image."
+			            });
+                    }
+                }).catch(function(err) {
+	                $ionicLoading.hide();
+                    console.log(err);
+                    console.log(JSON.stringify(err));
+                    alert(err.statusText);
+                });
+            });
+        }
     };
 })
 

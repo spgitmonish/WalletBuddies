@@ -1,0 +1,28 @@
+<ion-view hide-back-button="true" view-title="Identity Verification">
+    <ion-content class="pageBG" padding="true">
+    	<br>
+    	<p align="center" style="color: #595858"><b>We need the following information for verifying your identity. This is to be compliant with fraud prevention laws.</b></p>
+    	<br>
+    	<div class="card">
+	    	<div class="item item-divider item-text-wrap">
+                Upload a picture of your Government Issued ID
+            </div>
+            <label class="item item-avatar" ng-click="selectPicture()">
+              <img ng-src="{{imageSrc}}">
+              <h2>Select Photo</h2>
+		      <p>Tap here to add photo</p>
+            </label>
+        </div>
+        <br>
+        <div class="row">
+	        <div class="col">
+		        <i class="icon ion-ios7-locked-outline my-icon"></i>
+	        </div>
+	        <div class="col col-90">
+		        <p align="justify" style="color: #595858">The information you provide on this page is solely for identity verification only.</p>
+	        </div>
+        </div>
+		<br> 
+        <button ng-click="upload()" class="button button-block button-balanced">Finish</button>        
+    </ion-content>
+</ion-view>
