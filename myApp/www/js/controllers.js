@@ -67,7 +67,7 @@ angular.module('starter.controllers', [])
 	                        switch (error.code) {
 	                            case "EMAIL_TAKEN":
                                     if(typeof analytics !== undefined) {
-                                        analytics.trackEvent('Email', 'In Use', 'In AccountCtrl', 2);
+                                        analytics.trackEvent('Email', 'In Use', 'In AccountCtrl', error.code);
                                     }
 	                                alert("The new user account cannot be created because the email is already in use.");
 	                                $ionicPopup.alert({
@@ -77,7 +77,7 @@ angular.module('starter.controllers', [])
 	                                break;
 	                            case "INVALID_EMAIL":
                                     if(typeof analytics !== undefined) {
-                                        analytics.trackEvent('Email', 'Invalid', 'In AccountCtrl', 3);
+                                        analytics.trackEvent('Email', 'Invalid', 'In AccountCtrl', error.code);
                                     }
 	                                $ionicPopup.alert({
 							            title: "Invalid Email",
@@ -86,7 +86,7 @@ angular.module('starter.controllers', [])
 	                                break;
 	                            default:
                                     if(typeof analytics !== undefined) {
-                                        analytics.trackEvent('Account Creation', 'Error', 'In AccountCtrl', 4);
+                                        analytics.trackEvent('Account Creation', 'Error', 'In AccountCtrl', error.code);
                                     }
 	                                $ionicPopup.alert({
 							            title: "Error creating user",
@@ -241,14 +241,14 @@ angular.module('starter.controllers', [])
 
 			                            }).catch(function(err) {
                                             if(typeof analytics !== undefined) {
-                                                analytics.trackEvent('SynapsePay', 'Error communicating', 'In AccountCtrl', 5);
+                                                analytics.trackEvent('SynapsePay', 'Error communicating', 'In AccountCtrl', err);
                                             }
 			                                console.log("An error occured while communicating with Synapse");
 			                                console.log(JSON.stringify(err));
 			                            });
 		                            }, function(e) {
                                         if(typeof analytics !== undefined) {
-                                            analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', 6);
+                                            analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', e);
                                         }
 										alert("An error occured while validating your ip address");
 									});
@@ -297,7 +297,7 @@ angular.module('starter.controllers', [])
 	                                        console.log("Success: " + deviceToken);
 	                                    }, function(err) {
                                             if(typeof analytics !== undefined) {
-                                                analytics.trackEvent('Push Notification(Android)', 'Registration Error', 'In AccountCtrl', 7);
+                                                analytics.trackEvent('Push Notification(Android)', 'Registration Error', 'In AccountCtrl', err);
                                             }
 	                                        alert("Registration error: " + err);
 	                                    })
@@ -316,7 +316,7 @@ angular.module('starter.controllers', [])
 	                                        });
 	                                    }, function(err) {
                                             if(typeof analytics !== undefined) {
-                                                analytics.trackEvent('Push Notification(iOS)', 'Registration Error', 'In AccountCtrl', 8);
+                                                analytics.trackEvent('Push Notification(iOS)', 'Registration Error', 'In AccountCtrl', err);
                                             }
 	                                        alert("Registration error: " + err);
 	                                    });
@@ -324,7 +324,7 @@ angular.module('starter.controllers', [])
 	                            });
 	                        }).catch(function(error) {
                                 if(typeof analytics !== undefined) {
-                                    analytics.trackEvent('Authentication', 'Failed', 'In AccountCtrl', 9);
+                                    analytics.trackEvent('Authentication', 'Failed', 'In AccountCtrl', error);
                                 }
 	                            console.error("Authentication failed: " + error);
 	                        });
@@ -335,7 +335,7 @@ angular.module('starter.controllers', [])
 	    else {
             // User didn't accept the terms
             if(typeof analytics !== undefined) {
-                analytics.trackEvent('Terms', 'Not Accepted', 'In AccountCtrl', 10);
+                analytics.trackEvent('Terms', 'Not Accepted', 'In AccountCtrl', 2);
             }
 
 		    $ionicPopup.alert({
@@ -358,7 +358,7 @@ angular.module('starter.controllers', [])
                 switch (error.code) {
                     case "INVALID_USER":
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Forgot Password', 'Email not in the system', 'In ForgotPassCtrl', 11);
+                            analytics.trackEvent('Forgot Password', 'Email not in the system', 'In ForgotPassCtrl', error.code);
                         }
                         $ionicPopup.alert({
                             title: "Email not in the system!",
@@ -367,7 +367,7 @@ angular.module('starter.controllers', [])
                         break;
                     default:
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Forgot Password', 'Error setting password', 'In ForgotPassCtrl', 12);
+                            analytics.trackEvent('Forgot Password', 'Error setting password', 'In ForgotPassCtrl', error.code);
                         }
                         console.log("Error resetting password:", error);
                 }
@@ -395,7 +395,7 @@ angular.module('starter.controllers', [])
                 switch (error.code) {
                     default:
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Changing Password', 'Error', 'In ResetPassCtrl', 13);
+                            analytics.trackEvent('Changing Password', 'Error', 'In ResetPassCtrl', error.code);
                         }
                         console.log("Error changing password:", error);
                 }
@@ -456,7 +456,7 @@ angular.module('starter.controllers', [])
                 function(error, authData) {
                     if (error) {
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Login Error', 'Username or password incorrect', 'In SignInCtrl', 14);
+                            analytics.trackEvent('Login Error', 'Username or password incorrect', 'In SignInCtrl', error);
                         }
                         $ionicPopup.alert({
                             title: "Login Error",
@@ -592,7 +592,7 @@ angular.module('starter.controllers', [])
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
                     }, function(err) {
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-1', 'In GroupCtrl', 15);
+                            analytics.trackEvent('Choosing Photo', 'Error-1', 'In GroupCtrl', err);
                         }
                         // error
                         $ionicLoading.show({
@@ -621,7 +621,7 @@ angular.module('starter.controllers', [])
                     }, function(err) {
                         // error
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-2', 'In GroupCtrl', 16);
+                            analytics.trackEvent('Choosing Photo', 'Error-2', 'In GroupCtrl', err);
                         }
                         $ionicLoading.show({
                             template: 'Error choosing photo',
@@ -646,7 +646,7 @@ angular.module('starter.controllers', [])
             },
             function(failure) {
                 if(typeof analytics !== undefined) {
-                    analytics.trackEvent('Contacts', 'Failed to pick a contact', 'In GroupCtrl', 18);
+                    analytics.trackEvent('Contacts', 'Failed to pick a contact', 'In GroupCtrl', failure);
                 }
                 console.log("Bummer. Failed to pick a contact");
             }
@@ -1021,7 +1021,7 @@ angular.module('starter.controllers', [])
                         });
                     }, function(err) {
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-3', 'In WalletDetailCtrl', 19);
+                            analytics.trackEvent('Choosing Photo', 'Error-3', 'In WalletDetailCtrl', err);
                         }
                         // error
                         $ionicLoading.show({
@@ -1057,7 +1057,7 @@ angular.module('starter.controllers', [])
                     }, function(err) {
                         // error
                         if(typeof analytics !== undefined) {
-                            analytics.trackEvent('Choosing Photo', 'Error-4', 'In WalletDetailCtrl', 20);
+                            analytics.trackEvent('Choosing Photo', 'Error-4', 'In WalletDetailCtrl', err);
                         }
                         $ionicLoading.show({
                             template: 'Error choosing photo',
