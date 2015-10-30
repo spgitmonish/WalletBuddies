@@ -719,8 +719,12 @@ angular.module('starter.controllers', [])
                     groupMessage: groupMessage,
                     contacts: $scope.data.selectedContacts,
                     circlePhoto: $scope.imageSrc,
+                    circleType: $rootScope.circleTypePicked,
                     circleComplete: false
                 });
+
+                // Reset it back to "None" after the update
+                $rootScope.circleTypePicked = "None"
 
                 // Initialize the counter under CreditDates of the Circle
                 // NOTE: CreditDates will be set up once all the user accept the invites and once we hit the deadline
@@ -887,6 +891,27 @@ angular.module('starter.controllers', [])
     }
 })
 
+// Controller for selecting type of circle
+.controller('CircleTypeCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback) {
+    $scope.circleTypeList = [{
+        text: "Singular",
+        value: "Singular"
+    }, {
+        text: "Rotational",
+        value: "Rotational"
+    }];
+
+    $scope.circleType = {
+        answer: 'ng'
+    };
+
+    $scope.circleTypeChosen = function(item) {
+        $rootScope.circleTypePicked = item.value;
+        console.log("Circle type picked:", $rootScope.circleTypePicked);
+        $state.go('tab.socialcircle');
+    }
+})
+
 // Controller for Wallet tab
 .controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray, $http) {
     // Check if user has linked a bank account before he can start a circle
@@ -895,7 +920,11 @@ angular.module('starter.controllers', [])
         fbUser.once("value", function(data) {
             // Check if user's bank account is linked and KYC verified
             if (data.child("Bank").exists() && data.child("KYC").exists()) {
-                $state.go("tab.socialcircle");
+                // Set the circleTypePicked to "None"
+                $rootScope.circleTypePicked = "None";
+
+                // Go to the page to select the type of circle
+                $state.go('tab.socialcircletype');
             } else {
                 $ionicPopup.alert({
                     title: "You haven't linked your bank account yet!",

@@ -1,0 +1,25 @@
+<ion-view hide-back-button="true" view-title="Select type of Circle">
+    <ion-content class="pageBG" padding="true">
+        <div class="row">
+	        <div class="col col-90">
+		        <p align="justify" style="color: #595858">
+                    <b>We have two options available.
+                        <br>
+                        <br>1. Singular - For this type of circle, the pooled money goes to the creator of the group.
+                        No transaction fees apply to the creator but the fees is split equally by the remaining members.
+                        This type group runs infinitely and can be cancelled anytime.
+                        <br>
+                        <br>
+                        <br>2. Regular - This is a regular type of circle, the pooled money goes around to each member of the group.
+                        The transaction fees is equally split among members of the group.
+                        This type of group ends when all the members in the group get paid.
+                    </b>
+                </p>
+	        </div>
+        </div>
+        <H3>{{ questionList[0].text }}</H3>
+        <ion-radio name="circleType" ng-repeat="item in circleTypeList" ng-value="item.value" ng-model="circleType.answer" ng-change="circleTypeChosen(item)">
+            {{ item.text }}
+        </ion-radio>
+    </ion-content>
+</ion-view>

@@ -465,6 +465,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
 
+    .state('tab.socialcircletype', {
+        url: '/socialcircle-type',
+        views: {
+            'tab-wallet': {
+                templateUrl: 'templates/socialcircle-type.html',
+                controller: 'CircleTypeCtrl'
+            }
+        }
+    })
+
     .state('tab.wallet-detail', {
         url: '/wallet/:circleID',
         views: {
@@ -584,7 +594,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.document-upload', {
         url: '/document-upload',
         views: {
