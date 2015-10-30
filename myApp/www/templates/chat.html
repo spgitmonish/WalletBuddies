@@ -7,6 +7,7 @@
     <ion-content class="content-stable" on-swipe-left="hideTime = false" on-swipe-right="hideTime = true">
         <div ng-repeat="message in messages" class="message-wrapper">
             <div ng-if="uid !== message.userId">
+                <img class="profile-pic left" ng-src="{{message.photo}}"/>
 
                 <div class="chat-bubble left">
 
@@ -21,6 +22,7 @@
                 </div>
             </div>
             <div ng-if="uid === message.userId">
+                <img class="profile-pic right" ng-src="{{message.photo}}"/>
 
                 <div class="chat-bubble right">
 

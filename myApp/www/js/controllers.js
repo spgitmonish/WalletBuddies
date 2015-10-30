@@ -1059,6 +1059,7 @@ angular.module('starter.controllers', [])
     // Creare a link to a CircleMembers under this circle
     var fbCircleMembers = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Members/" + $stateParams.circleID + "/CircleMembers/");
     console.log("FBCIRCLE MEMBERS: " + fbCircleMembers);
+
     // Clear all the data
     fbCircleMembers.remove();
 
@@ -1073,6 +1074,8 @@ angular.module('starter.controllers', [])
                 // Get the reference for the push
                 var fbCircleMembersPushRef = fbCircleMembers.push();
                 console.log("FBCIRCLE MEMBERS: " + fbCircleMembersPushRef);
+
+                // Once the user data is loaded update the information
                 // Update the location(temporary cache)
                 fbCircleMembersPushRef.update({
                     firstName: data.val().firstname
@@ -1185,14 +1188,22 @@ angular.module('starter.controllers', [])
         var d = Date.now();
         //d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
 
-        $scope.messages.$add({
-            userId: $rootScope.fbAuthData.uid,
-            text: $scope.data.message,
-            time: d,
-            name: user.firstname
-        });
+        // Create a firebase reference to get the user's information
+        var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+        var profile = $firebaseObject(fbRef.child("Users").child($rootScope.fbAuthData.uid));
+        profile.$bindTo($scope, "userData");
 
-		$ionicScrollDelegate.scrollBottom(true, true);
+        profile.$loaded().then(function() {
+            $scope.messages.$add({
+                userId: $rootScope.fbAuthData.uid,
+                text: $scope.data.message,
+                time: d,
+                name: user.firstname,
+                photo: $scope.userData.profilePhoto
+            });
+
+		    $ionicScrollDelegate.scrollBottom(true, true);
+        });
 
         fbMembers = new Firebase("https://walletbuddies.firebaseio.com/Circles/").child($stateParams.circleID);
         fbPush = new Firebase("https://walletbuddies.firebaseio.com/");
@@ -2227,9 +2238,9 @@ angular.module('starter.controllers', [])
 })
 
 .controller('DocUploadCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
-	
+
 	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
-	
+
 	// For selecting a photo
     $scope.selectPicture = function() {
         // Show the action sheet
@@ -2300,7 +2311,7 @@ angular.module('starter.controllers', [])
             }
         });
     };
-    
+
     // When user clicks finish submit the photo
     $scope.upload = function() {
         // Check if user has uploaded a image

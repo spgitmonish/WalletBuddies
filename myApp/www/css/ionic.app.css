@@ -133,7 +133,7 @@ $dark:                            #444 !default;
 button.ion-android-send {
   padding-top: 2px; }
 
-/* add this to keep your footer buttons down 
+/* add this to keep your footer buttons down
 at the bottom as the textarea resizes */
 .footer-btn-wrap {
   position: relative;
@@ -157,6 +157,12 @@ img.profile-pic.left {
 
 img.profile-pic.right {
   right: 10px; }
+
+img.circle-profile-pic{
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    right: 10px; }
 
 .ion-email {
   float: right;
@@ -209,7 +215,7 @@ img.profile-pic.right {
   background-color: #158ffe;
   color: #fff;
   float: right;
-  margin-right: 10px; }
+  margin-right: 55px; }
 
 .chat-bubble.right:before {
   background-color: #158ffe;
