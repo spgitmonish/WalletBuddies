@@ -446,6 +446,13 @@ label.item.valid-lr {
   padding: 2px 0 2px 16px;
   color: red;
 }
+// Styling for horizontal radio buttons
+.button-bar > .button:last-child {
+  border-radius: 0px 20px 20px 0px !important;
+}
+.button-bar > .button:first-child {
+    border-radius: 20px 0px 0px 20px !important;
+}
 
 // Include all of Ionic
 @import "www/lib/ionic/scss/ionic";

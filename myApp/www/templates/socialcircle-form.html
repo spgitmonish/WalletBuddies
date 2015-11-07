@@ -20,7 +20,7 @@
             <div class="list">
 	            <p><b>&nbsp&nbspPick your plan</b></p>
                 <label class="item item-input item-select" ng-class="{ 'has-error-lr' : signinForm.plan.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.plan.$valid  && signinForm.$submitted}">
-                    <div class="input-label">
+                    <div class="input-label">        
                         <p>Click to select a plan</p>
                     </div>
                     <select ng-model='user.plan' name="plan" required>
@@ -30,14 +30,26 @@
                     </select>
                 </label>
             </div>
-
+			<div class="list">
+				<p><b>&nbsp&nbspWho should the pool amount go to?</b></p>				
+				<div class="button-bar padding" style="padding-left: 80px; padding-right: 80px">
+					<a grouped-radio="'Singular'" ng-model="data.circleType">Just Me</a>
+					<a grouped-radio="'Rotational'" ng-model="data.circleType">Everyone</a>
+    			</div>
+    			{{}}
+    			<div ng-if="data.circleType=='Singular' && user.plan!=null">
+	    			<p>&nbsp&nbspThe pooled amount will be credited to you {{user.plan}}.</p>
+    			</div>
+    			<div ng-if="data.circleType=='Rotational' && user.plan!=null">
+	    			<p>&nbsp&nbspThe pooled amount will be credited to everyone in the group on a rotational basis {{user.plan}}. </p>
+    			</div>
+			</div>
             <div class="list">
                 <p><b>&nbsp&nbspSet your payment amount</b></p>
                 <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.amount.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.amount.$valid  && signinForm.$submitted}">
                     <input ng-model='user.amount' name="amount" type="tel" placeholder="$ 50.00" required>
                 </label>
             </div>
-
             <div class="list">
                 <p><b>&nbsp&nbspSay something to your buddies</b></p>
                 <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.groupMessage.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.groupMessage.$valid  && signinForm.$submitted}">

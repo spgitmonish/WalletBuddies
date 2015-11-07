@@ -653,6 +653,9 @@ angular.module('starter.controllers', [])
    		$scope.data.selectedContacts.splice(item, 1);
     };
 
+	$scope.data = {
+		circleType: "None"
+	};
     // This function is called when the "Invite your wallet buddies" button is pressed
     $scope.addGroup = function(user) {
         // Save data to a local var
@@ -660,7 +663,8 @@ angular.module('starter.controllers', [])
         var plan = user.plan;
         var amount = user.amount;
         var groupMessage = user.groupMessage;
-
+        var circleType = $scope.data.circleType;
+		console.log(" Circle type =", $scope.data.circleType);
         // Check if all information is entered by the user
         if (!groupName || !plan || !amount || !groupMessage) {
             // Do nothing
@@ -719,8 +723,10 @@ angular.module('starter.controllers', [])
                     groupMessage: groupMessage,
                     contacts: $scope.data.selectedContacts,
                     circlePhoto: $scope.imageSrc,
-                    circleType: $rootScope.circleTypePicked,
-                    circleComplete: false
+                    circleType: circleType,
+                    circleComplete: false,
+                    circleCancelled: false
+                    
                 });
 
                 // Reset it back to "None" after the update
@@ -753,11 +759,19 @@ angular.module('starter.controllers', [])
                 });
 
                 // Writing UserID under CircleID and set Status to true and initialize notification counter badge to 0
-                fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
-                    Status: true,
-                    badgeCounter: 0
-                });
-
+                // If the group is singluar set the priority to 0, else don't set
+                if ($scope.data.circleType == 'Singluar') {
+	            	fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
+                    	Status: true,
+						badgeCounter: 0,
+						Priority: 0
+                	});
+				} else {
+                    fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
+                    	Status: true,
+						badgeCounter: 0
+                 	});
+				}
                 // Save the timestamp to trigger the circle-start-scheduler
                 var date = Firebase.ServerValue.TIMESTAMP;
                 console.log("Firebase.ServerValue.TIMESTAMP" + date);
@@ -891,7 +905,7 @@ angular.module('starter.controllers', [])
     }
 })
 
-// Controller for selecting type of circle
+/*// Controller for selecting type of circle
 .controller('CircleTypeCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback) {
     $scope.circleTypeList = [{
         text: "Singular",
@@ -910,7 +924,7 @@ angular.module('starter.controllers', [])
         console.log("Circle type picked:", $rootScope.circleTypePicked);
         $state.go('tab.socialcircle');
     }
-})
+}) */
 
 // Controller for Wallet tab
 .controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray, $http) {
@@ -924,7 +938,7 @@ angular.module('starter.controllers', [])
                 $rootScope.circleTypePicked = "None";
 
                 // Go to the page to select the type of circle
-                $state.go('tab.socialcircletype');
+                $state.go('tab.socialcircle');
             } else {
                 $ionicPopup.alert({
                     title: "You haven't linked your bank account yet!",
