@@ -860,6 +860,7 @@ angular.module('starter.controllers', [])
                         });
                     })(i);
                 }
+
                 // Clear the forms
                 user.groupName = "";
                 user.plan = "weekly";
@@ -942,6 +943,7 @@ angular.module('starter.controllers', [])
 
     $scope.id = $rootScope.fbAuthData.uid;
     console.log("IDesh: " + $scope.id);
+
     // Get a reference to the Firebase account
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 
@@ -960,11 +962,9 @@ angular.module('starter.controllers', [])
     // Obtain list of circle IDs with a "true" status
     // NOTE: This callback gets called on a 'child_added' event.
     fbCallback.childAdded(fbUserCircle, true, function(data) {
-        //console.log("Circles Id(accepted add): " + data.val().Status + data.key());
         var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
-        //console.log("Circles FBCircles(accepted add): " + fbCircles);
 
-        // Obtain circle data for the pending circles
+        // Obtain circle data for the accepted circles
         fbCallback.fetch(fbCircles, function(output) {
             var acceptedCircleVal = output;
             // Get the reference for the push
@@ -978,13 +978,12 @@ angular.module('starter.controllers', [])
     // Obtain list of circle IDs with a "true" status
     // NOTE: This callback gets called on a 'child_removal'	event.
     fbCallback.childRemoved(fbUserCircle, true, function(data) {
-        console.log("Circles Id(accepted removal): " + data.val().Status + data.key());
         var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
-        console.log("Circles FBCircles(accepted removal): " + fbCircles);
 
         // Obtain circle data for the pending circles
         fbCallback.fetch(fbCircles, function(output) {
             var acceptedCircleVal = output;
+
             // Check for the Pending Circle which went from Pending to Accepted/Rejected
             // and remove the corresponding entry in the "cache"
             fbUserAcceptedCircles.on('child_added', function(snapshot) {
@@ -1085,32 +1084,38 @@ angular.module('starter.controllers', [])
         });
     };
 
-    // Creare a link to a CircleMembers under this circle
+    // Create a link to a CircleMembers under this circle
     var fbCircleMembers = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Members/" + $stateParams.circleID + "/CircleMembers/");
-    console.log("FBCIRCLE MEMBERS: " + fbCircleMembers);
-
-    // Clear all the data
-    fbCircleMembers.remove();
 
     // Update $scope.members
     $scope.members = $firebaseArray(fbCircleMembers);
 
-    obj.$loaded().then(function() {
-        console.log("loaded record for FBCIRCLE MEMBERS:", obj.$id, obj.Members);
-        // To iterate the key/value pairs of the object, use angular.forEach()
-        angular.forEach(obj.Members, function(value, key) {
-            fbRef.child("Users").child(key).once('value', function(data) {
-                // Get the reference for the push
-                var fbCircleMembersPushRef = fbCircleMembers.push();
-                console.log("FBCIRCLE MEMBERS: " + fbCircleMembersPushRef);
+    fbCircleMembers.once("value", function(snapshot) {
+        var dataExists = snapshot.exists();
 
-                // Once the user data is loaded update the information
-                // Update the location(temporary cache)
-                fbCircleMembersPushRef.update({
-                    firstName: data.val().firstname
-                });
-            });
-        })
+        // Check if the data exists already, if not then create the record
+        if(dataExists){
+            console.log("No loading required again");
+        }
+        else{
+            obj.$loaded().then(function() {
+                console.log("loaded record for FBCIRCLE MEMBERS:", obj.$id, obj.Members);
+
+                angular.forEach(obj.Members, function(value, key) {
+                    fbRef.child("Users").child(key).once('value', function(data) {
+                        // Get the reference for the push
+                        var fbCircleMembersPushRef = fbCircleMembers.push();
+                        console.log("FBCIRCLE MEMBERS: " + fbCircleMembersPushRef);
+
+                        // Once the user data is loaded update the information
+                        // Update the location(temporary cache)
+                        fbCircleMembersPushRef.update({
+                            firstName: data.val().firstname
+                        });
+                    });
+                })
+            })
+        }
     })
 
     $scope.chat = function() {
