@@ -14,7 +14,13 @@
 		    <div class="item">
 		      <b>How Much &nbsp</b> <p> ${{circle.amount}} {{circle.plan}}</p>
 		    </div>
-		    <div class="item">
+		    <div class="item item-text-wrap" ng-if="circle.circleType=='Singular'">
+		      <b>Circle Type &nbsp</b> <p>Collector Circle: {{circle.invitorName}} is the Admin for this Circle. The Pooled Amount for this circle will go to {{circle.invitorName}} {{circle.plan}}.</p>
+		    </div>
+		    <div class="item item-text-wrap" ng-if="circle.circleType=='Rotational'">
+		      <b>Circle Type &nbsp</b> <p>Collective Circle: The Pooled Amount will go to a randomly chosen person in this Circle {{circle.plan}}. Every member gets the Pool Amount once.</p>
+		    </div>
+		    <div class="item item-text-wrap">
 		      <b>Why &nbsp</b> <p>{{circle.groupMessage}}</p>
 		    </div>
 		</div>

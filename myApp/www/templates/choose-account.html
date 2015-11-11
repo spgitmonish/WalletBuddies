@@ -3,16 +3,23 @@
     	<br>
     	<p align="center" style="color: #595858"><b>Choose an account you would like to link with WalletBuddies.</b></p>
     	<br>
-		<ul class="list">
+		<!--<ul class="list">
 		  <li class="item item-checkbox" ng-repeat="account in data.nodes">
 		     <label class="checkbox">
 		       <input type="radio" ng-required="true" ng-change="checkSelect($index)" ng-model="account.info.bank_name">
 		     </label>
 		     {{account.info.class}} {{account.info.type}} ending-{{account.info.account_num}} {{account.info.bank_name}}
 		  </li>
-		</ul>
-		<!--<ion-radio ng-repeat="account in data.banks" ng-change="checkSelect($index)" ng-model="account.balance">{{account.nickname}} ${{account.balance}}</ion-radio>
-        -->
+		</ul>-->
+		<div class="list">
+		<ion-radio ng-repeat="account in data.nodes"
+                   ng-value="account.info.type"
+                   ng-click="checkSelect($index)" 
+                   ng-model="account.info.bank_name">
+          {{account.info.class}} {{account.info.type}} ending-{{account.info.account_num}}
+        </ion-radio>
+
+		</div>
         <br>
         <div class="row">
 	        <div class="col">

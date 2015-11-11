@@ -18,8 +18,117 @@ var token = tokenGenerator.createToken(
 
 fbRef.authWithCustomToken(token, function(error, authData) {
 	
-	/*
-	// Encrypting oauth and refesh token keys
+	
+	
+	
+	/*var fbCircles = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles");
+    var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
+    fbCircles.once('value', function(circles) {
+        circles.forEach(function(childCircle) {
+	        console.log("CircleID", childCircle.key());
+	        console.log("FIELD EXISTS?", circles.child(childCircle.key()+"/circleType").exists());
+            if(circles.child(childCircle.key()+"/circleType").exists() && childCircle.val().circleType=='Singular' && childCircle.val().circleCancelled==false) {
+	            console.log("Circle type detected:", childCircle.val().circleType, childCircle.val().circleCancelled);
+	            var path = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles").child(childCircle.key()).child("Members");
+                path.once('value', function(userData) {
+                    userData.forEach(function(childSnapshot) {
+	                    console.log("User and User's STATUS:", childSnapshot.key(), childSnapshot.val().Status);
+                    });
+                });
+            } else {
+	            console.log("Absolutely nothing detected.");
+	            var path = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles").child(childCircle.key()).child("Members");
+	            path.once('value', function(userData) {
+                    userData.forEach(function(childSnapshot) {
+	                    console.log("User and User's STATUS:", childSnapshot.key(), childSnapshot.val().Status);
+                    });
+                });
+            }
+        })
+    })
+	
+	fbSynapse.child('SynapsePay').once('value', function(output) {
+		// Decipher WalletBuddies' refresh token
+        var cipher_text = output.val().refresh_token.cipher_text;
+        var salt = output.val().refresh_token.salt;
+        var iv = output.val().refresh_token.iv;
+        var pass = forge.pkcs5.pbkdf2('csc-btr-8th-9kf', forge.util.decode64(salt), 4, 16);
+        var decipher = forge.cipher.createDecipher('AES-CBC', pass);
+        decipher.start({
+            iv: forge.util.decode64(iv)
+        });
+        decipher.update(forge.util.createBuffer(forge.util.decode64(cipher_text)));
+        decipher.finish();
+        var refresh_token = decipher.output.toString();
+		console.log('refresh_token: ' + refresh_token);
+        // Signin to the user's SynapsePay account
+        var postData = {
+            "client": {
+			    //your client ID and secret
+			    "client_id": "9enbLBHe3M1UauQRZHBz",  
+			    "client_secret": "kAelFBaFyZFU2DfeDLMgZ6xbrgOos6M1Xo1HcKV1"
+			},
+			  "login":{
+			    //Instead of email and password, you can specify refresh_token of the user as well.
+			    "refresh_token": refresh_token
+			},
+			  "user":{
+			    //the id of the user profile that you wish to sign into.
+			    "_id":{
+			      "$oid": '55cbd79c95062932f243c822'
+			},
+			    "fingerprint": 'suasusau21324redakufejfjsf',
+			    "ip": '73.200.137.46'
+			}
+        }
+
+        var url = 'https://synapsepay.com/api/v3/user/signin'
+        var options = {
+            method: 'post',
+            body: postData,
+            json: true,
+            url: url
+        }
+        request(options, function(err, res, response) {
+            if (err) {
+                console.log("Got an error in Synapse Signin");
+                console.log(JSON.stringify(err));
+                console.log("Synapse Signin StatusText: " + err.statusText);
+            } else {
+                console.log("SignIn BODY: " + JSON.stringify(response));
+                // Save the oauth and refresh tokens
+				var salt = forge.random.getBytesSync(128);
+			    var keys = forge.pkcs5.pbkdf2('csc-btr-8th-9kf', salt, 4, 16);
+			    var iv = forge.random.getBytesSync(16);
+			    var cipher = forge.cipher.createCipher('AES-CBC', keys);
+			    cipher.start({iv: iv});
+			    cipher.update(forge.util.createBuffer(response.oauth.oauth_key));
+			    cipher.finish();
+			    var cipherText = forge.util.encode64(cipher.output.getBytes());
+			    fbSynapse.child('SynapsePay').child('oauth_key').update({
+				    cipher_text: cipherText, 
+				    salt: forge.util.encode64(salt), 
+				    iv: forge.util.encode64(iv)
+				});
+				var salt = forge.random.getBytesSync(128);
+			    var keys = forge.pkcs5.pbkdf2('csc-btr-8th-9kf', salt, 4, 16);
+			    var iv = forge.random.getBytesSync(16);
+				var cipher = forge.cipher.createCipher('AES-CBC', keys);
+			    cipher.start({iv: iv});
+			    cipher.update(forge.util.createBuffer(response.oauth.refresh_token));
+			    cipher.finish();
+			    var cipherText = forge.util.encode64(cipher.output.getBytes());
+			    fbSynapse.child('SynapsePay').child('refresh_token').update({
+				    cipher_text: cipherText, 
+				    salt: forge.util.encode64(salt), 
+				    iv: forge.util.encode64(iv)
+				});
+            }
+        });
+    })
+	
+	
+	// Encrypting SYNAPSEPAY oauth and refesh token keys
     var salt = forge.random.getBytesSync(128);
     var key = forge.pkcs5.pbkdf2("csc-btr-8th-9kf", salt, 4, 16);
     var iv = forge.random.getBytesSync(16);
@@ -179,10 +288,7 @@ fbRef.authWithCustomToken(token, function(error, authData) {
         circleID: "-JziVd9GKX6tUaE4uVL8",
         plan: "daily",
         amount: "1"
-    });
-    
-    
-    */
+    });  
     
     var fbCircles = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles");
     fbCircles.child('-JziVd9GKX6tUaE4uVL8').child('CreditDates').child('Counter').once('value', function(countData) {
@@ -191,7 +297,18 @@ fbRef.authWithCustomToken(token, function(error, authData) {
         var count = countData.val().counter;
         console.log("countData.val().counter: "+countData.val().counter);
     });
-    /*
+    
+    var path = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles").child('-K0y6M09IH45tNi4Fgbu').child("Members");
+    var count = 0;
+        // Filter users based on their priority.
+        var fbCircles = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles");
+                fbCircles.once('value', function(circles) {
+                    circles.forEach(function(childCircle) {
+	                    console.log("CIRCLE ID: " + childCircle.val().circleID + " AND numChildren: " + childCircle.child("Members").numChildren());
+                    });
+            	});
+    
+    
         fbCircles.once('value', function(circles) {
 	        //console.log("Circle : " + JSON.stringify(circles.val()));
             circles.forEach(function(childCircle) {

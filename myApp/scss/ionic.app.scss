@@ -54,6 +54,11 @@ $help-3: '../img/Help-3.png';
   text-align: center;
 }
 
+.inpu{
+	display:inline-block;
+    float:right;
+    width:80%
+}
 // Centering data for no-data events
 .no-data {
 	display: -webkit-box;

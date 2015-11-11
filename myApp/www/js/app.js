@@ -5,7 +5,7 @@
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
 
-angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify', 'ngIOS9UIWebViewPatch'])
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify', 'ngIOS9UIWebViewPatch', 'jett.ionic.filter.bar'])
 
 .run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory, $ionicLoading) {
     return $ionicPlatform.ready(function() {
@@ -366,23 +366,55 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 })
 
 // Directive for keeping the keyboard open while in chat
-.directive('isFocused', function($timeout) {
+.directive('isFocused', function($timeout, $rootScope) {
   return {
     scope: { trigger: '@isFocused' },
     link: function(scope, element) {
       scope.$watch('trigger', function(value) {
         if(value === "true") {
-	        console.log("here-o-o");
           $timeout(function() {
+	          console.log("Hello", value);
             element[0].focus();
+
             element.on('blur', function() {
-              element[0].focus();
+	            console.log("Hello blur", value, $rootScope.focused);
+	            if ($rootScope.focused != "false") {
+		        console.log("Hello blur focusing", value, $rootScope.focused);    
+		        	element[0].focus();   
+	            }
             });
           });
         }
       });
     }
   };
+})
+
+// Directive for horizantal radio buttons 
+.directive('groupedRadio', function() {
+ return {
+   restrict: 'A',
+   require: 'ngModel',
+   scope: {
+     model: '=ngModel',
+     value: '=groupedRadio'
+   },
+   link: function(scope, element, attrs, ngModelCtrl) {
+     element.addClass('button');
+     element.on('click', function(e) {
+       scope.$apply(function() {
+         ngModelCtrl.$setViewValue(scope.value);
+       });
+     });
+
+     scope.$watch('model', function(newVal) {
+       element.removeClass('button-balanced');
+       if (newVal === scope.value) {
+         element.addClass('button-balanced');
+       }
+     });
+   }
+ };
 })
 
 .filter('reverse', function() {

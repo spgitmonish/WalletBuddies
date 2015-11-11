@@ -4,7 +4,7 @@
 	  	Wallet
 	</ion-nav-back-button>
 	</ion-nav-bar>-->
-    <ion-content class="content-stable" on-swipe-left="hideTime = false" on-swipe-right="hideTime = true">
+    <ion-content class="content-stable" on-swipe-left="hideTime = false" on-swipe-right="hideTime = true" ng-Click="contentClick()">
         <div ng-repeat="message in messages" class="message-wrapper">
             <div ng-if="uid !== message.userId">
                 <img class="profile-pic left" ng-src="{{message.photo}}"/>
@@ -40,12 +40,11 @@
         </div>
 
     </ion-content>
-
     <ion-footer-bar keyboard-attach class="bar-stable item-input-inset message-footer">
       <label class="item-input-wrapper">
-        <input type="text" placeholder="Type your message" ng-model="data.message" ng-focus="text()"/>
+        <input type="text" is-focused="{{isFocused}}" placeholder="Type your message" ng-model="data.message" ng-focus="text()" ng-click="inputClick()"/>
       </label>
-      <button class="button button-clear" ng-click="sendMessage()">
+      <button class="button button-clear" ng-click="sendMessage(data)">
         Send
       </button>
     </ion-footer-bar>
