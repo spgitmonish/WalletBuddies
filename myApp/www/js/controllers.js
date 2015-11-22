@@ -1,14 +1,17 @@
 angular.module('starter.controllers', [])
 
 // Controller for Launch page
-.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory) {
+.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory, fbCallback, $ionicLoading) {
     $scope.$on('$ionicView.beforeEnter', function() {
         var ref = new Firebase("https://walletbuddies.firebaseio.com/");
         var authData = ref.getAuth();
+
         if (authData) {
             console.log("Authenticated user with uid: ", authData.uid);
+
             // Saving auth data to be used across controllers
             $rootScope.fbAuthData = authData;
+
             // Switch to the Wallet Tab
             $state.go('tab.wallet');
         } else {
@@ -40,7 +43,7 @@ angular.module('starter.controllers', [])
 		if($scope.check.data) {
 	        // Make sure all the fields have a value
 	        if (!account.email || !account.password || !account.firstname || !account.lastname || !account.phonenumber) {
-                if(typeof analytics !== undefined) {
+                if(typeof analytics !== 'undefined') {
                     analytics.trackEvent('Sign up Fields', 'Not Entered', 'In AccountCtrl', 1);
                 }
 	        } else {
@@ -66,7 +69,7 @@ angular.module('starter.controllers', [])
 	                    if (error) {
 	                        switch (error.code) {
 	                            case "EMAIL_TAKEN":
-                                    if(typeof analytics !== undefined) {
+                                    if(typeof analytics !== 'undefined') {
                                         analytics.trackEvent('Email', 'In Use', 'In AccountCtrl', error.code);
                                     }
 	                                alert("The new user account cannot be created because the email is already in use.");
@@ -76,7 +79,7 @@ angular.module('starter.controllers', [])
 							        });
 	                                break;
 	                            case "INVALID_EMAIL":
-                                    if(typeof analytics !== undefined) {
+                                    if(typeof analytics !== 'undefined') {
                                         analytics.trackEvent('Email', 'Invalid', 'In AccountCtrl', error.code);
                                     }
 	                                $ionicPopup.alert({
@@ -85,7 +88,7 @@ angular.module('starter.controllers', [])
 							        });
 	                                break;
 	                            default:
-                                    if(typeof analytics !== undefined) {
+                                    if(typeof analytics !== 'undefined') {
                                         analytics.trackEvent('Account Creation', 'Error', 'In AccountCtrl', error.code);
                                     }
 	                                $ionicPopup.alert({
@@ -166,7 +169,7 @@ angular.module('starter.controllers', [])
 						                        fbRef.child("Circles").child(circleID).child("Members").child(data.uid).update({
 						                            Status: "pending"
 						                        });
-		                                        
+
 		                                        fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
 		                                            Status: "pending"
 		                                        });
@@ -255,14 +258,14 @@ angular.module('starter.controllers', [])
 			                                });
 
 			                            }).catch(function(err) {
-                                            if(typeof analytics !== undefined) {
+                                            if(typeof analytics !== 'undefined') {
                                                 analytics.trackEvent('SynapsePay AccountCtrl', err.statusText, err.data.error.en, 1);
                                             }
 			                                console.log("An error occured while communicating with Synapse");
 			                                console.log(JSON.stringify(err));
 			                            });
 		                            }, function(e) {
-                                        if(typeof analytics !== undefined) {
+                                        if(typeof analytics !== 'undefined') {
                                             analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', e);
                                         }
 										alert("An error occured while validating your ip address");
@@ -285,6 +288,12 @@ angular.module('starter.controllers', [])
 						            requestCounter: 0,
 						            feedCounter: 1
 						        });
+
+                                // Record entry into Account Controller
+                                if(typeof analytics !== 'undefined') {
+                                    analytics.trackView("Account Controller");
+                                    analytics.trackEvent('AccountCtrl', 'Pass', 'In AccountCtrl', 113);
+                                }
 
 	                            var feedToPush = "Welcome to <b>WalletBuddies</b>, your account was succesfully set up!";
 
@@ -311,7 +320,7 @@ angular.module('starter.controllers', [])
 	                                        // Success -- Registration ID is received in $notificationReceiver and sent to FireBase
 	                                        console.log("Success: " + deviceToken);
 	                                    }, function(err) {
-                                            if(typeof analytics !== undefined) {
+                                            if(typeof analytics !== 'undefined') {
                                                 analytics.trackEvent('Push Notification(Android)', 'Registration Error', 'In AccountCtrl', err);
                                             }
 	                                        alert("Registration error: " + err);
@@ -330,7 +339,7 @@ angular.module('starter.controllers', [])
 	                                            device: "iOS"
 	                                        });
 	                                    }, function(err) {
-                                            if(typeof analytics !== undefined) {
+                                            if(typeof analytics !== 'undefined') {
                                                 analytics.trackEvent('Push Notification(iOS)', 'Registration Error', 'In AccountCtrl', err);
                                             }
 	                                        alert("Registration error: " + err);
@@ -338,7 +347,7 @@ angular.module('starter.controllers', [])
 	                                }
 	                            });
 	                        }).catch(function(error) {
-                                if(typeof analytics !== undefined) {
+                                if(typeof analytics !== 'undefined') {
                                     analytics.trackEvent('Authentication', 'Failed', 'In AccountCtrl', error);
                                 }
 	                            console.error("Authentication failed: " + error);
@@ -349,7 +358,7 @@ angular.module('starter.controllers', [])
 	    }
 	    else {
             // User didn't accept the terms
-            if(typeof analytics !== undefined) {
+            if(typeof analytics !== 'undefined') {
                 analytics.trackEvent('Terms', 'Not Accepted', 'In AccountCtrl', 2);
             }
 
@@ -372,7 +381,7 @@ angular.module('starter.controllers', [])
             if (error) {
                 switch (error.code) {
                     case "INVALID_USER":
-                        if(typeof analytics !== undefined) {
+                        if(typeof analytics !== 'undefined') {
                             analytics.trackEvent('Forgot Password', 'Email not in the system', 'In ForgotPassCtrl', error.code);
                         }
                         $ionicPopup.alert({
@@ -381,7 +390,7 @@ angular.module('starter.controllers', [])
                         });
                         break;
                     default:
-                        if(typeof analytics !== undefined) {
+                        if(typeof analytics !== 'undefined') {
                             analytics.trackEvent('Forgot Password', 'Error setting password', 'In ForgotPassCtrl', error.code);
                         }
                         console.log("Error resetting password:", error);
@@ -390,6 +399,13 @@ angular.module('starter.controllers', [])
                 $ionicPopup.alert({
                     title: "Temporary password sent"
                 });
+
+                // Record entry into Forgot Password Controlller
+                if(typeof analytics !== 'undefined') {
+                    analytics.trackView("Forgot Password Controller");
+                    analytics.trackEvent('ForgotPassCtrl', 'Pass', 'In ForgotPassCtrl', 101);
+                }
+
                 $state.go('launch');
             }
         });
@@ -409,7 +425,7 @@ angular.module('starter.controllers', [])
             if (error) {
                 switch (error.code) {
                     default:
-                        if(typeof analytics !== undefined) {
+                        if(typeof analytics !== 'undefined') {
                             analytics.trackEvent('Changing Password', 'Error', 'In ResetPassCtrl', error.code);
                         }
                         console.log("Error changing password:", error);
@@ -421,6 +437,13 @@ angular.module('starter.controllers', [])
                 $ionicPopup.alert({
                     title: "Password changed successfully!"
                 });
+
+                // Record entry into Reset Password Controlller
+                if(typeof analytics !== 'undefined') {
+                    analytics.trackView("Reset Password Controller");
+                    analytics.trackEvent('ResetPassCtrl', 'Pass', 'In ResetPassCtrl', 102);
+                }
+
                 $state.go('tab.settings');
             }
         });
@@ -477,7 +500,7 @@ angular.module('starter.controllers', [])
                 },
                 function(error, authData) {
                     if (error) {
-                        if(typeof analytics !== undefined) {
+                        if(typeof analytics !== 'undefined') {
                             analytics.trackEvent('Login Error', 'Username or password incorrect', 'In SignInCtrl', error);
                         }
                         $ionicLoading.hide();
@@ -489,7 +512,7 @@ angular.module('starter.controllers', [])
                         // Saving auth data to be used across controllers
                         $rootScope.fbAuthData = authData;
                         $rootScope.email = email;
-						
+
                         // Hard coded to be false
                         if (false) {
                             var fbInvites = new Firebase(fbRef + "/Invites/" + token);
@@ -562,6 +585,13 @@ angular.module('starter.controllers', [])
                             });
                         } else {
                             $ionicLoading.hide();
+
+                            // Record entry into Sign In Controlller
+                            if(typeof analytics !== 'undefined') {
+                                analytics.trackView("Sign In Controller");
+                                analytics.trackEvent('SignInCtrl', 'Pass', 'In SignInCtrl', 103);
+                            }
+
                             // Switch to the Wallet tab
                             $state.go('tab.wallet');
                         }
@@ -663,25 +693,25 @@ angular.module('starter.controllers', [])
 	      $ionicLoading.hide();
 	    });
   	};
-  	
+
   	// Initialize an array to store selected contacts
-  	var temp = [];  
-    
+  	var temp = [];
+
     $scope.scrollTop = function() {
-        $ionicScrollDelegate.resize();  
+        $ionicScrollDelegate.resize();
     };
-  	
+
   	$scope.phoneSelect = function(parentObj, Obj) {
 	  	var parentIndex = $scope.contacts.indexOf(parentObj);
-	  	var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);	  	
+	  	var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);
 	  	console.log("PHONE Index: ", parentIndex, index, $scope.contacts[parentIndex].phoneNumbers[index].selected);
-	  	
+
 	  	// Save the index values received when a user selects a contact
 	  	if($scope.contacts[parentIndex].phoneNumbers[index].selected) {
 			temp.push({
-			  	parent: parentIndex, 
+			  	parent: parentIndex,
 			  	child: index
-			}); 	
+			});
 	  	} else if($scope.contacts[parentIndex].phoneNumbers[index].selected == false) {
 		  	for (var i = 0; i < temp.length; i++) {
 			    if(parentIndex == temp[i].parent && index == temp[i].child) {
@@ -706,49 +736,51 @@ angular.module('starter.controllers', [])
 		  	return 420;
 	  	}
   	}
-  	
+
   	// Execute action on hide modal
-	$scope.$on('modal.hidden', function() {
-	    // Execute action
-	    console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
-	    // Initialize an array for storing contacts
-	    $scope.data = {
-	        selectedContacts: []
-	    };
-	    for (var i = 0; i < temp.length; i++) {
-		    if($scope.contacts[temp[i].parent].emails != null) {
-			    $scope.data.selectedContacts.push({
-				    name: $scope.contacts[temp[i].parent].name.formatted,
-				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value,
-				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
-				    email: $scope.contacts[temp[i].parent].emails[0].value,
-				    emailType: $scope.contacts[temp[i].parent].emails[0].type
-			    });
-		    } else {
-				$scope.data.selectedContacts.push({
-				    name: $scope.contacts[temp[i].parent].name.formatted,
-				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
-				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value
-			    });   
-		    }
-	    };
-	    console.log("SELECTED CONTACTS: " + JSON.stringify($scope.data.selectedContacts));
-	    $ionicScrollDelegate.scrollBottom(true, true);
+	$scope.$on('modal.hidden', function(modal) {
+        if(modal.id == '2'){
+    	    // Execute action
+    	    console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
+    	    // Initialize an array for storing contacts
+    	    $scope.data = {
+    	        selectedContacts: []
+    	    };
+    	    for (var i = 0; i < temp.length; i++) {
+    		    if($scope.contacts[temp[i].parent].emails != null) {
+    			    $scope.data.selectedContacts.push({
+    				    name: $scope.contacts[temp[i].parent].name.formatted,
+    				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value,
+    				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
+    				    email: $scope.contacts[temp[i].parent].emails[0].value,
+    				    emailType: $scope.contacts[temp[i].parent].emails[0].type
+    			    });
+    		    } else {
+    				$scope.data.selectedContacts.push({
+    				    name: $scope.contacts[temp[i].parent].name.formatted,
+    				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
+    				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value
+    			    });
+    		    }
+    	    };
+    	    console.log("SELECTED CONTACTS: " + JSON.stringify($scope.data.selectedContacts));
+    	    $ionicScrollDelegate.scrollBottom(true, true);
+        }
 	});
-  	
+
   	$ionicModal.fromTemplateUrl('contacts-modal.html', {
 	    scope: $scope,
 	    animation: 'slide-in-up'
 	}).then(function(modal) {
 	    $scope.modal = modal;
 	});
-	
+
     // Deleting contact selected in error
     $scope.contactDelete = function(item) {
    		$scope.data.selectedContacts.splice(item, 1);
    		temp.splice(item, 1);
     };
-	
+
     // This function is called when the "Invite your wallet buddies" button is pressed
     $scope.addGroup = function(user) {
         // Save data to a local var
@@ -820,7 +852,6 @@ angular.module('starter.controllers', [])
                 });
 
                 // Initialize the counter under CreditDates of the Circle
-                // NOTE: CreditDates will be set up once all the user accept the invites and once we hit the deadline
                 fbCirclePushRef.child('CreditDates-test').child('Counter').update({
                     counter: 0
                 });
@@ -843,6 +874,35 @@ angular.module('starter.controllers', [])
                 // Writing circle ID to the user's path and set Status to true
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
                     Status: true
+                });
+
+                // Get the reference for the push
+                var fbAcceptedMembers = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers");
+                var fbAcceptedMembersPushRef = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers").push();
+                var fbUser = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
+                fbUser.once("value", function(userData) {
+                    // Store the user information
+                    // 'Singular': This group type has an admin
+                    // 'Regular': This group doesn't have an admin(may be in the future)
+                    if (circleType == 'Singular') {
+                        fbAcceptedMembersPushRef.update({
+                            admin: true,
+                            firstName: userData.val().firstname,
+                            lastName: userData.val().lastname,
+                            phone: userData.val().phonenumber,
+                            email: userData.val().email,
+                            profilePhoto: userData.val().profilePhoto
+                        });
+                    } else {
+                        fbAcceptedMembersPushRef.update({
+                            admin: false,
+                            firstName: userData.val().firstname,
+                            lastName: userData.val().lastname,
+                            phone: userData.val().phonenumber,
+                            email: userData.val().email,
+                            profilePhoto: userData.val().profilePhoto
+                        });
+                    }
                 });
 
                 // Writing UserID under CircleID and set Status to true and initialize notification counter badge to 0
@@ -891,6 +951,7 @@ angular.module('starter.controllers', [])
                             // Check if invited user is registered with WalletBuddies
                             if (data != null) {
                                 console.log("Invited user is registered with uid: " + data.uid);
+
                                 // Writing UserID under CircleID and set Status to pending
                                 fbRef.child("Circles").child(groupID).child("Members").child(data.uid).update({
                                     Status: "pending"
@@ -909,7 +970,6 @@ angular.module('starter.controllers', [])
                                         message: fbName + " has invited you to form a Circle on WalletBuddies.",
                                         payload: groupID,
                                         tab: "requests"
-
                                     });
                                 });
                             }
@@ -988,6 +1048,12 @@ angular.module('starter.controllers', [])
                     time: dt
                 });
 
+                // Record entry into Group Controlller
+                if(typeof analytics !== 'undefined') {
+                    analytics.trackView("Group Controller");
+                    analytics.trackEvent('GroupCtrl', 'Pass', 'In GroupCtrl', 104);
+                }
+
                 // The data is ready, switch to the Wallet tab
                 $state.go('tab.wallet');
             }
@@ -996,7 +1062,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Wallet tab
-.controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray, $http) {
+.controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray, $http, $firebaseObject, $ionicLoading) {
     // Check if user has linked a bank account before he can start a circle
     $scope.newCircle = function() {
         var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid + "/Payments");
@@ -1017,11 +1083,11 @@ angular.module('starter.controllers', [])
         });
     };
 
-    // This is just for prototyping
-    /*if(typeof analytics !== undefined) {
+    // Record entry into the Wallet Controller
+    if(typeof analytics !== 'undefined') {
         analytics.trackView("Wallet Controller");
-        analytics.trackEvent('WalletCtrl', 'Pass', 'In WalletCtrl', 100);
-    }*/
+        analytics.trackEvent('WalletCtrl', 'Pass', 'In WalletCtrl', 105);
+    }
 
     $scope.id = $rootScope.fbAuthData.uid;
     console.log("IDesh: " + $scope.id);
@@ -1035,7 +1101,7 @@ angular.module('starter.controllers', [])
     // Get a reference to where the User's accepted circles are going to be stored
     var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 
-    // Clear all the data
+    // Delete all the accepted circles cached data
     fbUserAcceptedCircles.remove();
 
     // Update $scope.circles
@@ -1048,10 +1114,13 @@ angular.module('starter.controllers', [])
 
         // Obtain circle data for the accepted circles
         fbCallback.fetch(fbCircles, function(output) {
+            // Get the information within the circle
             var acceptedCircleVal = output;
+            console.log(acceptedCircleVal);
+
             // Get the reference for the push
-            var fbAcceptedCirclePushRef = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + data.key());
-			
+            var fbAcceptedCirclePushRef = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/").push();
+
             // Update the location(temporary cache)
             fbAcceptedCirclePushRef.update(acceptedCircleVal);
         });
@@ -1169,38 +1238,93 @@ angular.module('starter.controllers', [])
     };
 
     // Create a link to a CircleMembers under this circle
-    var fbCircleMembers = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Members/" + $stateParams.circleID + "/CircleMembers/");
+    var fbCircleAcceptedMembers = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers");
+    var fbCircleAcceptedMembersObj = $firebaseObject(fbCircleAcceptedMembers);
 
-    // Update $scope.members
-    $scope.members = $firebaseArray(fbCircleMembers);
+    $ionicLoading.show({
+        template: "Loading circle data..."
+    });
 
-    fbCircleMembers.once("value", function(snapshot) {
+    // Hide the notification after the data is loaded
+    fbCircleAcceptedMembers.once("value", function(snapshot){
         var dataExists = snapshot.exists();
 
-        // Check if the data exists already, if not then create the record
         if(dataExists){
-            console.log("No loading required again");
-        }
-        else{
+            console.log("Data exists");
+
+            // Update $scope.members
+            $scope.members = $firebaseArray(fbCircleAcceptedMembers);
+
+            // Hide the notification
+            $ionicLoading.hide();
+        }else{
+            // Update $scope.members
+            $scope.members = $firebaseArray(fbCircleAcceptedMembers);
+
+            // NOTE!! We should never enter here, this is only for making sure
+            //        that we have the new UI work with older code on the client.
+            //        The newer UI assumes that there is an /AcceptedMembers folder.
+            //        Also as of 11/18/2015 when this code was added, the clients
+            //        are not aware of a Singular group, so the 'admin' field is
+            //        always false. This section needs to be modified/deleted
+            //        after we delete the app.
             obj.$loaded().then(function() {
                 console.log("loaded record for FBCIRCLE MEMBERS:", obj.$id, obj.Members);
 
                 angular.forEach(obj.Members, function(value, key) {
-                    fbRef.child("Users").child(key).once('value', function(data) {
+                    fbRef.child("Users").child(key).once('value', function(userData) {
                         // Get the reference for the push
-                        var fbCircleMembersPushRef = fbCircleMembers.push();
-                        console.log("FBCIRCLE MEMBERS: " + fbCircleMembersPushRef);
+                        var fbCircleAcceptedMembersPushRef = fbCircleAcceptedMembers.push();
 
-                        // Once the user data is loaded update the information
-                        // Update the location(temporary cache)
-                        fbCircleMembersPushRef.update({
-                            firstName: data.val().firstname
+                        fbRef.child("Users").child(key).child("Circles").child($stateParams.circleID).child("Status").once('value', function(acceptStatus){
+                            console.log("Accept Status", acceptStatus.val());
+
+                            // Show only users who have accepted the invite
+                            if(acceptStatus.val() == true)
+                            {
+                                // Once the user data is loaded update the information
+                                // Update the location(temporary cache)
+                                fbCircleAcceptedMembersPushRef.update({
+                                    admin: false,
+                                    firstName: userData.val().firstname,
+                                    lastName: userData.val().lastname,
+                                    phone: userData.val().phonenumber,
+                                    email: userData.val().email,
+                                    profilePhoto: userData.val().profilePhoto
+                                });
+                            }
                         });
                     });
-                })
-            })
+                });
+
+                // Hide the notification
+                $ionicLoading.hide();
+            });
         }
-    })
+    });
+
+
+    $ionicModal.fromTemplateUrl('display-contact-modal.html', {
+        id: '1',
+        scope: $scope,
+        animation: 'slide-in-up'
+    }).then(function(modal) {
+        $scope.contactmodal = modal;
+    });
+    $scope.openModal = function(selectedMember) {
+        $scope.memberToDisplay = selectedMember;
+        $scope.contactmodal.show();
+    };
+    $scope.closeModal = function() {
+        $scope.contactmodal.hide();
+    };
+
+
+    // Record entry into Wallet Detail Controlller
+    if(typeof analytics !== 'undefined') {
+        analytics.trackView("Wallet Detail Controller");
+        analytics.trackEvent('WalletDetailCtrl', 'Pass', 'In WalletDetailCtrl', 106);
+    }
 
     $scope.chat = function() {
         $state.go('tab.chat', {
@@ -1239,25 +1363,25 @@ angular.module('starter.controllers', [])
             }
         })
     }
-    
+
     // Initialize an array to store selected contacts
-  	var temp = [];  
-    
+  	var temp = [];
+
     $scope.scrollTop = function() {
-        $ionicScrollDelegate.resize();  
+        $ionicScrollDelegate.resize();
     };
-  	
+
   	$scope.phoneSelect = function(parentObj, Obj) {
 	  	var parentIndex = $scope.contacts.indexOf(parentObj);
-	  	var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);	  	
+	  	var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);
 	  	console.log("PHONE Index: ", parentIndex, index, $scope.contacts[parentIndex].phoneNumbers[index].selected);
-	  	
+
 	  	// Save the index values received when a user selects a contact
 	  	if($scope.contacts[parentIndex].phoneNumbers[index].selected) {
 			temp.push({
-			  	parent: parentIndex, 
+			  	parent: parentIndex,
 			  	child: index
-			}); 	
+			});
 	  	} else if($scope.contacts[parentIndex].phoneNumbers[index].selected == false) {
 		  	for (var i = 0; i < temp.length; i++) {
 			    if(parentIndex == temp[i].parent && index == temp[i].child) {
@@ -1282,49 +1406,52 @@ angular.module('starter.controllers', [])
 		  	return 420;
 	  	}
   	}
-  	
+
   	// Execute action on hide modal
-	$scope.$on('modal.hidden', function() {
-	    // Execute action
-	    console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
-	    // Initialize an array for storing contacts
-	    $scope.data = {
-	        selectedContacts: []
-	    };
-	    for (var i = 0; i < temp.length; i++) {
-		    if($scope.contacts[temp[i].parent].emails != null) {
-			    $scope.data.selectedContacts.push({
-				    name: $scope.contacts[temp[i].parent].name.formatted,
-				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value,
-				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
-				    email: $scope.contacts[temp[i].parent].emails[0].value,
-				    emailType: $scope.contacts[temp[i].parent].emails[0].type
-			    });
-		    } else {
-				$scope.data.selectedContacts.push({
-				    name: $scope.contacts[temp[i].parent].name.formatted,
-				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
-				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value
-			    });   
-		    }
-	    };
-	    console.log("SELECTED CONTACTS: " + JSON.stringify($scope.data.selectedContacts));
-	    $ionicScrollDelegate.scrollBottom(true, true);
+	$scope.$on('modal.hidden', function(modal) {
+        if(modal.id == '2'){
+    	    // Execute action
+    	    console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
+    	    // Initialize an array for storing contacts
+    	    $scope.data = {
+    	        selectedContacts: []
+    	    };
+    	    for (var i = 0; i < temp.length; i++) {
+    		    if($scope.contacts[temp[i].parent].emails != null) {
+    			    $scope.data.selectedContacts.push({
+    				    name: $scope.contacts[temp[i].parent].name.formatted,
+    				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value,
+    				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
+    				    email: $scope.contacts[temp[i].parent].emails[0].value,
+    				    emailType: $scope.contacts[temp[i].parent].emails[0].type
+    			    });
+    		    } else {
+    				$scope.data.selectedContacts.push({
+    				    name: $scope.contacts[temp[i].parent].name.formatted,
+    				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
+    				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value
+    			    });
+    		    }
+    	    };
+    	    console.log("SELECTED CONTACTS: " + JSON.stringify($scope.data.selectedContacts));
+    	    $ionicScrollDelegate.scrollBottom(true, true);
+        }
 	});
-  	
+
   	$ionicModal.fromTemplateUrl('contacts-modal.html', {
+        id: '2',
 	    scope: $scope,
 	    animation: 'slide-in-up'
 	}).then(function(modal) {
 	    $scope.modal = modal;
 	});
-	
+
     // Deleting contact selected in error
     $scope.contactDelete = function(item) {
    		$scope.data.selectedContacts.splice(item, 1);
    		temp.splice(item, 1);
     };
-    
+
     // This function is called when the "Invite your wallet buddies" button is pressed
     $scope.addGroup = function() {
         // Use angular.copy to avoid $$hashKey being added to object
@@ -1364,7 +1491,8 @@ angular.module('starter.controllers', [])
                     // Check if invited user is registered with WalletBuddies
                     if (data != null) {
                         console.log("Invited user is registered with uid: " + data.uid);
-                        // Writing UserID under CircleID and set Status to pending
+
+                         // Writing UserID under CircleID and set Status to pending
                         fbRef.child("Circles").child(groupID).child("PendingMembers").child(data.uid).update({
                             Status: "pending"
                         });
@@ -1435,16 +1563,16 @@ angular.module('starter.controllers', [])
                 });
             })(i);
         }
-		
+
         $ionicPopup.alert({
             title: "Whooosh!",
             template: "Your invites are one their way. :)"
         });
-        
+
         //Reset the contacts array
 		$scope.data.selectedContacts = [];
     }
-    
+
     //Cancel a group - set the flag to true
     $scope.cancelCircle = function () {
         console.log("fbCircles"+ fbCircles);
@@ -1452,7 +1580,7 @@ angular.module('starter.controllers', [])
             circleCancelled: true
         });
     }
-    // Creating a reference to the priority field 
+    // Creating a reference to the priority field
 	var fbCircleMemberPath = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/Members/" + $rootScope.fbAuthData.uid);
 	var members = $firebaseObject(fbCircleMemberPath);
 	members.$bindTo($scope, "Member");
@@ -1463,7 +1591,7 @@ angular.module('starter.controllers', [])
     fbRef = new Firebase("https://walletbuddies.firebaseio.com/Circles/" + $stateParams.circleID + "/Messages/");
     // Create a synchronized array at the firebase reference
     $scope.messages = $firebaseArray(fbRef);
-    
+
     // This scope and rootScope var controls the focus of the keyboard
     $scope.isFocused = "false";
     $rootScope.focused = "false";
@@ -1474,12 +1602,19 @@ angular.module('starter.controllers', [])
 		$scope.isFocused = "true"
 	    $rootScope.focused = "true";
 	}
-    
+
     fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/").child($rootScope.fbAuthData.uid);
+
     // Create a synchronized array at the firebase reference
     var user = $firebaseObject(fbUser);
 
 	$scope.$on('$ionicView.enter', function() {
+        // Record entry into Chat Controlller
+        if(typeof analytics !== 'undefined') {
+            analytics.trackView("Chat Controller");
+            analytics.trackEvent('ChatCtrl', 'Pass', 'In ChatCtrl', 107);
+        }
+
 		console.log("Ionic.view enter");
 	    $ionicNavBarDelegate.showBackButton(true);
 	    // Scroll down the content automatically
@@ -1652,8 +1787,15 @@ angular.module('starter.controllers', [])
 			requestCounter: 0
 		});
 	});
+
     // Update $scope.circles
     $scope.circles = $firebaseArray(fbUserPendingCircles);
+
+    // Record entry into Requests Controlller
+    if(typeof analytics !== 'undefined') {
+        analytics.trackView("Requests Controller");
+        analytics.trackEvent('RequestsCtrl', 'Pass', 'In RequestsCtrl', 108);
+    }
 
     // Obtain list of circle IDs with a "pending" status
     // NOTE: This callback gets called on a 'child_removal'	event.
@@ -1722,7 +1864,6 @@ angular.module('starter.controllers', [])
         fbUser.once("value", function(data) {
             // Check if user's bank account is linked and KYC info verified before the user can accept an invite
             if (data.child("Payments/Bank").exists() && data.child("Payments/KYC").exists()) {
-
                 // Send out a push and inform users of accepted invite
                 var fbCircle = new Firebase("https://walletbuddies.firebaseio.com/Circles/");
                 var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
@@ -1733,7 +1874,7 @@ angular.module('starter.controllers', [])
 		                    Status: true,
 		                    badgeCounter: 0
 		                });
-		
+
 		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
 		                    Status: true
 		                });
@@ -1743,7 +1884,7 @@ angular.module('starter.controllers', [])
 		                    Status: true,
 		                    badgeCounter: 0
 		                });
-		
+
 		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
 		                    Status: true
 		                });
@@ -1779,7 +1920,27 @@ angular.module('starter.controllers', [])
 		            color: "melon-icon",
 		            time: dt
 		        });
-                $state.go('tab.requests');
+
+                // Get the reference for the push and store the relevant user information
+                var fbAcceptedMembers = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers");
+                var fbAcceptedMembersPushRef = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers").push();
+                var fbUser = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
+                fbUser.once("value", function(userData) {
+
+                    // Store the user information
+                    // NOTE: By default when a user accepts an invite the user is
+                    //       not an admin
+                    fbAcceptedMembersPushRef.update({
+                        admin: false,
+                        firstName: userData.val().firstname,
+                        lastName: userData.val().lastname,
+                        phone: userData.val().phonenumber,
+                        email: userData.val().email,
+                        profilePhoto: userData.val().profilePhoto
+                    });
+
+                    $state.go('tab.requests');
+                });
             } else {
                 $ionicPopup.alert({
                     title: "You haven't linked your bank account yet!",
@@ -1856,6 +2017,12 @@ angular.module('starter.controllers', [])
             time: dt
         });
 
+        // Record entry into Request Detail Controlller
+        if(typeof analytics !== 'undefined') {
+            analytics.trackView("Request Detail Controller");
+            analytics.trackEvent('RequestsDetailCtrl', 'Pass', 'In RequestsDetailCtrl', 109);
+        }
+
         $state.go('tab.requests');
     }
 })
@@ -1868,6 +2035,12 @@ angular.module('starter.controllers', [])
     var profile = $firebaseObject(fbRef.child("Users").child($rootScope.fbAuthData.uid));
 
     profile.$bindTo($scope, "data");
+
+    // Record entry into Settings Controlller
+    if(typeof analytics !== 'undefined') {
+        analytics.trackView("Settings Controller");
+        analytics.trackEvent('SettingsCtrl', 'Pass', 'In SettingsCtrl', 110);
+    }
 
     // For selecting a profile photo
     $scope.selectPicture = function() {
@@ -1998,7 +2171,11 @@ angular.module('starter.controllers', [])
     // Create a firebase reference
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
 
-    console.log("SurveyPageCtrl");
+    // Record entry into Survey Page Controlller
+    if(typeof analytics !== 'undefined') {
+        analytics.trackView("Survey Page Controlller");
+        analytics.trackEvent('SurveyPageCtrl', 'Pass', 'In SurveyPageCtrl', 111);
+    }
 
     $scope.questionList = [{
         text: "How big was your Savings Circle?",
@@ -2192,7 +2369,7 @@ angular.module('starter.controllers', [])
 
 })
 
-// Controller for tab-Account
+// Controller for tab-account
 .controller('ConnectCtrl', function($scope, $state, $stateParams, $rootScope, $cipherFactory, $cordovaDevice, $firebaseArray, $cipherFactory, $http, $ionicLoading, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
     $scope.user = {
         type: '',
@@ -2328,7 +2505,7 @@ angular.module('starter.controllers', [])
         fbRef.once('value', function(userData) {
 	        ref.child('SynapsePay').once('value', function(data) {
 	        	// Check if SynapsePay account exists
-		        if (!userData.child("Payments").exists()) {			        
+		        if (!userData.child("Payments").exists()) {
 					// Create a SynapsePay user account
 					// get host ip address of client
 					var json = 'http://ipv4.myexternalip.com/json';
@@ -2391,14 +2568,14 @@ angular.module('starter.controllers', [])
 		                        oid: response.data.user._id.$oid
 		                    });
 		                }).catch(function(err) {
-		                    if(typeof analytics !== undefined) {
+		                    if(typeof analytics !== 'undefined') {
 		                        analytics.trackEvent('SynapsePay ConnectCtrl', err.statusText, err.data.error.en, 1);
 		                    }
 		                    console.log("An error occured while communicating with Synapse");
 		                    console.log(JSON.stringify(err));
 		                });
 		            }, function(e) {
-		                if(typeof analytics !== undefined) {
+		                if(typeof analytics !== 'undefined') {
 		                    analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', e);
 		                }
 						alert("An error occured while validating your ip address");
@@ -2410,7 +2587,7 @@ angular.module('starter.controllers', [])
 			        $http.post('https://synapsepay.com/api/v3/user/signin', {
 		                "client": {
 						    //your client ID and secret
-						    "client_id": data.val().client_id,  
+						    "client_id": data.val().client_id,
 						    "client_secret": data.val().client_secret
 						},
 						  "login":{
@@ -2437,7 +2614,7 @@ angular.module('starter.controllers', [])
 						// Connect to the user's bank
 						//Decipher oauth keys before POST
 			            var oauth_key = $cipherFactory.decrypt(userData.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.oauth_key.salt, userData.val().Payments.oauth.oauth_key.iv);
-			            console.log("oauth_key " + oauth_key);			
+			            console.log("oauth_key " + oauth_key);
 			            // $http post for Bank Login
 			            $http.post('https://synapsepay.com/api/v3/node/add', {
 			                'login': {
@@ -2474,7 +2651,7 @@ angular.module('starter.controllers', [])
 			                }
 			            }).catch(function(err) {
 			                $ionicLoading.hide();
-			                if(typeof analytics !== undefined) {
+			                if(typeof analytics !== 'undefined') {
 			                    analytics.trackEvent('Bank Login ConnectCtrl', err.statusText, err.data.error.en, 1);
 			                }
 			                console.log("Got an error in bank login.");
@@ -2495,7 +2672,7 @@ angular.module('starter.controllers', [])
 			            });
 	                }).catch(function(err) {
 		                $ionicLoading.hide();
-	                    if(typeof analytics !== undefined) {
+	                    if(typeof analytics !== 'undefined') {
 	                        analytics.trackEvent('SynapsePay ConnectCtrl Signin', err.statusText, err.data.error.en, 1);
 	                    }
 	                    console.log("An error occured while communicating with Synapse");
@@ -2503,72 +2680,8 @@ angular.module('starter.controllers', [])
 	                    alert(err.data.error.en);
 	                });
 		        }
-		    })	        
+		    })
         })
-        /*
-        fbRef.child("Payments/oauth").once('value', function(data) {
-            //Decipher oauth keys before POST
-            var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
-            var refresh_token = $cipherFactory.decrypt(data.val().refresh_token.cipher_text, $rootScope.fbAuthData.uid, data.val().refresh_token.salt, data.val().refresh_token.iv);
-            console.log("oauth_key " + oauth_key);
-            console.log("refresh_token " + refresh_token);
-
-            // $http post for Bank Login
-            $http.post('https://synapsepay.com/api/v3/node/add', {
-                'login': {
-                    'oauth_key': oauth_key
-                },
-                'user': {
-                    'fingerprint': data.val().fingerprint
-                },
-                'node': {
-                    'type': 'ACH-US',
-                    'info': {
-                        'bank_id': user.username,
-                        'bank_pw': user.password,
-                        'bank_name': user.id,
-                    }
-                }
-            }).then(function(payload) {
-                // Clear the forms
-                $scope.user = {
-                    type: '',
-                    username: '',
-                    password: ''
-                };
-                if (payload.data.success) {
-                    if (payload.data.nodes[0].allowed == null) {
-                        $rootScope.question = payload.data;
-                        $ionicLoading.hide();
-                        $state.go('tab.auth-question');
-                    } else {
-                        $rootScope.data = payload.data;
-                        $ionicLoading.hide();
-                        $state.go('tab.choose-account');
-                    }
-                }
-            }).catch(function(err) {
-                $ionicLoading.hide();
-                if(typeof analytics !== undefined) {
-                    analytics.trackEvent('Bank Login ConnectCtrl', err.statusText, err.data.error.en, 1);
-                }
-                console.log("Got an error in bank login.");
-                console.log(JSON.stringify(err));
-                if (err.statusText == 'CONFLICT') {
-	                $ionicPopup.alert({
-		                title: "Incorrect Credentials",
-		                template: "Either your Online ID or password is incorrect!"
-		            });
-                }
-                if (err.statusText == 'BAD REQUEST') {
-	                $ionicPopup.alert({
-		                title: "Select your Bank",
-		                template: "Please make sure you've selected your bank from the drop down!"
-		            });
-                }
-                //alert(err.statusText);
-            });
-        });*/
     };
 })
 
@@ -2585,7 +2698,7 @@ angular.module('starter.controllers', [])
     $scope.check = {
         data: false
     };
-    
+
     $scope.TC = function(index) {
         console.log('array index is ' + index + $scope.check.data);
         var checked = index;
@@ -2620,18 +2733,6 @@ angular.module('starter.controllers', [])
     $scope.data = $rootScope.data;
 
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
-
-    /*
-    $scope.user = {
-        day: 26,
-        month: 12,
-        year: 1987,
-        street: "4301 rowalt dr",
-        city: "College Park",
-        zip: "20740",
-        ssn: 3333
-    };
-    */
 
     // For selecting a photo
     $scope.selectPicture = function() {
@@ -2755,7 +2856,7 @@ angular.module('starter.controllers', [])
                         console.log(data);
                         console.log("DOCUMENT: " + JSON.stringify(data));
                     }).catch(function(err) {
-                        if(typeof analytics !== undefined) {
+                        if(typeof analytics !== 'undefined') {
                             analytics.trackEvent('user/doc/attachments/add In KycCtrl', err.statusText, err.data.error.en, 1);
                         }
                         console.log(err);
@@ -2787,6 +2888,12 @@ angular.module('starter.controllers', [])
                             time: dt
                         });
 
+                        // Record entry into Account Verification Complete
+                        if(typeof analytics !== 'undefined') {
+                            analytics.trackView("Account Verification Complete");
+                            analytics.trackEvent('KycCtrl', 'Pass', 'In KycCtrl', 112);
+                        }
+
                         $state.go("tab.settings");
                     } else {
                         $ionicLoading.hide();
@@ -2798,7 +2905,7 @@ angular.module('starter.controllers', [])
                         $state.go("tab.kyc-questions");
                     }
                 }).catch(function(err) {
-                    if(typeof analytics !== undefined) {
+                    if(typeof analytics !== 'undefined') {
                         analytics.trackEvent('/v3/user/doc/add In KycCtrl', err.statusText, err.data.error.en, 1);
                     }
                     $ionicLoading.hide();
@@ -3028,7 +3135,7 @@ angular.module('starter.controllers', [])
                 $state.go("tab.settings");
 
             }).catch(function(err) {
-                if(typeof analytics !== undefined) {
+                if(typeof analytics !== 'undefined') {
                     analytics.trackEvent('/v3/user/doc/verify KycQuestionCtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
@@ -3091,7 +3198,7 @@ angular.module('starter.controllers', [])
                     $state.go('tab.choose-account');
                 }
             }).catch(function(err) {
-                if(typeof analytics !== undefined) {
+                if(typeof analytics !== 'undefined') {
                     analytics.trackEvent('MFA QuestionCtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
@@ -3139,7 +3246,7 @@ angular.module('starter.controllers', [])
                 $rootScope.data = payload.data;
                 $state.go('tab.choose-account');
             }).catch(function(err) {
-                if(typeof analytics !== undefined) {
+                if(typeof analytics !== 'undefined') {
                     analytics.trackEvent('MFA in MFACtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
@@ -3216,20 +3323,3 @@ angular.module('starter.controllers', [])
         return $sce.trustAsHtml(html_code);
     };
 })
-
-// Function to modify the email address to create a unique link based on the user
-function escapeEmailAddress(email) {
-    if (!email) return false
-        // Replace '.' (not allowed in a Firebase key) with ','
-    email = email.toLowerCase();
-    email = email.replace(/\./g, ',');
-    return email.trim();
-};
-
-// Function to modify the social circle name to remove whitespaces, convert to lower case
-function convertCircleName(circlename) {
-    if (!circlename) return false
-    circlename = circlename.toLowerCase();
-    circlename = circlename.replace(/ /g, '');
-    return circlename.trim();
-};

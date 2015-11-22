@@ -13,17 +13,15 @@
             <label class="item item-thumbnail-left" ng-click="selectPicture()">
                 <img ng-src="{{circle.circlePhoto}}">
                 <br>
-                <h2>Circle Photo</h2>
-                <p ng-if="circle.circlePhoto">Edit</p>
                 <p ng-if="!circle.circlePhoto">Add Photo</p>
             </label>
             <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && Member.Priority==0">
                 <div class="row">
-					<div class="col" style="padding-top: 12px">Buddies</div>
-					<div class="col"></div>
-					<div class="col"></div>
-					<div class="col"></div>
-					<div class="col button-icon" ng-click="selectContacts()" style="text-align: right"><span class="icon ion-ios7-plus-outline"></span></div>
+                    <div class="col" style="padding-top: 12px">Buddies</div>
+                    <div class="col"></div>
+                    <div class="col"></div>
+                    <div class="col"></div>
+                    <div class="col button-icon" ng-click="selectContacts()" style="text-align: right"><span class="icon ion-ios7-plus-outline"></span></div>
                 </div>
             </div>
             <div class="item item-divider item-dark" ng-if="circle.circleType!='Singular' || circle.circleType==null">
@@ -32,14 +30,19 @@
             <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && Member.Priority!=0">
                 Buddies
             </div>
-            <div class="item" ng-repeat="member in members">
-                {{member.firstName}}
+            <div class="item" ng-repeat="member in members" ng-click="openModal(member)">
+                <div ng-if="member.admin==true">
+                    {{member.firstName}} (Admin)
+                </div>
+                <div ng-if="member.admin==false">
+                    {{member.firstName}}
+                </div>
             </div>
             <div class="item item-divider item-dark">
                 Plan
             </div>
             <div class="item">
-               ${{circle.amount}} {{circle.plan}}
+                ${{circle.amount}} {{circle.plan}}
             </div>
             <div class="item item-divider item-dark">
                 Pool Amount
@@ -47,66 +50,89 @@
             <div class="item">
                 ${{circle.amount * members.length}}
             </div>
-        <!-- Picking contacts -->
-        <div class="item item-divider item-dark" ng-if="data.selectedContacts.length!=0">
-            	Selected Contacts
-        </div>       
+            <!-- Picking contacts -->
+            <div class="item item-divider item-dark" ng-if="data.selectedContacts.length!=0">
+                Selected Contacts
+            </div>
             <div class="list">
                 <a class="item" ng-repeat="contact in data.selectedContacts">
                     <div class="row">
-				    	<div class="col col-90">
-					    	<h2>{{contact.name}}</h2>
-							<p ng-if="contact.email">{{contact.emailType}} : {{contact.email}}</p>
-							<p>{{contact.phoneType}} : {{contact.phone}}</p>
-				    	</div>
-						<div class="col">
-							<i class="icon ion-close-circled melon-icon " ng-click="contactDelete($index)"></i>
-						</div>
-		    		</div>
+                        <div class="col col-90">
+                            <h2>{{contact.name}}</h2>
+                            <p ng-if="contact.email">{{contact.emailType}} : {{contact.email}}</p>
+                            <p>{{contact.phoneType}} : {{contact.phone}}</p>
+                        </div>
+                        <div class="col">
+                            <i class="icon ion-close-circled melon-icon " ng-click="contactDelete($index)"></i>
+                        </div>
+                    </div>
                 </a>
             </div>
             <div class="padding" ng-if="data.selectedContacts.length!=0">
-            	<button class="button button-block button-dark" ng-click="selectContacts()">Add More</button>
+                <button class="button button-block button-dark" ng-click="selectContacts()">Add More</button>
             </div>
             <!-- Picking contacts ends here -->
             <div ng-if="data.selectedContacts.length!=0" style="padding-left: 20px; padding-right: 20px">
-              <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's how your circle will change:</b> WalletBuddies will debit <b>${{circle.amount}}</b> from everyone <b>{{circle.plan}}</b> and the pooled amount of <b>${{circle.amount * (members.length+data.selectedContacts.length)}}</b> will be credited to <b>you</b>.</p>
+                <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's how your circle will change:</b> WalletBuddies will debit <b>${{circle.amount}}</b> from everyone <b>{{circle.plan}}</b> and the pooled amount of <b>${{circle.amount * (members.length+data.selectedContacts.length)}}</b> will be credited to <b>you</b>.</p>
             </div>
             <div class="list padding" ng-if="data.selectedContacts.length!=0">
                 <button class="button button-block button-balanced" ng-click="addGroup()">Invite</button>
             </div>
         </div>
         <div ng-if="circle.circleType=='Singular' && Priority==0">
-        <div class="list">
-               <button class="button button-block button-balanced" ng-click="cancelCircle()">End Circle</button>
-           </div>
-       </div>
+            <div class="list">
+                <button class="button button-block button-balanced" ng-click="cancelCircle()">End Circle</button>
+            </div>
+        </div>
     </ion-content>
 </ion-view>
 
 <script id="contacts-modal.html" type="text/ng-template">
-  <ion-modal-view>
-    <ion-header-bar class="bar bar-header bar-balanced">
-      <h1 class="title">Pick your buddies</h1>
-      <div class="button button-clear" ng-click="modal.hide()">Done</div>
-    </ion-header-bar>
-    <div class="bar bar-subheader bar-light item-input-inset">
-        <label class="item-input-wrapper">
-            <i class="icon ion-ios7-search placeholder-icon"></i>
-            <input type="search" placeholder="Search Contacts" ng-model="search.name.formatted" ng-change="scrollTop()">
-        </label>
+    <ion-modal-view>
+        <ion-header-bar class="bar bar-header bar-balanced">
+            <h1 class="title">Pick your buddies</h1>
+            <div class="button button-clear" ng-click="modal.hide()">Done</div>
+        </ion-header-bar>
+        <div class="bar bar-subheader bar-light item-input-inset">
+            <label class="item-input-wrapper">
+                <i class="icon ion-ios7-search placeholder-icon"></i>
+                <input type="search" placeholder="Search Contacts" ng-model="search.name.formatted" ng-change="scrollTop()">
+            </label>
+        </div>
+        <ion-content class="has-subheader">
+            <ion-list>
+                <div ng-repeat="contact in contacts | filter:search" ng-init="parentIndex=$index" collection-item-height="itemheight(contact.phoneNumbers.length)" collection-item-width="'100%'" style="width:100%">
+                    <ion-item>
+                        <ion-checkbox ng-repeat="phoneNumber in contact.phoneNumbers" style="border:none;" ng-model="phoneNumber.selected" ng-init="actIndex=$index" ng-click="phoneSelect(contact, phoneNumber)">
+                            <div>
+                                <h5>{{contact.name.formatted}}</h5></div>
+                            <div>
+                                <p style="font-size: smaller">{{phoneNumber.type}} {{phoneNumber.value}}</p>
+                            </div>
+                        </ion-checkbox>
+                    </ion-item>
+                </div>
+            </ion-list>
+        </ion-content>
+    </ion-modal-view>
+</script>
+
+<script id="display-contact-modal.html" type="text/ng-template">
+    <div class="modal">
+        <ion-content has-header="true" style="margin-top: 0px !important;">
+            <div class="list">
+                <div class="item item-avatar item-text-wrap">
+                    <img ng-src="{{memberToDisplay.profilePhoto}}">
+                    <h2 style="padding-top: 25px; padding-left: 25px"><b>{{memberToDisplay.firstName}} {{memberToDisplay.lastName}}</b></h2>
+                </div>
+                <a class="item item-icon-left">
+                    <i class="icon ion-iphone"></i> {{memberToDisplay.phone}}
+                </a>
+                <a class="item item-icon-left">
+                    <i class="icon ion-email"></i> {{memberToDisplay.email}}
+                </a>
+            </div>
+            <button class="button button-block button-lsi" ng-click="closeModal()">Close Contact</button>
+        </ion-content>
     </div>
-    <ion-content class="has-subheader">
-    <ion-list>
-	  <div ng-repeat="contact in contacts | filter:search" ng-init="parentIndex=$index" collection-item-height="itemheight(contact.phoneNumbers.length)" collection-item-width="'100%'" style="width:100%">
-		<ion-item>
-	    <ion-checkbox ng-repeat="phoneNumber in contact.phoneNumbers" style="border:none;" ng-model="phoneNumber.selected" ng-init="actIndex=$index" ng-click="phoneSelect(contact, phoneNumber)">
-	    	<div><h5>{{contact.name.formatted}}</h5></div>
-            <div><p style="font-size: smaller">{{phoneNumber.type}} {{phoneNumber.value}}</p></div>
-	    </ion-checkbox>
-		</ion-item>
-	  </div>
-    </ion-list>
-    </ion-content>
-  </ion-modal-view>
 </script>
