@@ -10,7 +10,7 @@
             </button>
         </div>
         <div class="card">
-            <label class="item item-thumbnail-left" ng-click="selectPicture()">
+            <label class="item item-image" ng-click="selectPicture()" style="padding-bottom: 10px; padding-top: 10px;">
                 <img ng-src="{{circle.circlePhoto}}">
                 <br>
                 <p ng-if="!circle.circlePhoto">Add Photo</p>
@@ -31,24 +31,26 @@
                 Buddies
             </div>
             <div class="item" ng-repeat="member in members" ng-click="openModal(member)">
-                <div ng-if="member.admin==true">
-                    {{member.firstName}} (Admin)
+                <div ng-if="member.admin==true" class="item item-avatar item-text-wrap">
+                    <img ng-src="{{member.profilePhoto}}">
+                    <h2 style="padding-top: 25px; padding-left: 25px; color: #444"><b>{{member.firstName}} (Admin)</b></h2>
                 </div>
-                <div ng-if="member.admin==false">
-                    {{member.firstName}}
+                <div ng-if="member.admin==false" class="item item-avatar item-text-wrap">
+                    <img ng-src="{{member.profilePhoto}}">
+                    <h2 style="padding-top: 25px; padding-left: 25px; color: #444"><b>{{member.firstName}}</b></h2>
                 </div>
             </div>
             <div class="item item-divider item-dark">
                 Plan
             </div>
             <div class="item">
-                ${{circle.amount}} {{circle.plan}}
+                <b>${{circle.amount}} {{circle.plan}}</b>
             </div>
             <div class="item item-divider item-dark">
                 Pool Amount
             </div>
             <div class="item">
-                ${{circle.amount * members.length}}
+                <b>${{circle.amount * members.length}}</b>
             </div>
             <!-- Picking contacts -->
             <div class="item item-divider item-dark" ng-if="data.selectedContacts.length!=0">

@@ -877,8 +877,8 @@ angular.module('starter.controllers', [])
                 });
 
                 // Get the reference for the push
-                var fbAcceptedMembers = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers");
-                var fbAcceptedMembersPushRef = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers").push();
+                var fbAcceptedMembers = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers");
+                var fbAcceptedMembersPushRef = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers").push();
                 var fbUser = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
                 fbUser.once("value", function(userData) {
                     // Store the user information
@@ -1238,7 +1238,7 @@ angular.module('starter.controllers', [])
     };
 
     // Create a link to a CircleMembers under this circle
-    var fbCircleAcceptedMembers = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers");
+    var fbCircleAcceptedMembers = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers");
     var fbCircleAcceptedMembersObj = $firebaseObject(fbCircleAcceptedMembers);
 
     $ionicLoading.show({
@@ -1619,7 +1619,7 @@ angular.module('starter.controllers', [])
 	    $ionicNavBarDelegate.showBackButton(true);
 	    // Scroll down the content automatically
         $ionicScrollDelegate.scrollBottom(true, true);
-        cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+        //cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
         // Updating chat badge counter
 		var ref = new Firebase("https://walletbuddies.firebaseio.com");
 		// Get a reference to where the User's accepted circles are going to be stored
@@ -1922,8 +1922,8 @@ angular.module('starter.controllers', [])
 		        });
 
                 // Get the reference for the push and store the relevant user information
-                var fbAcceptedMembers = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers");
-                var fbAcceptedMembersPushRef = new Firebase(fbRef + "/Circles/CircleMembers/" + $stateParams.circleID + "/AcceptedMembers").push();
+                var fbAcceptedMembers = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers");
+                var fbAcceptedMembersPushRef = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers").push();
                 var fbUser = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
                 fbUser.once("value", function(userData) {
 
