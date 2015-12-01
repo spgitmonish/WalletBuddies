@@ -1638,10 +1638,8 @@ angular.module('starter.controllers', [])
                 // that means the messages haven't been read yet,
                 // so decrement walletCounter if it is not 0 already for
                 // some UNKNOWN reason
-                if((badgeCounter > 0) && (walletCounter > 0)){
+                if(badgeCounter > 0){
                     walletCounter = walletCounter - userData.val().badgeCounter;
-                } else {
-                    walletCounter = 0;
                 }
 
                 // Update the total badges counter
