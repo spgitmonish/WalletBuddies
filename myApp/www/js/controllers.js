@@ -1102,6 +1102,8 @@ angular.module('starter.controllers', [])
     var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 
     // Delete all the accepted circles cached data
+    // NOTE: This needs to be removed after all our users download the latest
+    //       version of the app. Removal of this may show faster loading times.
     fbUserAcceptedCircles.remove();
 
     // Update $scope.circles
@@ -1119,7 +1121,7 @@ angular.module('starter.controllers', [])
             console.log(acceptedCircleVal);
 
             // Get the reference for the push
-            var fbAcceptedCirclePushRef = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/").push();
+            var fbAcceptedCirclePushRef = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + data.key());
 
             // Update the location(temporary cache)
             fbAcceptedCirclePushRef.update(acceptedCircleVal);
@@ -1615,7 +1617,6 @@ angular.module('starter.controllers', [])
             analytics.trackEvent('ChatCtrl', 'Pass', 'In ChatCtrl', 107);
         }
 
-		console.log("Ionic.view enter");
 	    $ionicNavBarDelegate.showBackButton(true);
 	    // Scroll down the content automatically
         $ionicScrollDelegate.scrollBottom(true, true);
@@ -1623,27 +1624,43 @@ angular.module('starter.controllers', [])
         // Updating chat badge counter
 		var ref = new Firebase("https://walletbuddies.firebaseio.com");
 		// Get a reference to where the User's accepted circles are going to be stored
-		var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
-		fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
+		var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID + "/Members/" + $rootScope.fbAuthData.uid);
+		fbUserAcceptedCircles.once("value", function(data){
 			ref.child('Users').child($rootScope.fbAuthData.uid).once("value", function(userData){
-				//Decrement this circle's chat counter from totalCount
-				var walletCounter = userData.val().Badges.walletCounter - data.val().badgeCounter;
-				if (walletCounter >= 0) {
-					ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
-						walletCounter: walletCounter
-					});
-				} else {
-					ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
-						walletCounter: 0
-					});
-				}
-				// Set badgeCounter to 0
-				fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-					badgeCounter: 0
-				})
-				ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-					badgeCounter: 0
-				})
+				// Get the existing total notification count
+				var walletCounter = userData.val().Badges.walletCounter;
+                var badgeCounter = data.val().badgeCounter;
+
+                console.log("walletCounter: " + walletCounter);
+                console.log("badgeCounter: " + badgeCounter);
+
+                // If badgeCounter is greater than 0(for this circle),
+                // that means the messages haven't been read yet,
+                // so decrement walletCounter if it is not 0 already for
+                // some UNKNOWN reason
+                if((badgeCounter > 0) && (walletCounter > 0)){
+                    walletCounter = walletCounter - userData.val().badgeCounter;
+                } else {
+                    walletCounter = 0;
+                }
+
+                // Update the total badges counter
+                ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
+	                walletCounter: walletCounter
+				});
+
+                // Set badgeCounter to 0 only if it not-zero
+                // (otherwise junk data will be displayed in the wallet tab)
+                if(badgeCounter != 0){
+                    // Set badgeCounter to 0
+    				fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+    					badgeCounter: 0
+    				});
+
+    				ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+    					badgeCounter: 0
+    				});
+                }
 			})
 		});
 	});
@@ -1764,7 +1781,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$ionicView.leave', function() {
-        cordova.plugins.Keyboard.hideKeyboardAccessoryBar(false);
+        //cordova.plugins.Keyboard.hideKeyboardAccessoryBar(false);
     });
 })
 
