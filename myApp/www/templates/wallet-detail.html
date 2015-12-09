@@ -10,9 +10,11 @@
             </button>
         </div>
         <div class="card">
-            <label class="item item-image" ng-click="selectPicture()" style="padding-bottom: 10px; padding-top: 10px;">
+            <label class="item item-thumbnail-left" ng-click="selectPicture()">
                 <img ng-src="{{circle.circlePhoto}}">
                 <br>
+                <h2>Circle Photo</h2>
+                <p ng-if="circle.circlePhoto">Edit</p>
                 <p ng-if="!circle.circlePhoto">Add Photo</p>
             </label>
             <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && Member.Priority==0">
@@ -31,26 +33,24 @@
                 Buddies
             </div>
             <div class="item" ng-repeat="member in members" ng-click="openModal(member)">
-                <div ng-if="member.admin==true" class="item item-avatar item-text-wrap">
-                    <img ng-src="{{member.profilePhoto}}">
-                    <h2 style="padding-top: 25px; padding-left: 25px; color: #444"><b>{{member.firstName}} (Admin)</b></h2>
+                <div ng-if="member.admin==true">
+                    {{member.firstName}} (Admin)
                 </div>
-                <div ng-if="member.admin==false" class="item item-avatar item-text-wrap">
-                    <img ng-src="{{member.profilePhoto}}">
-                    <h2 style="padding-top: 25px; padding-left: 25px; color: #444"><b>{{member.firstName}}</b></h2>
+                <div ng-if="member.admin==false">
+                    {{member.firstName}}
                 </div>
             </div>
             <div class="item item-divider item-dark">
                 Plan
             </div>
-            <div class="item">
-                <b>${{circle.amount}} {{circle.plan}}</b>
+            <div class="item item-text-wrap" ng-repeat="date in debit">
+                ${{circle.amount}} {{circle.plan}}: Debits for current cycle occur on <b>{{date.debitDate}}</b>
             </div>
             <div class="item item-divider item-dark">
                 Pool Amount
             </div>
-            <div class="item">
-                <b>${{circle.amount * members.length}}</b>
+            <div class="item item-text-wrap" ng-repeat="date in credit">
+                ${{circle.amount * members.length}} will be credited to the group on <b>{{date.notificationDate}}</b>
             </div>
             <!-- Picking contacts -->
             <div class="item item-divider item-dark" ng-if="data.selectedContacts.length!=0">

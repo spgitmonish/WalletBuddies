@@ -22,6 +22,7 @@
     "cordova-plugin-camera"
   ],
   "cordovaPlatforms": [
-    "android"
+    "android",
+    "ios"
   ]
 }

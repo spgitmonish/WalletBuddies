@@ -11,7 +11,7 @@
 
                 <div class="chat-bubble left">
 
-                    <div class="message" ng-bind-html="message.text" autolinker>
+                    <div class="message" ng-bind-html="message.text | linky | hrefToJS" autolinker>
                         {{message.text}}
                     </div>
 
@@ -26,7 +26,7 @@
 
                 <div class="chat-bubble right">
 
-                    <div class="message" ng-bind-html="message.text" autolinker>
+                    <div class="message" ng-bind-html="message.text | linky | hrefToJS" autolinker>
                         {{message.text}}
                     </div>
 
@@ -42,9 +42,9 @@
     </ion-content>
     <ion-footer-bar keyboard-attach class="bar-stable item-input-inset message-footer">
       <label class="item-input-wrapper">
-        <input type="text" is-focused="{{isFocused}}" placeholder="Type your message" ng-model="data.message" ng-focus="text()" ng-click="inputClick()"/>
+        <input type="text" id="message" placeholder="Type your message" ng-model="data.message" ng-focus="text()" ng-click="inputClick()" ng-blur="onBlur()"/>
       </label>
-      <button class="button button-clear" ng-click="sendMessage(data)">
+      <button class="button button-clear" ng-click="sendMessage()">
         Send
       </button>
     </ion-footer-bar>

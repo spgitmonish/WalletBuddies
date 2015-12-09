@@ -18,6 +18,29 @@ angular.module('starter.services', [])
     }
 })
 
+// Function for sending messages
+.factory('UpdateMessages', function($rootScope, $timeout) {
+	return {
+		update: function(message, circleID) {
+			$timeout(function() {
+				var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+			    var fbMessages = new Firebase("https://walletbuddies.firebaseio.com/Circles/" + circleID + "/Messages/");
+			    var d = Date.now();
+			    fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
+			        console.log("$scope.data.message: " + message, $rootScope.fbAuthData.uid, d, userData.val().firstname);
+			        fbMessages.push({
+			            userId: $rootScope.fbAuthData.uid,
+			            text: message,
+			            time: d,
+			            name: userData.val().firstname,
+			            photo: userData.val().profilePhoto
+			        });
+			    });	
+		    });
+		}
+	}
+})
+
 .factory('PostsArrayFactory', function($q, $firebaseArray) {
     return $firebaseArray.$extend({
         getPost: function(postKey) {

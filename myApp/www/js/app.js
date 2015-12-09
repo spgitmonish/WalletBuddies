@@ -5,7 +5,7 @@
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
 
-angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify', 'ngIOS9UIWebViewPatch', 'jett.ionic.filter.bar'])
+angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify', 'ngIOS9UIWebViewPatch', 'jett.ionic.filter.bar', 'ngSanitize'])
 
 .run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory, $ionicLoading) {
     return $ionicPlatform.ready(function() {
@@ -366,29 +366,30 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 })
 
 // Directive for keeping the keyboard open while in chat
-.directive('isFocused', function($timeout, $rootScope) {
+/*.directive('isFocused', function($timeout, $rootScope) {
   return {
     scope: { trigger: '@isFocused' },
     link: function(scope, element) {
       scope.$watch('trigger', function(value) {
         if(value === "true") {
-          $timeout(function() {
-	          console.log("Hello", value);
-            element[0].focus();
-
+          
+            //element[0].focus();
+		  $timeout(function() {
             element.on('blur', function() {
-	            console.log("Hello blur", value, $rootScope.focused);
-	            if ($rootScope.focused != "false") {
-		        console.log("Hello blur focusing", value, $rootScope.focused);    
-		        	element[0].focus();   
-	            }
+	            //$timeout(function () {
+		            console.log("Hello blur", value, $rootScope.focused);
+		            if ($rootScope.focused != "false") {
+			        console.log("Hello blur focusing", value, $rootScope.focused);    
+			        	element[0].focus();   
+		            }
+	            //});
             });
           });
         }
       });
     }
   };
-})
+})*/
 
 // Directive for horizantal radio buttons 
 .directive('groupedRadio', function() {
@@ -421,6 +422,15 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
   return function(items) {
     return items.slice().reverse();
   };
+})
+
+// This filter opens links in devices' default browser
+.filter('hrefToJS', function ($sce, $sanitize) {
+    return function (text) {
+        var regex = /href="([\S]+)"/g;
+        var newString = $sanitize(text).replace(regex, "onClick=\"window.open('$1', '_blank', 'location=yes')\"");
+        return $sce.trustAsHtml(newString);
+    }
 })
 
 .config(function($stateProvider, $urlRouterProvider) {
@@ -603,6 +613,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             'tab-settings': {
                 templateUrl: 'templates/tab-account.html',
                 controller: 'ConnectCtrl'
+            }
+        }
+    })
+    
+    .state('tab.manual-account', {
+        url: '/manual-account',
+        views: {
+            'tab-settings': {
+                templateUrl: 'templates/tab-manual-account.html',
+                controller: 'ManualAccountCtrl'
             }
         }
     })

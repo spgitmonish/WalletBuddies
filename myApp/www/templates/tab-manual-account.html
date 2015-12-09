@@ -1,0 +1,59 @@
+<ion-view view-title="Link your account">
+    <ion-content class="pageBG" padding="true">
+    <form name="signinForm" novalidate="" ng-submit="signIn(signinForm)">
+    	<br>
+    	<p align="center" style="color: #595858"><b>Use your bank account number and routing number to connect your account.</b></p>
+    	<br>
+        <div class="card">
+            <div class="item">
+	            <label class="item item-input item-select" ng-class="{ 'has-error-lr' : signinForm.type.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.type.$valid  && signinForm.$submitted}">
+                    <div class="input-label balanced">
+                        Select Account Class
+                    </div>
+                    <select name="type" ng-model="user.type" ng-required="true">
+                        <option ng-selected="PERSONAL" value="PERSONAL">PERSONAL</option>
+                        <option ng-selected="BUSINESS" value="BUSINESS">BUSINESS</option>
+                    </select>
+                </label>
+                <label class="item item-input item-select" ng-class="{ 'has-error-lr' : signinForm.class.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.class.$valid  && signinForm.$submitted}">
+                    <div class="input-label balanced">
+                        Select Account Type
+                    </div>
+                    <select name="class" ng-model="user.class" ng-required="true">
+                        <option ng-selected="CHECKING" value="CHECKING">CHECKING</option>
+                        <option ng-selected="SAVINGS" value="SAVINGS">SAVINGS</option>
+                    </select>
+                </label>
+                <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.nickname.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.nickname.$valid  && signinForm.$submitted}">
+                    <span class="input-label balanced">Account Nickname</span>
+                    <input type="text" name="nickname" placeholder="Nickname (e.g. Library Savings Account)" ng-model="user.nickname" ng-required="true">
+                </label>
+                <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.accountNumber.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.accountNumber.$valid  && signinForm.$submitted}">
+                    <span class="input-label balanced">Account Number</span>
+                    <input type="tel" name="accountNumber" placeholder="Account Number" ng-model="user.accountNumber" ng-required="true">
+                </label>
+                <label class="item item-input item-floating-label" ng-class="{ 'has-error-lr' : signinForm.routingNumber.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.routingNumber.$valid  && signinForm.$submitted}">
+                    <span class="input-label balanced">Routing Number</span>
+                    <input type="tel" name="routingNumber" placeholder="Routing Number" ng-model="user.routingNumber" ng-required="true">
+                </label>
+            </div>
+        </div>
+        <div class="form-errors"  
+		   ng-show="signinForm.$error && signinForm.$submitted"
+		   ng-messages="signinForm.$error"
+		   ng-messages-include="templates/form-errors.html">  
+		</div>
+        <br>                        
+        <div class="row">
+	        <div class="col">
+		        <i class="icon ion-ios7-locked-outline my-icon"></i>
+	        </div>
+	        <div class="col col-90">
+		        <p align="justify" style="color: #595858">We do not store any information you provide on this page. This information is requested to connect to your bank.</p>
+	        </div>
+        </div>
+		<br> 
+        <button ng-click="connect(user)" class="button button-full button-balanced">Connect</button>
+    </form>        
+    </ion-content>
+</ion-view>

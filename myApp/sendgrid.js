@@ -17,9 +17,72 @@ var token = tokenGenerator.createToken(
 );
 
 fbRef.authWithCustomToken(token, function(error, authData) {
-	
-	
-	
+    
+	var postData = {
+	    'login': {
+	        'oauth_key': 'oauth-f29ee1e5-68b7-407c-8dd4-f2e87e02cc7c'
+	    },
+	    'user': {
+	        'fingerprint': 'suasusau21324redakufejfjsf'
+	    },
+	    'trans': {
+	        //where you wish to debit funds from. This should belong to the user who's OAUTH key you have supplied in login
+	        'from': {
+	            'type': 'ACH-US',
+	            'id': '55b2e3ee86c2733dcf4c6eca'
+	        },
+	        //where you wish to send funds to
+	        'to': {
+	            'type': 'SYNAPSE-US',
+	            'id': '55b0249386c2732645787e49'
+	        },
+	        'amount': {
+	            'amount': 222.22,
+	            'currency': 'USD'
+	        },
+	        //this is all optional stuff.
+	        //supp_id lets you add your own DB's ID for the transaction
+	        //Note lets you attach a memo to the transaction
+	        //Webhook URL lets you establish a webhook update line
+	        //process on lets you supply the date when you wish to process this transaction. This is delta time, which means 1 means tomorrow, 2 means day after, and so on
+	        //Finally the IP address of the transaction
+	        'extra': {
+	            'supp_id': '1283764wqwsdd34wd13212',
+	            'note': 'Debited from WB user ',
+	            'webhook': 'http://requestb.in/1ks130f1',
+	            'process_on': 0,
+	            'ip': '192.168.1.1',
+	        },
+	        //this lets you add a facilitator fee to the transaction, once the transaction settles, you will get a part of the transaction
+	        'fees': [{
+	            'fee': parseFloat("0.01"),
+	            'note': 'Facilitator Fee',
+	            'to': {
+	                'id': '55b0249386c2732645787e49'
+	            }
+	        }]
+	    }
+	}
+
+    var url = 'https://sandbox.synapsepay.com/api/v3/trans/add'
+    var options = {
+        method: 'post',
+        body: postData,
+        json: true,
+        url: url
+    }
+
+    request(options, function(err, res, body) {
+        if (err) {
+            console.log("Got an error in transaction");
+            console.log(JSON.stringify(err));
+            console.log("Error StatusText: " + err.statusText);
+        }
+        console.log("Response: " + JSON.stringify(res));
+        console.log("Body: " + JSON.stringify(body));
+
+    });
+                         
 	
 	/*var fbCircles = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles");
     var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");

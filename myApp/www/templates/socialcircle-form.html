@@ -89,10 +89,10 @@
             </div>
             <!-- Picking contacts ends here -->
             <div ng-if="user.circleType=='Singular' && user.plan!=null && user.amount!=null && data.selectedContacts.length!=0" style="padding-left: 20px; padding-right: 20px">
-              <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's your circle summary:</b> WalletBuddies will debit <b>${{user.amount}}</b> from everyone <b>{{user.plan}}</b> and the pooled amount of <b>${{user.amount*data.selectedContacts.length}}</b> will be credited to <b>you</b>.</p>
+              <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's your circle summary:</b> WalletBuddies will debit <b>${{user.amount}}</b> from everyone <b>{{user.plan}}</b> and the pooled amount of <b>${{user.amount*(data.selectedContacts.length+1)}}</b> will be credited to <b>you</b>.</p>
             </div>
             <div ng-if="user.circleType=='Rotational' && user.plan!=null && user.amount!=null && data.selectedContacts.length!=0" style="padding-left: 20px; padding-right: 20px">
-              <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's your circle summary:</b> WalletBuddies will debit <b>${{user.amount}}</b> from everyone <b>{{user.plan}}</b> and the pooled amount of <b>${{user.amount*data.selectedContacts.length}}</b> will be credited to <b>everyone</b> in the group on a rotational basis.</p>
+              <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's your circle summary:</b> WalletBuddies will debit <b>${{user.amount}}</b> from everyone <b>{{user.plan}}</b> and the pooled amount of <b>${{user.amount*(data.selectedContacts.length+1)}}</b> will be credited to <b>everyone</b> in the group on a rotational basis.</p>
             </div>
             <div class="list padding" ng-if="data.selectedContacts.length!=0">
                 <button class="button button-block button-balanced" ng-click="addGroup(user)">Invite</button>
