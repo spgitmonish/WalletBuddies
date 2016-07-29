@@ -32,14 +32,25 @@
             <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && Member.Priority!=0">
                 Buddies
             </div>
-            <div class="item" ng-repeat="member in members" ng-click="openModal(member)">
+            <div class="row">
+				<div class="col" style="vertical-align: top; display: inline-block; text-align: center; width: 120px;" ng-repeat="member in members">
+					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{member.profilePhoto}}"/>
+					<span style="display: block">{{member.firstName}}</span>
+				</div>
+            </div>
+            <!--<div class="item"  ng-click="openModal(member)">
                 <div ng-if="member.admin==true">
                     {{member.firstName}} (Admin)
                 </div>
                 <div ng-if="member.admin==false">
-                    {{member.firstName}}
+                    <div class="row">
+						<div class="col" ng-repeat="member in members">
+							<img class="profile-pic" ng-src="{{member.profilePhoto}}"/>
+							{{member.firstName}}
+						</div>
+                    </div>
                 </div>
-            </div>
+            </div>-->
             <div class="item item-divider item-dark">
                 Plan
             </div>
@@ -81,9 +92,9 @@
                 <button class="button button-block button-balanced" ng-click="addGroup()">Invite</button>
             </div>
         </div>
-        <div ng-if="circle.circleType=='Singular' && Priority==0">
+        <div align="center" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority==0">
             <div class="list">
-                <button class="button button-block button-balanced" ng-click="cancelCircle()">End Circle</button>
+                <button class="button button-outline button-dark" ng-click="cancelCircle()">End Circle</button>
             </div>
         </div>
     </ion-content>

@@ -183,7 +183,7 @@ img.profile-pic {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  position: absolute;
+  //position: relative;
   bottom: 10px;
 }
 
@@ -450,6 +450,30 @@ label.item.valid-lr {
 .form-error {
   padding: 2px 0 2px 16px;
   color: red;
+}
+
+/** Styling for the wallet-detail page **/
+
+.wd-avatar {
+    max-width: 40px;
+    max-height: 40px;
+    width: 100%;
+    border-radius: 50%;
+}
+
+.wd-item {
+    /* To correctly align image, regardless of content height: */
+    vertical-align: top;
+    display: inline-block;
+    /* To horizontally center images and caption */
+    text-align: center;
+    /* The width of the container also implies margin around the images. */
+    width: 120px;
+}
+
+.wd-caption {
+    /* Make the caption a block so it occupies its own line. */
+    display: block;
 }
 
 // Include all of Ionic

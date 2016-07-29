@@ -607,7 +607,7 @@ angular.module('starter.controllers', [])
 ])
 
 // Controller for submitting social circle form
-.controller('GroupCtrl', function($scope, $cordovaCamera, $ionicActionSheet, $ionicLoading, $firebaseObject, $ionicModal, ContactsService, fbCallback, $cordovaContacts, $ionicScrollDelegate, $rootScope, $state, $log, $ionicPopup, $ionicFilterBar) {
+.controller('GroupCtrl', function($scope, $cordovaCamera, $ionicActionSheet, $ionicLoading, $firebaseObject, $ionicModal, ContactsService, fbCallback, $cordovaContacts, $ionicScrollDelegate, $rootScope, $state, $log, $ionicPopup, $ionicFilterBar, $stateParams) {
 
     // For selecting a photo
     $scope.selectPicture = function() {
@@ -1258,7 +1258,7 @@ angular.module('starter.controllers', [])
 
             // Hide the notification
             $ionicLoading.hide();
-        }else{
+        } else{
             // Update $scope.members
             $scope.members = $firebaseArray(fbCircleAcceptedMembers);
 
@@ -1581,10 +1581,6 @@ angular.module('starter.controllers', [])
             circleCancelled: true
         });
     }
-    // Creating a reference to the priority field
-	var fbCircleMemberPath = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/Members/" + $rootScope.fbAuthData.uid);
-	var members = $firebaseObject(fbCircleMemberPath);
-	members.$bindTo($scope, "Member");
 	
 	// Display credit and debit dates
 	var fbCredits = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/NotificationDates-test/");
@@ -1595,10 +1591,10 @@ angular.module('starter.controllers', [])
 
 // Controller for chat
 .controller('ChatCtrl', function($scope, $stateParams, $state, $rootScope, $ionicNavBarDelegate, $timeout, $ionicScrollDelegate, $firebaseArray, $firebaseObject, UpdateMessages) {
-    var fbMessages = new Firebase("https://walletbuddies.firebaseio.com/Circles/" + $stateParams.circleID + "/Messages/");
+    var fbMessages = new Firebase("https://walletbuddies.firebaseio.com/Messages/" + $stateParams.circleID);
     var fbQuery = fbMessages.limitToLast(50);
     // Create a synchronized array at the firebase reference
-    $scope.messages = $firebaseArray(fbMessages);
+    $scope.messages = $firebaseArray(fbQuery);
     
     // This scope var controls the focus of the keyboard
     $scope.isFocused = "false";
@@ -1626,7 +1622,7 @@ angular.module('starter.controllers', [])
 	    $ionicNavBarDelegate.showBackButton(true);
 	    // Scroll down the content automatically
         $ionicScrollDelegate.scrollBottom(true, true);
-        //cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+        cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
         // Updating chat badge counter
 		var ref = new Firebase("https://walletbuddies.firebaseio.com");
 		// Get a reference to where the User's accepted circles are going to be stored
@@ -1672,6 +1668,7 @@ angular.module('starter.controllers', [])
 	// Updating chat badge counter
 	$scope.$on('$ionicView.leave', function() {
 		var ref = new Firebase("https://walletbuddies.firebaseio.com");
+		cordova.plugins.Keyboard.hideKeyboardAccessoryBar(false);
 		// Get a reference to where the User's accepted circles are going to be stored
 		var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 		fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
@@ -1726,7 +1723,6 @@ angular.module('starter.controllers', [])
 		
 		//UpdateMessages.update($scope.data.message, $stateParams.circleID);
 		var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
-	    var fbMessages = new Firebase("https://walletbuddies.firebaseio.com/Circles/" + $stateParams.circleID + "/Messages/");
 	    var d = Date.now();
 	    fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
 	        console.log("$scope.data.message: " + message, $rootScope.fbAuthData.uid, d, userData.val().firstname);
@@ -1886,6 +1882,30 @@ angular.module('starter.controllers', [])
                 var fbCircle = new Firebase("https://walletbuddies.firebaseio.com/Circles/");
                 var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
                 fbCircle.child($stateParams.circleID).once('value', function(circle) {
+	                // Remove this user from the contacts list so he doesn't get reminders
+					fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
+												
+		                for(var i in data.val().contacts) {
+		                    var val = data.val().contacts[i];
+							//  Loop for removing symbols in phone numbers
+				            var str = val.phone.toString();
+				            var temp = str.replace(/\D/g, '');
+				            console.log("temp", str, temp);
+				            // Removing 1 from the phone number
+				            if (temp.length > 10) {
+				                var temp = temp.substring(1);
+				                var temp_int = parseInt(temp);
+				                var phone = temp_int;
+				            } else {
+					            var phone = temp;
+				            }
+				            
+				            // Find the right contact and delete
+							if(userData.val().phonenumber == phone) {
+								fbRef.child("Circles").child($stateParams.circleID).child("contacts").child(i).remove();
+							}
+			            };
+					});
 					if (circle.val().circleType == 'Singular') {
 						// Change Status of the circle to "true" and initializing notification badge to 0
 		                fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
@@ -1972,6 +1992,30 @@ angular.module('starter.controllers', [])
     $scope.onDecline = function() {
         // Send email notification to circle creator & user confirming decline (Currently only sending to the user)
         fbRef.child("Circles").child($stateParams.circleID).once('value', function(data) {
+	        // Remove this user from the contacts list so he doesn't get reminders
+			fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
+				
+                for(var i in data.val().contacts) {
+                    var val = data.val().contacts[i];
+					//  Loop for removing symbols in phone numbers
+		            var str = val.phone.toString();
+		            var temp = str.replace(/\D/g, '');
+		            console.log("temp", str, temp);
+		            // Removing 1 from the phone number
+		            if (temp.length > 10) {
+		                var temp = temp.substring(1);
+		                var temp_int = parseInt(temp);
+		                var phone = temp_int;
+		            } else {
+			            var phone = temp;
+		            }
+		            
+		            // Find the right contact and delete
+					if(userData.val().phonenumber == phone) {
+						fbRef.child("Circles").child($stateParams.circleID).child("contacts").child(i).remove();
+					}
+	            };
+			});
 	        if (data.val().circleType == 'Singular') {
 				// Change Status of the circle to "false"
                 fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
@@ -2135,6 +2179,11 @@ angular.module('starter.controllers', [])
     // Go to tab-account
     $scope.account = function() {
         $state.go("tab.account");
+    };
+    
+    // Go to tab-account-credits
+    $scope.accountCredit = function() {
+        $state.go("tab.account-credit");
     };
 
     // Called when the user clicks the "Reset Password" button
@@ -2394,133 +2443,66 @@ angular.module('starter.controllers', [])
         username: '',
         password: ''
     };
-
+	
+	$scope.$on("$ionicView.enter", function(event, data){
+	   // Fire Plaid link when view loads
+	   var linkHandler = Plaid.create({
+		  selectAccount: true,
+		  env: 'tartan',
+		  clientName: 'WalletBuddies',
+		  key: 'fc5e88b3e3b80b99c42edd7c5357c5',
+		  product: 'auth',
+		  onLoad: function() {
+		    // The Link module finished loading.
+		  },
+		  onSuccess: function(public_token, metadata) {
+		    // The onSuccess function is called when the user has successfully
+		    // authenticated and selected an account to use.
+		    //
+		    // When called, you will send the public_token and the selected
+		    // account ID, metadata.account_id, to your backend app server.
+			$ionicLoading.show({
+	            template: 'Loading...'
+	        });
+		    $http.post('https://webhook-walletbuddies2.rhcloud.com/authenticate', {
+			    public_token: public_token,
+				account_id: metadata.account_id,
+				user: $rootScope.fbAuthData.uid,
+				type: "Debits"
+		    }).then(function(response) {
+			    console.log("Successful POST to webhooks server", response)
+			    $ionicLoading.hide();
+			    $ionicPopup.alert({
+	                title: "Success",
+	                template: "Your Bank Account was successfully setup for debits."
+	            });
+			    $state.go("tab.settings");
+		    }).catch(function(err) {
+			    console.log("Error making POST to webhooks server", err)
+		    })
+		    console.log('Public Token: ' + public_token);
+		    console.log('Customer-selected account ID: ' + metadata.account_id);
+		  },
+		  onExit: function() {
+		    // The user exited the Link flow.
+		    $state.go("tab.settings");
+		  },
+		});
+	   linkHandler.open();
+	});
+		
+/*
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
     var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid + "/Payments");
     var ref = new Firebase("https://walletbuddies.firebaseio.com");
-
-    // List of supported institutions
-    $scope.institutions = {
-        "banks": [{
-            "bank_name": "Ally",
-            "date": "2015-06-04T22:50:10.628919",
-            "id": "ally",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/ally.png",
-            "resource_uri": "/api/v2/bankstatus/11/",
-            "status": "Active"
-        }, {
-            "bank_name": "First Tennessee",
-            "date": "2015-06-04T22:50:11.579320",
-            "id": "firsttennessee",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/first_tn.png",
-            "resource_uri": "/api/v2/bankstatus/12/",
-            "status": "Active"
-        }, {
-            "bank_name": "TD Bank",
-            "date": "2015-06-04T22:50:14.312727",
-            "id": "td",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/td.png",
-            "resource_uri": "/api/v2/bankstatus/13/",
-            "status": "Active"
-        }, {
-            "bank_name": "BB&T Bank",
-            "date": "2015-06-04T22:50:14.316785",
-            "id": "bbt",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/bbt.png",
-            "resource_uri": "/api/v2/bankstatus/16/",
-            "status": "Active"
-        }, {
-            "bank_name": "Bank of America",
-            "date": "2015-06-04T22:50:00.069431",
-            "id": "bofa",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/bofa.png",
-            "resource_uri": "/api/v2/bankstatus/1/",
-            "status": "Active"
-        }, {
-            "bank_name": "Chase",
-            "date": "2015-06-04T22:50:00.073254",
-            "id": "chase",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/chase.png",
-            "resource_uri": "/api/v2/bankstatus/2/",
-            "status": "Active"
-        }, {
-            "bank_name": "Wells Fargo",
-            "date": "2015-06-04T22:50:00.076002",
-            "id": "wells",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/wells_fargo.png",
-            "resource_uri": "/api/v2/bankstatus/3/",
-            "status": "Active"
-        }, {
-            "bank_name": "Citibank",
-            "date": "2015-06-04T22:50:00.078971",
-            "id": "citi",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/citi.png",
-            "resource_uri": "/api/v2/bankstatus/4/",
-            "status": "Active"
-        }, {
-            "bank_name": "US Bank",
-            "date": "2015-06-04T22:50:00.081610",
-            "id": "us",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/usbank.png",
-            "resource_uri": "/api/v2/bankstatus/5/",
-            "status": "Active"
-        }, {
-            "bank_name": "USAA",
-            "date": "2015-06-04T22:50:00.084672",
-            "id": "usaa",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/usaa.png",
-            "resource_uri": "/api/v2/bankstatus/6/",
-            "status": "Active"
-        }, {
-            "bank_name": "Charles Schwab",
-            "date": "2015-06-04T22:50:00.087398",
-            "id": "schwab",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/charles_schwab.png",
-            "resource_uri": "/api/v2/bankstatus/7/",
-            "status": "Active"
-        }, {
-            "bank_name": "Capital One 360",
-            "date": "2015-06-04T22:50:00.090046",
-            "id": "capone360",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/cap360.png",
-            "resource_uri": "/api/v2/bankstatus/8/",
-            "status": "Active"
-        }, {
-            "bank_name": "PNC",
-            "date": "2015-06-04T22:50:00.092713",
-            "id": "pnc",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/pnc.png",
-            "resource_uri": "/api/v2/bankstatus/14/",
-            "status": "Active"
-        }, {
-            "bank_name": "Fidelity",
-            "date": "2015-06-04T22:50:00.095358",
-            "id": "fidelity",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/fidelity.png",
-            "resource_uri": "/api/v2/bankstatus/15/",
-            "status": "Active"
-        }, {
-            "bank_name": "Regions",
-            "date": "2015-06-04T22:50:04.796854",
-            "id": "regions",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/regionsbank.png",
-            "resource_uri": "/api/v2/bankstatus/9/",
-            "status": "Active"
-        }, {
-            "bank_name": "SunTrust",
-            "date": "2015-06-04T22:50:10.625099",
-            "id": "suntrust",
-            "logo": "https://s3.amazonaws.com/synapse_django/bank_logos/suntrust.png",
-            "resource_uri": "/api/v2/bankstatus/10/",
-            "status": "Active"
-        }]
-    }
     
     // Go to manual account setup
     $scope.account = function() {
         $state.go("tab.manual-account");
     };
+*/
 
+/*
     $scope.connect = function(user) {
         $ionicLoading.show({
             template: 'Loading..Hold tight.'
@@ -2706,6 +2688,55 @@ angular.module('starter.controllers', [])
 		    })
         })
     };
+*/
+})
+
+// Controller for tab-account-credit
+.controller('StripeConnectCtrl', function($scope, $state, $stateParams, $rootScope, $cipherFactory, $cordovaDevice, $firebaseArray, $cipherFactory, $http, $ionicLoading, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
+	
+	$scope.$on("$ionicView.enter", function(event, data){
+	   // Fire Plaid link when view loads
+	   var linkHandler = Plaid.create({
+		  selectAccount: true,
+		  env: 'tartan',
+		  clientName: 'WalletBuddies',
+		  key: 'fc5e88b3e3b80b99c42edd7c5357c5',
+		  product: 'auth',
+		  onLoad: function() {
+		    // The Link module finished loading.
+		  },
+		  onSuccess: function(public_token, metadata) {
+		    // The onSuccess function is called when the user has successfully
+		    // authenticated and selected an account to use.
+		    //
+		    // When called, you will send the public_token and the selected
+		    // account ID, metadata.account_id, to your backend app server.
+			$ionicLoading.show({
+	            template: 'Loading...'
+	        });
+		    $http.post('https://webhook-walletbuddies2.rhcloud.com/authenticate', {
+			    public_token: public_token,
+				account_id: metadata.account_id,
+				user: $rootScope.fbAuthData.uid,
+				type: "Credits"
+		    }).then(function(response) {
+			    console.log("Successful POST to webhooks server", response)
+			    $ionicLoading.hide();
+			    $state.go('tab.kyc-details');
+		    }).catch(function(err) {
+			    console.log("Error making POST to webhooks server", err)
+		    })
+		    console.log('Public Token: ' + public_token);
+		    console.log('Customer-selected account ID: ' + metadata.account_id);
+		  },
+		  onExit: function() {
+		    // The user exited the Link flow.
+		    $state.go("tab.settings");
+		  },
+		});
+	   linkHandler.open();
+	});
+  
 })
 
 // Controller for tab-Manual-Account
@@ -3051,194 +3082,148 @@ angular.module('starter.controllers', [])
 
     var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
 
-    // For selecting a photo
-    $scope.selectPicture = function() {
-        // Show the action sheet
-        var hideSheet = $ionicActionSheet.show({
-            buttons: [{
-                text: 'Choose Photo'
-            }, {
-                text: 'Take Photo'
-            }],
-            cancelText: 'Cancel',
-            cancel: function() {
-                // add cancel code..
-            },
-            buttonClicked: function(index) {
-                if (index == 0) {
-                    hideSheet();
-                    var options = {
-                        quality: 75,
-                        destinationType: Camera.DestinationType.DATA_URL,
-                        sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-                        allowEdit: true,
-                        encodingType: Camera.EncodingType.JPEG,
-                        targetWidth: 600,
-                        targetHeight: 600,
-                        popoverOptions: CameraPopoverOptions,
-                        saveToPhotoAlbum: false
-                    };
-
-                    $cordovaCamera.getPicture(options).then(function(imageData) {
-                        var image = document.getElementById('myImage');
-                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
-                        $scope.imageDoc = "data:image/jpeg;base64," + imageData;
-                    }, function(err) {
-                        $ionicLoading.show({
-                            template: 'No Photo Selected',
-                            duration: 1000
-                        });
-                    });
-                }
-
-                if (index == 1) {
-                    hideSheet();
-                    var options = {
-                        quality: 75,
-                        destinationType: Camera.DestinationType.DATA_URL,
-                        sourceType: Camera.PictureSourceType.CAMERA,
-                        allowEdit: true,
-                        encodingType: Camera.EncodingType.JPEG,
-                        targetWidth: 600,
-                        targetHeight: 600,
-                        popoverOptions: CameraPopoverOptions,
-                        saveToPhotoAlbum: false
-                    };
-
-                    $cordovaCamera.getPicture(options).then(function(imageData) {
-                        var image = document.getElementById('myImage');
-                        $scope.imageSrc = "data:image/jpeg;base64," + imageData;
-                        $scope.imageDoc = "data:image/jpeg;base64," + imageData;
-                    }, function(err) {
-                        $ionicLoading.show({
-                            template: 'No Photo Selected',
-                            duration: 1000
-                        });
-                    });
-                }
-            }
-        });
-    };
-
     $scope.validateUser = function(user) {
         // Check if user has uploaded a image
-        if ($scope.imageDoc == null) {
-            $ionicPopup.alert({
-                title: "Photo Needed",
-                template: "Please upload your photo to continue."
-            });
-        } else {
-            $ionicLoading.show({
-                template: 'Loading..Hold tight.'
-            });
-            fbRef.once("value", function(data) {
-                //Decipher oauth keys before POST
-                var oauth_key = $cipherFactory.decrypt(data.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().Payments.oauth.oauth_key.salt, data.val().Payments.oauth.oauth_key.iv);
-                console.log("USER IMAGE: " + $scope.imageDoc);
+        $ionicLoading.show({
+            template: 'Loading..Hold tight.'
+        });
+        // get host ip address of client
+		var json = 'http://ipv4.myexternalip.com/json';
+		$http.get(json).then(function(result) {
+			var ip = result.data.ip;
+	        $http.post('https://webhook-walletbuddies2.rhcloud.com/stripe-create-connect-account', {
+				user: $rootScope.fbAuthData.uid,
+				dob_day: user.day,
+			    dob_month: user.month,
+			    dob_year: user.year,
+			    address_line: user.street,
+			    address_postal: user.zip,
+			    address_city: user.city,
+			    address_state: user.state,
+			    ssn: user.ssn.toString(),
+			    ip: ip
+		    }).then(function(response) {
+			    console.log("Successful POST to webhooks server", response)
+			    $ionicLoading.hide();
+                $ionicPopup.alert({
+	                title: "Thanks! You're all set.",
+	                template: "Your Bank Account can now receive credits."
+	            });
+			    $state.go('tab.settings');
+		    }).catch(function(err) {
+			    console.log("Error making POST to webhooks server", err)
+		    })
+	    })
+	    
+        /*
+fbRef.once("value", function(data) {
+            //Decipher oauth keys before POST
+            var oauth_key = $cipherFactory.decrypt(data.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().Payments.oauth.oauth_key.salt, data.val().Payments.oauth.oauth_key.iv);
+            console.log("USER IMAGE: " + $scope.imageDoc);
 
-                $http.post('https://synapsepay.com/api/v3/user/doc/add', {
+            $http.post('https://synapsepay.com/api/v3/user/doc/add', {
+                'login': {
+                    'oauth_key': oauth_key
+                },
+                'user': {
+                    'doc': {
+                        'birth_day': user.day,
+                        'birth_month': user.month,
+                        'birth_year': user.year,
+                        'name_first': data.val().firstname,
+                        'name_last': data.val().lastname,
+                        'address_street1': user.street,
+                        'address_city': user.city,
+                        'address_postal_code': user.zip,
+                        'address_country_code': 'US',
+                        'document_value': user.ssn.toString(),
+                        'document_type': 'SSN',
+                    },
+                    'fingerprint': data.val().Payments.oauth.fingerprint
+                }
+            }).then(function(payload) {
+                console.log("KYC" + JSON.stringify(payload));
+                // POST for submitting user image
+                $http.post('https://synapsepay.com/api/v3/user/doc/attachments/add', {
                     'login': {
                         'oauth_key': oauth_key
                     },
                     'user': {
                         'doc': {
-                            'birth_day': user.day,
-                            'birth_month': user.month,
-                            'birth_year': user.year,
-                            'name_first': data.val().firstname,
-                            'name_last': data.val().lastname,
-                            'address_street1': user.street,
-                            //'address_city': user.city,
-                            'address_postal_code': user.zip,
-                            'address_country_code': 'US',
-                            'document_value': user.ssn.toString(),
-                            'document_type': 'SSN',
+                            'attachment': $scope.imageDoc
                         },
                         'fingerprint': data.val().Payments.oauth.fingerprint
                     }
-                }).then(function(payload) {
-                    console.log("KYC" + JSON.stringify(payload));
-                    // POST for submitting user image
-                    $http.post('https://synapsepay.com/api/v3/user/doc/attachments/add', {
-                        'login': {
-                            'oauth_key': oauth_key
-                        },
-                        'user': {
-                            'doc': {
-                                'attachment': $scope.imageDoc
-                            },
-                            'fingerprint': data.val().Payments.oauth.fingerprint
-                        }
-                    }).then(function(data) {
-                        console.log(data);
-                        console.log("DOCUMENT: " + JSON.stringify(data));
-                    }).catch(function(err) {
-                        if(typeof analytics !== 'undefined') {
-                            analytics.trackEvent('user/doc/attachments/add In KycCtrl', err.statusText, err.data.error.en, 1);
-                        }
-                        console.log(err);
-                        console.log(JSON.stringify(err));
-                        alert(err.statusText);
-                    });
-
-                    if (payload.data.http_code == "200") {
-                        fbRef.child("Payments").child("KYC").update({
-                            oid: payload.data.user._id.$oid,
-                            clientid: payload.data.user.client.id
-                        });
-                        $ionicLoading.hide();
-                        $ionicPopup.alert({
-                            title: "You're all set!",
-                            template: "Your verification is complete"
-                        });
-
-                        // Get a reference to the NewsFeed of the user
-                        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
-                        var dt = Date.now();
-                        var feedToPush = "Yay!! Your bank account was linked successfully!";
-
-                        // Append new data to this FB link
-                        fbNewsFeedRef.push({
-                            feed: feedToPush,
-                            icon: "ion-checkmark",
-                            color: "my-icon",
-                            time: dt
-                        });
-
-                        // Record entry into Account Verification Complete
-                        if(typeof analytics !== 'undefined') {
-                            analytics.trackView("Account Verification Complete");
-                            analytics.trackEvent('KycCtrl', 'Pass', 'In KycCtrl', 112);
-                        }
-
-                        $state.go("tab.settings");
-                    } else {
-                        $ionicLoading.hide();
-                        $ionicPopup.alert({
-                            title: "We need a little more info from you",
-                            template: "Please bear with us :)"
-                        });
-                        $rootScope.kycQuestions = payload.data;
-                        $state.go("tab.kyc-questions");
-                    }
+                }).then(function(data) {
+                    console.log(data);
+                    console.log("DOCUMENT: " + JSON.stringify(data));
                 }).catch(function(err) {
                     if(typeof analytics !== 'undefined') {
-                        analytics.trackEvent('/v3/user/doc/add In KycCtrl', err.statusText, err.data.error.en, 1);
+                        analytics.trackEvent('user/doc/attachments/add In KycCtrl', err.statusText, err.data.error.en, 1);
                     }
-                    $ionicLoading.hide();
-                    if (err.data.http_code == "409" || err.data.http_code == "401" && err.data.error.en != "Error verifying document. Please contact us to learn more.") {
-	                    $ionicPopup.alert({
-                            title: "We were unable to verify your SSN",
-                            template: "You need to provide a picture of your Drivers License or Passport!"
-                        });
-                        $state.go("tab.document-upload");
-                    } else {
-	                	alert(err.data.error.en);
-                    }
-                    console.log("Attachment" + JSON.stringify(err));
+                    console.log(err);
+                    console.log(JSON.stringify(err));
+                    alert(err.statusText);
                 });
+
+                if (payload.data.http_code == "200") {
+                    fbRef.child("Payments").child("KYC").update({
+                        oid: payload.data.user._id.$oid,
+                        clientid: payload.data.user.client.id
+                    });
+                    $ionicLoading.hide();
+                    $ionicPopup.alert({
+                        title: "You're all set!",
+                        template: "Your verification is complete"
+                    });
+
+                    // Get a reference to the NewsFeed of the user
+                    var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+                    var dt = Date.now();
+                    var feedToPush = "Yay!! Your bank account was linked successfully!";
+
+                    // Append new data to this FB link
+                    fbNewsFeedRef.push({
+                        feed: feedToPush,
+                        icon: "ion-checkmark",
+                        color: "my-icon",
+                        time: dt
+                    });
+
+                    // Record entry into Account Verification Complete
+                    if(typeof analytics !== 'undefined') {
+                        analytics.trackView("Account Verification Complete");
+                        analytics.trackEvent('KycCtrl', 'Pass', 'In KycCtrl', 112);
+                    }
+
+                    $state.go("tab.settings");
+                } else {
+                    $ionicLoading.hide();
+                    $ionicPopup.alert({
+                        title: "We need a little more info from you",
+                        template: "Please bear with us :)"
+                    });
+                    $rootScope.kycQuestions = payload.data;
+                    $state.go("tab.kyc-questions");
+                }
+            }).catch(function(err) {
+                if(typeof analytics !== 'undefined') {
+                    analytics.trackEvent('/v3/user/doc/add In KycCtrl', err.statusText, err.data.error.en, 1);
+                }
+                $ionicLoading.hide();
+                if (err.data.http_code == "409" || err.data.http_code == "401" && err.data.error.en != "Error verifying document. Please contact us to learn more.") {
+                    $ionicPopup.alert({
+                        title: "We were unable to verify your SSN",
+                        template: "You need to provide a picture of your Drivers License or Passport!"
+                    });
+                    $state.go("tab.document-upload");
+                } else {
+                	alert(err.data.error.en);
+                }
+                console.log("Attachment" + JSON.stringify(err));
             });
-        };
+        });
+*/
     };
 })
 

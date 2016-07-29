@@ -1,13 +1,16 @@
 var Firebase = require("firebase");
 var FirebaseTokenGenerator = require("firebase-token-generator");
 var forge = require('node-forge');
-var request = require('request');
+var request = require('request');	
 
-//var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + "simplelogin:10408/");
+var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + "simplelogin:10406/");
 var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
 var fbSynapse = new Firebase("https://walletbuddies.firebaseio.com/");
-
-console.log("User Reference: " + fbRef);
+var plaid = require('plaid');
+var stripe = require("stripe")(
+  "sk_test_eyqc7JcC2neCX9Bpnye9Oz5B" //Stripe API credentials
+);
+console.log("User Reference: " + fbUser);
 
 // Athenticate the server by giving admin access
 var tokenGenerator = new FirebaseTokenGenerator("vAn9n3WzAMnHv78E8dAoVboexbeCC3HqTm4kOGxl");
@@ -16,11 +19,212 @@ var token = tokenGenerator.createToken(
    {admin: true}
 );
 
+/*
+stripe.balance.retrieve(function(err, balance) {
+  // asynchronously called
+  if(err) {
+	  console.log("Stripe Balance Error", err)
+  } else {
+	  console.log("Stripe Balance", balance, Date.now())
+  }
+});
+*/
+
+/*
+stripe.customers.create(
+  {description: "example@stripe.com"},
+  {stripe_account: "acct_18Zy6YBIVH8maXc3"}, function(err, charge) {
+	  // asynchronously called
+	  if (err != null){
+		  console.log("Stripe Customer Error", err)
+	  } else {
+		  console.log("Customer Successfully Created", charge) 
+	  }
+});
+*/
+
+stripe.accounts.retrieve(
+	"acct_18Zy6YBIVH8maXc3", 
+	function(err, charge) {
+	  // asynchronously called
+	  if (err != null){
+		  console.log("Stripe Token Error", err)
+	  } else {
+		  console.log("Token Successfully Created", charge) 
+	  }
+	}
+)
+
+/*
+stripe.charges.create({
+	  amount: 100,
+	  currency: "usd",
+	  source: "cus_8sG5c6p9jyTCFR"
+}, function(err, charge) {
+	  // asynchronously called
+	  if (err != null){
+		  console.log("Stripe Charge Error", err)
+	  } else {
+		  console.log("Charge Successfully Created", charge) 
+	  }
+});
+*/
+
+// Log the error on Slack by doing a HTTP post request to the SLACK webhook
+/*
+var postData = {
+    "text": "*Error Object:* `" + "`\n *Error on user:* `" + "simplelogin:XXXX" + "`",
+    "username": "payments-server",
+    "icon_emoji": ":robot_face:"
+}
+
+var url = 'https://hooks.slack.com/services/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'
+var options = {
+    method: 'post',
+    body: postData,
+    json: true,
+    url: url
+}
+request(options, function(err, res, body) {
+    if (err) {
+        console.log("err: " + err);
+    } else {
+        console.log("Success: " + body);
+    }
+})
+*/
+var seconds = new Date().getTime()
+console.log("Stripe acc", Math.floor(Date.now() / 1000))
+
 fbRef.authWithCustomToken(token, function(error, authData) {
+	// Send out a push and remind users of circle start date
+    var fbCircle = new Firebase("https://walletbuddies.firebaseio.com/Circles/");
+    var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
+    var fbMessages = new Firebase("https://walletbuddies.firebaseio.com/Messages/"); 
     
-	var postData = {
+    /*
+fbUser.once('value', function(data) {
+	    console.log("Stripe acc", data.val().Stripe.stripe_bank_account_token)
+    })
+*/
+    /*fbCircle.once('value', function(data) {
+	    data.forEach(function(child) {
+		    console.log("Circle keys:", child.key());
+		    fbMessages.child(child.key()).update(
+			    child.val().Messages
+		    )
+	    });
+    	fbRef.child("Users").child("simplelogin:10406").once('value', function(userData) {
+            for(var i in data.val().contacts) {
+				var val = data.val().contacts[i];
+				//  Loop for removing symbols in phone numbers
+	            var str = val.phone.toString();
+	            var temp = str.replace(/\D/g, '');
+	            console.log("temp", str, temp);
+	            // Removing 1 from the phone number
+	            if (temp.length > 10) {
+	                var temp = temp.substring(1);
+	                var temp_int = parseInt(temp);
+	                var phone = temp_int;
+	            } else {
+		            var phone = temp;
+	            }
+				console.log("IF STMT", val.phone, userData.val().phonenumber);
+				if(userData.val().phonenumber == phone) {
+					fbRef.child("Circles").child("-K2yFOQtzqe3ZaBuREx8").child("contacts").child(i).remove();
+				}
+            };
+		});
+    });*/
+    var words = ["dell", "ledl", "abc", "cba"];
+    
+    for (var i in words) {
+	    console.log(i);
+    }
+    /*//For checking user balance
+    fbUser.child("Payments").once('value', function(data) {
+	//fbSynapse.child('SynapsePay').once('value', function(data) {		
+	    var cipher_text = data.val().oauth.oauth_key.cipher_text;
+	    var salt = data.val().oauth.oauth_key.salt;
+	    var iv = data.val().oauth.oauth_key.iv;
+	    console.log("TEXT, SALT, IV: " + cipher_text + "  " + salt + "  " + iv);
+	    // Decipher user's oauth key
+	    //function() {
+        var key = forge.pkcs5.pbkdf2("simplelogin:10406", forge.util.decode64(salt), 4, 16);
+        var decipher = forge.cipher.createDecipher('AES-CBC', key);
+        decipher.start({iv: forge.util.decode64(iv)});
+        decipher.update(forge.util.createBuffer(forge.util.decode64(cipher_text)));
+        decipher.finish();
+        var oauth_key = decipher.output.toString();
+        console.log("DECIPHER OUTPUT: " + oauth_key);
+                
+	    // Do a HTTP post request to the SynapsePay endpoint
+	    var postData = {
+	        'login': {
+	            'oauth_key': oauth_key
+	        },
+	        'user': {
+	            'fingerprint': 'suasusau21324redakufejfjsf'
+	        },
+	        'filter':{
+			    'type':'ACH-US'
+			}
+	    }
+	    
+	    var url = 'https://synapsepay.com/api/v3/node/show'
+	    var options = {
+	        method: 'post',
+	        body: postData,
+	        json: true,
+	        url: url
+	    }
+	
+	    request(options, function(err, res, body) {
+	        if (body.success == false) {
+	            console.log("Got an error in transaction");
+	            console.log("Error Object:", JSON.stringify(body));
+	            
+	            // Log the error on Slack by doing a HTTP post request to the SLACK webhook
+			    var postData = {
+			        "text": "*Error Object:* `" + JSON.stringify(body) + "`\n *Error on user:* `" + "simplelogin:XXXX" + "`",
+			        "username": "payments-server",
+			        "icon_emoji": ":robot_face:"
+			    }
+			    
+			    var url = 'https://hooks.slack.com/services/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'
+			    var options = {
+			        method: 'post',
+			        body: postData,
+			        json: true,
+			        url: url
+			    }
+		        request(options, function(err, res, body) {
+			        if (err) {
+				        console.log("err: " + err);
+			        } else {
+				        console.log("Success: " + body);
+			        }
+		        })
+	        }
+	        else {
+		        //console.log("TRANSACTION RES: " + JSON.stringify(res));
+		        console.log("TRANSACTION BODY: " + JSON.stringify(body));
+		        console.log("User OIDs = " + body.nodes[0]._id.$oid, data.val().Bank.oid);
+		        for(var i = 0; i < body.nodes.length; i++){
+			        console.log("Hi", body.nodes[i]._id.$oid);
+			        if (body.nodes[i]._id.$oid == data.val().Bank.oid) {
+				        var balance = body.nodes[i].info.balance.amount;
+				        break;
+			        }
+		        }
+		        console.log("User balance = " + balance);
+	        }
+	    });
+	});*/
+    
+	/*var postData = {
 	    'login': {
-	        'oauth_key': 'oauth-f29ee1e5-68b7-407c-8dd4-f2e87e02cc7c'
+	        'oauth_key': 'oauth-1a2fb3ff-26b5-40c1-95b0-4444559328bc'
 	    },
 	    'user': {
 	        'fingerprint': 'suasusau21324redakufejfjsf'
@@ -49,7 +253,7 @@ fbRef.authWithCustomToken(token, function(error, authData) {
 	        'extra': {
 	            'supp_id': '1283764wqwsdd34wd13212',
 	            'note': 'Debited from WB user ',
-	            'webhook': 'http://requestb.in/1ks130f1',
+	            'webhook': 'webhook-walletbuddies2.rhcloud.com/hello',
 	            'process_on': 0,
 	            'ip': '192.168.1.1',
 	        },
@@ -81,8 +285,9 @@ fbRef.authWithCustomToken(token, function(error, authData) {
         console.log("Response: " + JSON.stringify(res));
         console.log("Body: " + JSON.stringify(body));
 
-    });
-                         
+    });*/
+         
+                    
 	
 	/*var fbCircles = new Firebase("https://walletbuddies.firebaseio.com/").child("Circles");
     var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
@@ -205,6 +410,8 @@ fbRef.authWithCustomToken(token, function(error, authData) {
 	    salt: forge.util.encode64(salt), 
 	    iv: forge.util.encode64(iv)
 	});*/
+	
+	
 	/*
 	//fbRef.child("Payments").once('value', function(data) {
 	fbSynapse.child('SynapsePay').once('value', function(data) {

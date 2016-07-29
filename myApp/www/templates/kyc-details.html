@@ -4,7 +4,8 @@
     	<p align="center" style="color: #595858"><b>We need the following information for verifying your identity. This is to be compliant with fraud prevention laws.</b></p>
     	<br>
     	<div class="card">
-	    	<div class="item item-divider item-text-wrap">
+	    	<!--
+<div class="item item-divider item-text-wrap">
                 Upload your picture
             </div>
             <label class="item item-avatar" ng-click="selectPicture()">
@@ -12,6 +13,7 @@
               <h2>Has to be your picture</h2>
 		      <p>Add photo</p>
             </label>
+-->
             <div class="item item-divider item-text-wrap">
                 Date of birth
             </div>
@@ -34,13 +36,16 @@
                 Address
             </div>
             <label class="item item-input">
-                <input ng-model="user.street" type="text" placeholder="Street" ng-required="true">
+                <input ng-model="user.street" type="text" placeholder="123 Wallet Ave" ng-required="true">
             </label>
             <label class="item item-input">
-                <input ng-model="user.city" type="text" placeholder="City" ng-required="true">
+                <input ng-model="user.city" type="text" placeholder="San Francisco" ng-required="true">
             </label>
             <label class="item item-input">
-                <input ng-model="user.zip" type="tel" placeholder="Zipcode" ng-required="true">
+                <input ng-model="user.state" type="text" placeholder="CA" ng-required="true">
+            </label>
+            <label class="item item-input">
+                <input ng-model="user.zip" type="tel" placeholder="94087" ng-required="true">
             </label>
         </div>
         <br>

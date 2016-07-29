@@ -617,6 +617,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         }
     })
     
+    .state('tab.account-credit', {
+        url: '/account',
+        views: {
+            'tab-settings': {
+                templateUrl: 'templates/tab-account-credit.html',
+                controller: 'StripeConnectCtrl'
+            }
+        }
+    })
+    
     .state('tab.manual-account', {
         url: '/manual-account',
         views: {

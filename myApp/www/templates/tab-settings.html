@@ -19,14 +19,25 @@
           </label>
 		  <a ng-click="account()" class="item item-icon-left">
 		    <i class="icon ion-card"></i>
-            <div ng-if="!data.Payments.Bank.account_num || !data.Payments.KYC.oid">
-		        Link your bank account
+            <div class="item-text-wrap" ng-if="!data.Stripe.Debits.stripe_bank_account_token || !data.Stripe.Debits.customer_id">
+		        Setup Your Bank Account For Debits
             </div>
-            <div ng-if="data.Payments.Bank.account_num && data.Payments.KYC.oid">
-                Edit your bank account
+            <div ng-if="data.Stripe.Debits.stripe_bank_account_token || data.Stripe.Debits.customer_id">
+                Change Your Bank Account
             </div>
-		    <p ng-if="data.Payments.Bank.account_num && data.Payments.KYC.oid">Linked Account: xxxx-xxxx-{{data.Payments.Bank.account_num}}</p>
-		    <p ng-if="!data.Payments.Bank.account_num || !data.Payments.KYC.oid">No account linked</p>
+		    <p ng-if="data.Stripe.Debits.stripe_bank_account_token || data.Stripe.Debits.customer_id" style="color: #62ce6b">Status: Debits Enabled</p>
+		    <p ng-if="!data.Stripe.Debits.stripe_bank_account_token || !data.Stripe.Debits.customer_id" style="color: red">Status: No Account Linked</p>
+		  </a>
+		  <a ng-click="accountCredit()" class="item item-icon-left">
+		    <i class="icon ion-cash"></i>
+            <div class="item-text-wrap" ng-if="!data.Stripe.Credits.stripe_bank_account_token || !data.Stripe.Credits.stripe_connect_account_id">
+		        Setup Your Bank Account For Receiving Credits
+            </div>
+            <div ng-if="data.Stripe.Credits.stripe_bank_account_token && data.Stripe.Credits.stripe_connect_account_id">
+                Change Your Bank Account
+            </div>
+		    <p ng-if="data.Stripe.Credits.stripe_bank_account_token && data.Stripe.Credits.stripe_connect_account_id" style="color: #62ce6b">Status: Credits Enabled</p>
+		    <p ng-if="!data.Stripe.Credits.stripe_bank_account_token || !data.Stripe.Credits.stripe_connect_account_id" style="color: red">Status: No Account Linked</p>
 		  </a>
 		  <a ng-click="newPassword()" class="item item-icon-left">
 		    <i class="icon ion-ios7-unlocked"></i>
