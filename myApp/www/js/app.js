@@ -22,7 +22,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 
         // Set up Google Analytics(with the ID)
         if(typeof analytics !== undefined) {
-            analytics.startTrackerWithId("UA-68986040-1");
+//             analytics.startTrackerWithId("UA-68986040-1");
         } else {
             console.log("Google Analytics Unavailable");
         }
