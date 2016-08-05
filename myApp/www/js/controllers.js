@@ -1948,11 +1948,8 @@ angular.module('starter.controllers', [])
         fbCallback.fetch(fbCircles, function(output) {
             var pendingCircleVal = output;
 
-            // Get the reference for the push
-            var fbPendingCirclePushRef = fbUserPendingCircles.push();
-
             // Update the location(temporary cache)
-            fbPendingCirclePushRef.update(pendingCircleVal);
+            fbUserPendingCircles.child(data.key).update(pendingCircleVal);
         });
     });
 
@@ -2156,7 +2153,7 @@ angular.module('starter.controllers', [])
 	                if (data.val().AcceptedMembers.hasOwnProperty(uid)) {
 	                    fbPush.push({
 		                    uid: uid,
-							message: "WalletBuddies" + ' @ ' + data.val().circleName + ': ' + userData.val().firstname + " has declined the invite to the " + circle.val().circleName + " circle.",
+							message: "WalletBuddies" + ' @ ' + data.val().circleName + ': ' + userData.val().firstname + " has declined the invite to the " + data.val().circleName + " circle.",
 							payload: $stateParams.circleID,
 							tab: "chat"
 	                	});
