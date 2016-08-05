@@ -203,7 +203,7 @@ img.circle-profile-pic{
 .chat-bubble.left {
   background-color: #e6e5eb;
   float: left;
-  margin-left: 55px; }
+  margin-left: 10px; }
 
 .chat-bubble.left:before {
   background-color: #e6e5eb;
@@ -214,7 +214,7 @@ img.circle-profile-pic{
   background-color: #158ffe;
   color: #fff;
   float: right;
-  margin-right: 55px; }
+  margin-right: 10px; }
 
 .chat-bubble.right:before {
   background-color: #158ffe;

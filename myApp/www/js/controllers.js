@@ -3,22 +3,24 @@ angular.module('starter.controllers', [])
 // Controller for Launch page
 .controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory, fbCallback, $ionicLoading) {
     $scope.$on('$ionicView.beforeEnter', function() {
-        var ref = new Firebase("https://walletbuddies.firebaseio.com/");
-        var authData = ref.getAuth();
-
-        if (authData) {
-            console.log("Authenticated user with uid: ", authData.uid);
-
-            // Saving auth data to be used across controllers
-            $rootScope.fbAuthData = authData;
-
-            // Switch to the Wallet Tab
-            $state.go('tab.wallet');
-        } else {
-            //$ionicHistory.clearCache();
+        var ref = firebase.auth();
+        var authData = ref.onAuthStateChanged;
+        
+		ref.onAuthStateChanged(function(authData) {
+		    //$ionicHistory.clearCache();
             //$ionicHistory.clearHistory();
-            console.log("Not authenticated");
-        }
+            console.log("Not authenticated", authData);
+            
+		    if (authData) {
+		        console.log("Authenticated user with uid: ", authData.uid);
+
+	            // Saving auth data to be used across controllers
+	            $rootScope.fbAuthData = authData;
+	
+	            // Switch to the Wallet Tab
+	            $state.go('tab.wallet');
+		    }
+		});
     });
 })
 
@@ -50,7 +52,7 @@ angular.module('starter.controllers', [])
 	            console.log("All fields entered");
 
 	            // Get a reference to the Firebase account
-	            var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+	            var fbRef = firebase.database().ref();
 	            // Validating if phone number has 10 digits
 	            if (account.phonenumber.length > 10) {
 	                $ionicPopup.alert({
@@ -138,13 +140,13 @@ angular.module('starter.controllers', [])
 	                            console.log("ID after encode: " + id);
 
 	                            // Write the user's unique hash to registered users and save his UID
-	                            var fbHashRef = new Firebase(fbRef + "/RegisteredUsers/");
+	                            var fbHashRef = firebase.database().ref("/RegisteredUsers/");
 	                            fbHashRef.child(id).update({
 	                                uid: authData.uid
 	                            });
 
 	                            // Check to see if user has invites
-	                            var fbInvites = new Firebase(fbRef + "/Invites/" + id);
+	                            var fbInvites = firebase.database().ref("/Invites/" + id);
 	                            if (fbInvites != null) {
 	                                var obj = $firebaseObject(fbInvites);
 
@@ -281,7 +283,7 @@ angular.module('starter.controllers', [])
 
 								var dt = Date.now();
 	                            // Get a reference to the NewsFeed of the user
-	                            var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+	                            var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
 								fbRef.child("Users").child($rootScope.fbAuthData.uid).child('Badges').update({
 						            walletCounter: 0,
@@ -372,7 +374,7 @@ angular.module('starter.controllers', [])
 
 // Controller for Forgot Password
 .controller('ForgotPassCtrl', function($scope, $state, $rootScope, fbCallback, $ionicPopup) {
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    var fbRef = firebase.database().ref();
 
     $scope.sendTempPassword = function() {
         fbRef.resetPassword({
@@ -414,7 +416,7 @@ angular.module('starter.controllers', [])
 
 // Controller for Reset Password
 .controller('ResetPassCtrl', function($scope, $state, $rootScope, fbCallback, $ionicPopup) {
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    var fbRef = firebase.database().ref();
 
     $scope.passwordChange = function() {
         fbRef.changePassword({
@@ -459,8 +461,9 @@ angular.module('starter.controllers', [])
             $ionicHistory.clearCache();
             //$ionicHistory.clearHistory();
         });
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
-
+        var fbRef = firebase.database().ref();
+		var auth = firebase.auth();
+		
         $scope.user = {
             email: "",
             password: ""
@@ -494,110 +497,106 @@ angular.module('starter.controllers', [])
             }
 
             // Authorize the user with email/password
-            fbRef.authWithPassword({
-                    email: email,
-                    password: password
-                },
-                function(error, authData) {
-                    if (error) {
-                        if(typeof analytics !== 'undefined') {
-                            analytics.trackEvent('Login Error', 'Username or password incorrect', 'In SignInCtrl', error);
-                        }
-                        $ionicLoading.hide();
-                        $ionicPopup.alert({
-                            title: "Login Error",
-                            template: "Username or password is incorrect. Please try again."
+            auth.signInWithEmailAndPassword(email, password)
+            	.then(function(authData) {
+                    // Saving auth data to be used across controllers
+                    $rootScope.fbAuthData = authData;
+                    $rootScope.email = email;
+					console.log("Auth Success", authData)
+                    // Hard coded to be false
+                    if (false) {
+                        var fbInvites = firebase.database().ref("/Invites/" + token);
+                        console.log("Token Hmmm: " + token);
+
+                        // Use the user's email address and set the id length to be 4
+                        hashids = new Hashids("first@last.com", 4);
+
+                        // Hard code the invite code for now
+                        //var inviteEntered = "8wXlb6w";
+
+                        // Use the user's phone number(hard coded for now)
+                        //var decodedID = hashids.decode(inviteEntered);
+
+                        //console.log("DecodedID:" + decodedID);
+
+                        // Retrieve all the invites and compare it against the code
+                        fbInvites.on("child_added", function(snapshot) {
+                            var inviteVal = snapshot.val();
+                            var inviteKey = snapshot.key;
+                            console.log("Key:" + inviteKey);
+                            console.log("inviteval().inviteCode = " + inviteKey + " Val: " + inviteVal[0]);
+
+                            //if(token == inviteKey) {//&& (decodedID == "1234567891")){
+                            console.log("CircleID: " + inviteval().circleID);
+                            //console.log("GroupName: " + inviteval().circleName);
+
+                            // Copy the circle ID
+                            circleIDMatched = inviteval().circleID;
+
+                            // Get the link to the Circles of the User
+                            var fbCircle = firebase.database().ref("/Circles/");
+
+                            // Create an array which stores all the information
+                            var circlesArray = [];
+                            var loopCount = 0;
+
+                            // Retrieve all the social circles under this user
+                            // Note: This callback occurs repeatedly till all the "children" are parsed
+                            fbCircle.on("child_added", function(snapshot) {
+                                var circleVal = snapshot.val();
+
+                                // Display the Circle which matched
+                                if (circleval().circleID == circleIDMatched) {
+                                    circlesArray.push(circleVal)
+                                    console.log("Name: " + circlesArray[loopCount].circleName);
+                                    console.log("GroupID: " + circlesArray[loopCount].circleID);
+                                    console.log("Plan: " + circlesArray[loopCount].plan);
+                                    console.log("Amount: " + circlesArray[loopCount].amount);
+                                    console.log("Message: " + circlesArray[loopCount].groupMessage);
+                                    loopCount++;
+                                    console.log("Number of circles:" + loopCount);
+                                }
+
+                                // Code for deleting the invite after providing access
+                                //var fbInvite = firebase.database().ref("/Invites/" + inviteKey);
+                                //fbInvite.remove();
+                            });
+
+                            // Length will always equal count, since snap.val will include every child_added event
+                            // triggered before this point
+                            fbCircle.once("value", function(snap) {
+                                // Use the setter and set the value so that it is accessible to another controller
+                                Circles.set(circlesArray);
+                                $ionicLoading.hide();
+                                // The data is ready, switch to the Wallet tab
+                                $state.go('tab.wallet');
+                            });
+                            //}
                         });
                     } else {
-                        // Saving auth data to be used across controllers
-                        $rootScope.fbAuthData = authData;
-                        $rootScope.email = email;
+                        $ionicLoading.hide();
 
-                        // Hard coded to be false
-                        if (false) {
-                            var fbInvites = new Firebase(fbRef + "/Invites/" + token);
-                            console.log("Token Hmmm: " + token);
-
-                            // Use the user's email address and set the id length to be 4
-                            hashids = new Hashids("first@last.com", 4);
-
-                            // Hard code the invite code for now
-                            //var inviteEntered = "8wXlb6w";
-
-                            // Use the user's phone number(hard coded for now)
-                            //var decodedID = hashids.decode(inviteEntered);
-
-                            //console.log("DecodedID:" + decodedID);
-
-                            // Retrieve all the invites and compare it against the code
-                            fbInvites.on("child_added", function(snapshot) {
-                                var inviteVal = snapshot.val();
-                                var inviteKey = snapshot.key();
-                                console.log("Key:" + inviteKey);
-                                console.log("inviteVal.inviteCode = " + inviteKey + " Val: " + inviteVal[0]);
-
-                                //if(token == inviteKey) {//&& (decodedID == "1234567891")){
-                                console.log("CircleID: " + inviteVal.circleID);
-                                //console.log("GroupName: " + inviteVal.circleName);
-
-                                // Copy the circle ID
-                                circleIDMatched = inviteVal.circleID;
-
-                                // Get the link to the Circles of the User
-                                var fbCircle = new Firebase(fbRef + "/Circles/");
-
-                                // Create an array which stores all the information
-                                var circlesArray = [];
-                                var loopCount = 0;
-
-                                // Retrieve all the social circles under this user
-                                // Note: This callback occurs repeatedly till all the "children" are parsed
-                                fbCircle.on("child_added", function(snapshot) {
-                                    var circleVal = snapshot.val();
-
-                                    // Display the Circle which matched
-                                    if (circleVal.circleID == circleIDMatched) {
-                                        circlesArray.push(circleVal)
-                                        console.log("Name: " + circlesArray[loopCount].circleName);
-                                        console.log("GroupID: " + circlesArray[loopCount].circleID);
-                                        console.log("Plan: " + circlesArray[loopCount].plan);
-                                        console.log("Amount: " + circlesArray[loopCount].amount);
-                                        console.log("Message: " + circlesArray[loopCount].groupMessage);
-                                        loopCount++;
-                                        console.log("Number of circles:" + loopCount);
-                                    }
-
-                                    // Code for deleting the invite after providing access
-                                    //var fbInvite = new Firebase(fbRef + "/Invites/" + inviteKey);
-                                    //fbInvite.remove();
-                                });
-
-                                // Length will always equal count, since snap.val() will include every child_added event
-                                // triggered before this point
-                                fbCircle.once("value", function(snap) {
-                                    // Use the setter and set the value so that it is accessible to another controller
-                                    Circles.set(circlesArray);
-                                    $ionicLoading.hide();
-                                    // The data is ready, switch to the Wallet tab
-                                    $state.go('tab.wallet');
-                                });
-                                //}
-                            });
-                        } else {
-                            $ionicLoading.hide();
-
-                            // Record entry into Sign In Controlller
-                            if(typeof analytics !== 'undefined') {
-                                analytics.trackView("Sign In Controller");
-                                analytics.trackEvent('SignInCtrl', 'Pass', 'In SignInCtrl', 103);
-                            }
-
-                            // Switch to the Wallet tab
-                            $state.go('tab.wallet');
+                        // Record entry into Sign In Controlller
+                        if(typeof analytics !== 'undefined') {
+                            analytics.trackView("Sign In Controller");
+                            analytics.trackEvent('SignInCtrl', 'Pass', 'In SignInCtrl', 103);
                         }
+
+                        // Switch to the Wallet tab
+                        $state.go('tab.wallet');
                     }
-                }
-            );
+                })
+                .catch(function(error) {
+	                if(typeof analytics !== 'undefined') {
+                        analytics.trackEvent('Login Error', 'Username or password incorrect', 'In SignInCtrl', error);
+                    } 
+                    $ionicLoading.hide();
+                    console.log("Login Error", error)
+                    $ionicPopup.alert({
+                        title: "Login Error",
+                        template: "Username or password is incorrect. Please try again."
+                    });
+                })
         }
 
         // Clear the forms
@@ -608,7 +607,33 @@ angular.module('starter.controllers', [])
 
 // Controller for submitting social circle form
 .controller('GroupCtrl', function($scope, $cordovaCamera, $ionicActionSheet, $ionicLoading, $firebaseObject, $ionicModal, ContactsService, fbCallback, $cordovaContacts, $ionicScrollDelegate, $rootScope, $state, $log, $ionicPopup, $ionicFilterBar, $stateParams) {
-
+	
+	var storageRef = firebase.storage().ref();
+	
+	function base64toBlob(b64Data, contentType) {
+	  contentType = contentType || '';
+	  sliceSize = 512;
+	  var newb64 = b64Data.replace(/\s/g, "")
+	  var byteCharacters = atob(newb64);
+	  var byteArrays = [];
+	
+	  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+	    var slice = byteCharacters.slice(offset, offset + sliceSize);
+	
+	    var byteNumbers = new Array(slice.length);
+	    for (var i = 0; i < slice.length; i++) {
+	      byteNumbers[i] = slice.charCodeAt(i);
+	    }
+	
+	    var byteArray = new Uint8Array(byteNumbers);
+	
+	    byteArrays.push(byteArray);
+	  }
+	
+	  var blob = new Blob(byteArrays, {type: contentType});
+	  return blob;
+	}
+	
     // For selecting a photo
     $scope.selectPicture = function() {
         // Show the action sheet
@@ -640,6 +665,21 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        var blob = base64toBlob(imageData, "image/jpeg")
+                        var uploadTask = storageRef.child('Circles/Users/'+ $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
+                        uploadTask.on('state_changed', function(snapshot){
+						  // Observe state change events such as progress, pause, and resume
+						  // See below for more detail
+						}, function(error) {
+						  // Handle unsuccessful uploads
+						  $ionicLoading.show({
+                            template: 'We had trouble uploading your photo. Please try later.',
+                            duration: 2000
+                          });
+						}, function() {
+						  // Handle successful uploads on complete
+						  $scope.imageUrl = uploadTask.snapshot.downloadURL;
+						});
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -664,6 +704,21 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        var blob = base64toBlob(imageData, "image/jpeg")
+                        var uploadTask = storageRef.child('Circles/Users/'+ $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
+                        uploadTask.on('state_changed', function(snapshot){
+						  // Observe state change events such as progress, pause, and resume
+						  // See below for more detail
+						}, function(error) {
+						  // Handle unsuccessful uploads
+						  $ionicLoading.show({
+                            template: 'We had trouble uploading your photo. Please try later.',
+                            duration: 2000
+                          });
+						}, function() {
+						  // Handle successful uploads on complete
+						  $scope.imageUrl = uploadTask.snapshot.downloadURL;
+						});
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -795,19 +850,19 @@ angular.module('starter.controllers', [])
             // Do nothing
         } else {
             // Get a reference to the Firebase account
-            var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+            var fbRef = firebase.database().ref();
 
             // Get the link to the Circles of the User
-            var fbCircle = new Firebase(fbRef + "/Circles/");
+            var fbCircle = firebase.database().ref("/Circles/");
 
             // Get the link to the user profile
-            var fbProfile = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
+            var fbProfile = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
 
             // Get the reference for the push
             var fbCirclePushRef = fbCircle.push();
 
             // Get the unique ID generated by push()
-            var groupID = fbCirclePushRef.key();
+            var groupID = fbCirclePushRef.key;
             if ($scope.data.selectedContacts.length == 0) {
                 $ionicPopup.alert({
                     title: "No contacts selected",
@@ -844,10 +899,11 @@ angular.module('starter.controllers', [])
                     amount: amount,
                     groupMessage: groupMessage,
                     contacts: $scope.data.selectedContacts,
-                    circlePhoto: $scope.imageSrc,
+                    circlePhoto: $scope.imageUrl,
                     circleType: circleType,
                     circleComplete: false,
-                    circleCancelled: false
+                    circleCancelled: false,
+                    requestsExpired: false
                 });
 
                 // Initialize the counter under CreditDates of the Circle
@@ -876,15 +932,14 @@ angular.module('starter.controllers', [])
                 });
 
                 // Get the reference for the push
-                var fbAcceptedMembers = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers");
-                var fbAcceptedMembersPushRef = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers").push();
-                var fbUser = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
+                var fbAcceptedMembers = firebase.database().ref("/Circles/" + groupID + "/AcceptedMembers/" + $rootScope.fbAuthData.uid);
+                var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
                 fbUser.once("value", function(userData) {
                     // Store the user information
                     // 'Singular': This group type has an admin
                     // 'Regular': This group doesn't have an admin(may be in the future)
                     if (circleType == 'Singular') {
-                        fbAcceptedMembersPushRef.update({
+                        fbAcceptedMembers.update({
                             admin: true,
                             firstName: userData.val().firstname,
                             lastName: userData.val().lastname,
@@ -893,7 +948,7 @@ angular.module('starter.controllers', [])
                             profilePhoto: userData.val().profilePhoto
                         });
                     } else {
-                        fbAcceptedMembersPushRef.update({
+                        fbAcceptedMembers.update({
                             admin: false,
                             firstName: userData.val().firstname,
                             lastName: userData.val().lastname,
@@ -920,7 +975,7 @@ angular.module('starter.controllers', [])
                 }
 
                 // Save the timestamp to trigger the circle-start-scheduler
-                var date = Firebase.ServerValue.TIMESTAMP;
+                var date = firebase.database.ServerValue.TIMESTAMP;
                 console.log("Firebase.ServerValue.TIMESTAMP @ STARTDATE-test" + date);
                 fbRef.child('StartDate-test').push({
                     date: date,
@@ -942,7 +997,7 @@ angular.module('starter.controllers', [])
                         console.log("ID after encode: " + id);
 
                         // Get the link to the Registered User
-                        var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
+                        var fbHash = firebase.database().ref("/RegisteredUsers/" + id);
                         console.log("User LINK: " + fbHash);
 
                         // Callback function to obtain user info
@@ -976,7 +1031,7 @@ angular.module('starter.controllers', [])
                             else {
                                 console.log("Invited user is not registered, push email invites.");
                                 // Get the link to the Registered User
-                                var fbInvites = new Firebase(fbRef + "/Invites/" + id);
+                                var fbInvites = firebase.database().ref("/Invites/" + id);
 
                                 // Save the CircleId under Invites and Push the invite
                                 fbInvites.push({
@@ -1035,7 +1090,7 @@ angular.module('starter.controllers', [])
                 });
 
                 // Get a reference to the NewsFeed of the user
-                var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+                var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
                 var dt = Date.now();
                 var feedToPush = "You created a new circle <b>" + groupName + "</b>.";
 
@@ -1064,7 +1119,7 @@ angular.module('starter.controllers', [])
 .controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray, $http, $firebaseObject, $ionicLoading) {
     // Check if user has linked a bank account before he can start a circle
     $scope.newCircle = function() {
-        var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid + "/Payments");
+        var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Payments");
         fbUser.once("value", function(data) {
             // Check if user's bank account is linked and KYC verified
             if (data.child("Bank").exists() && data.child("KYC").exists()) {
@@ -1092,13 +1147,13 @@ angular.module('starter.controllers', [])
     console.log("IDesh: " + $scope.id);
 
     // Get a reference to the Firebase account
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    var fbRef = firebase.database().ref();
 
     // Get a reference to where the User's circle IDs are stored
-    var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+    var fbUserCircle = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
 
     // Get a reference to where the User's accepted circles are going to be stored
-    var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+    var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 
     // Delete all the accepted circles cached data
     // NOTE: This needs to be removed after all our users download the latest
@@ -1111,7 +1166,7 @@ angular.module('starter.controllers', [])
     // Obtain list of circle IDs with a "true" status
     // NOTE: This callback gets called on a 'child_added' event.
     fbCallback.childAdded(fbUserCircle, true, function(data) {
-        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+        var fbCircles = firebase.database().ref("/Circles/" + data.key);
 
         // Obtain circle data for the accepted circles
         fbCallback.fetch(fbCircles, function(output) {
@@ -1120,7 +1175,7 @@ angular.module('starter.controllers', [])
             console.log(acceptedCircleVal);
 
             // Get the reference for the push
-            var fbAcceptedCirclePushRef = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + data.key());
+            var fbAcceptedCirclePushRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + data.key);
 
             // Update the location(temporary cache)
             fbAcceptedCirclePushRef.update(acceptedCircleVal);
@@ -1130,7 +1185,7 @@ angular.module('starter.controllers', [])
     // Obtain list of circle IDs with a "true" status
     // NOTE: This callback gets called on a 'child_removal'	event.
     fbCallback.childRemoved(fbUserCircle, true, function(data) {
-        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+        var fbCircles = firebase.database().ref("/Circles/" + data.key);
 
         // Obtain circle data for the pending circles
         fbCallback.fetch(fbCircles, function(output) {
@@ -1139,8 +1194,8 @@ angular.module('starter.controllers', [])
             // Check for the Pending Circle which went from Pending to Accepted/Rejected
             // and remove the corresponding entry in the "cache"
             fbUserAcceptedCircles.on('child_added', function(snapshot) {
-                if (snapshot.val().circleName == acceptedCircleVal.circleName) {
-                    var fbAcceptedRemove = new Firebase(fbUserAcceptedCircles + "/" + snapshot.key());
+                if (snapshot.val().circleName == acceptedCircleval().circleName) {
+                    var fbAcceptedRemove = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + snapshot.key);
                     console.log("Removal:" + fbAcceptedRemove);
                     fbAcceptedRemove.remove();
                 }
@@ -1152,16 +1207,45 @@ angular.module('starter.controllers', [])
 // Controller for wallet-detail page
 .controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $cordovaCamera, $ionicScrollDelegate, $ionicActionSheet, $ionicLoading, $cordovaContacts, $ionicModal, $rootScope, $state, $ionicPopup, $firebaseArray, fbCallback) {
     // Get a reference to the Firebase account
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
-    var fbCircles = new Firebase(fbRef + "/Circles/" + $stateParams.circleID);
-    var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID);
+    var fbRef = firebase.database().ref();
+    var fbCircles = firebase.database().ref("/Circles/" + $stateParams.circleID);
+
+	// Create a storage reference from firebase storage service
+	var storageRef = firebase.storage().ref();	
+    
+    var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID);
     // Get the link to the user profile
-    var fbProfile = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
+    var fbProfile = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
     var obj = $firebaseObject(fbCircles);
     $scope.id = $rootScope.fbAuthData.uid;
-
+    
     obj.$bindTo($scope, "circle");
-
+    
+	console.log("$firebaseArray(fbCircles)", obj, obj.$id)	
+	function base64toBlob(b64Data, contentType) {
+	  contentType = contentType || '';
+	  sliceSize = 512;
+	  var newb64 = b64Data.replace(/\s/g, "")
+	  var byteCharacters = atob(newb64);
+	  var byteArrays = [];
+	
+	  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+	    var slice = byteCharacters.slice(offset, offset + sliceSize);
+	
+	    var byteNumbers = new Array(slice.length);
+	    for (var i = 0; i < slice.length; i++) {
+	      byteNumbers[i] = slice.charCodeAt(i);
+	    }
+	
+	    var byteArray = new Uint8Array(byteNumbers);
+	
+	    byteArrays.push(byteArray);
+	  }
+	
+	  var blob = new Blob(byteArrays, {type: contentType});
+	  return blob;
+	}
+	
     // For selecting a profile photo
     $scope.selectPicture = function() {
         // Show the action sheet
@@ -1184,8 +1268,8 @@ angular.module('starter.controllers', [])
                         sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
                         allowEdit: true,
                         encodingType: Camera.EncodingType.JPEG,
-                        targetWidth: 600,
-                        targetHeight: 600,
+                        targetWidth: 400,
+                        targetHeight: 400,
                         popoverOptions: CameraPopoverOptions,
                         saveToPhotoAlbum: false
                     };
@@ -1193,9 +1277,29 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
-                        fbCircles.update({
-                            circlePhoto: $scope.imageSrc
-                        });
+                        var blob = base64toBlob(imageData, "image/jpeg")
+                        var uploadTask = storageRef.child('Circles/' + $stateParams.circleID + "/CirclePhoto.jpg").put(blob);
+                        
+                        uploadTask.on('state_changed', function(snapshot){
+						  // Observe state change events such as progress, pause, and resume
+						  // See below for more detail
+						}, function(error) {
+						  // Handle unsuccessful uploads
+						  $ionicLoading.show({
+                            template: 'We had trouble uploading your photo. Please try later.',
+                            duration: 2000
+                          });
+						}, function() {
+						  // Handle successful uploads on complete
+						  var downloadURL = uploadTask.snapshot.downloadURL;
+						  console.log("Group Profile Pic Download link", downloadURL)
+						  fbCircles.update({
+	                        circlePhoto: downloadURL
+	                      });
+	                      fbUserAcceptedCircles.update({
+                            circlePhoto: downloadURL
+                          });
+						});
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -1211,8 +1315,8 @@ angular.module('starter.controllers', [])
                         sourceType: Camera.PictureSourceType.CAMERA,
                         allowEdit: true,
                         encodingType: Camera.EncodingType.JPEG,
-                        targetWidth: 600,
-                        targetHeight: 600,
+                        targetWidth: 400,
+                        targetHeight: 400,
                         popoverOptions: CameraPopoverOptions,
                         saveToPhotoAlbum: false
                     };
@@ -1220,12 +1324,29 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
-                        fbCircles.update({
-                            circlePhoto: $scope.imageSrc
-                        });
-                        fbUserAcceptedCircles.update({
-                            circlePhoto: $scope.imageSrc
-                        });
+                        var blob = base64toBlob(imageData, "image/jpeg")
+                        var uploadTask = storageRef.child('Circles/' + $stateParams.circleID + "/CirclePhoto.jpg").put(blob);
+                        uploadTask.on('state_changed', function(snapshot){
+						  // Observe state change events such as progress, pause, and resume
+						  // See below for more detail
+						}, function(error) {
+						  // Handle unsuccessful uploads
+						  $ionicLoading.show({
+                            template: 'We had trouble uploading your photo. Please try later.',
+                            duration: 2000
+                          });
+						}, function() {
+						  // Handle successful uploads on complete
+						  var downloadURL = uploadTask.snapshot.downloadURL;
+						  console.log("Group Profile Pic Download link", downloadURL)
+						  fbCircles.update({
+	                        circlePhoto: downloadURL
+	                      });
+	                      fbUserAcceptedCircles.update({
+                            circlePhoto: downloadURL
+                          });
+						});
+                        
 
                     }, function(err) {
                         $ionicLoading.show({
@@ -1239,7 +1360,7 @@ angular.module('starter.controllers', [])
     };
 
     // Create a link to a CircleMembers under this circle
-    var fbCircleAcceptedMembers = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers");
+    var fbCircleAcceptedMembers = firebase.database().ref("/Circles/" + $stateParams.circleID + "/AcceptedMembers/" + $rootScope.fbAuthData.uid);
     var fbCircleAcceptedMembersObj = $firebaseObject(fbCircleAcceptedMembers);
 
     $ionicLoading.show({
@@ -1274,8 +1395,6 @@ angular.module('starter.controllers', [])
 
                 angular.forEach(obj.Members, function(value, key) {
                     fbRef.child("Users").child(key).once('value', function(userData) {
-                        // Get the reference for the push
-                        var fbCircleAcceptedMembersPushRef = fbCircleAcceptedMembers.push();
 
                         fbRef.child("Users").child(key).child("Circles").child($stateParams.circleID).child("Status").once('value', function(acceptStatus){
                             console.log("Accept Status", acceptStatus.val());
@@ -1285,7 +1404,7 @@ angular.module('starter.controllers', [])
                             {
                                 // Once the user data is loaded update the information
                                 // Update the location(temporary cache)
-                                fbCircleAcceptedMembersPushRef.update({
+                                fbCircleAcceptedMembers.update({
                                     admin: false,
                                     firstName: userData.val().firstname,
                                     lastName: userData.val().lastname,
@@ -1484,7 +1603,7 @@ angular.module('starter.controllers', [])
                 console.log("ID after encode: " + id);
 
                 // Get the link to the Registered User
-                var fbHash = new Firebase(fbRef + "/RegisteredUsers/" + id);
+                var fbHash = firebase.database().ref("/RegisteredUsers/" + id);
                 console.log("User LINK: " + fbHash);
 
                 // Callback function to obtain user info
@@ -1518,7 +1637,7 @@ angular.module('starter.controllers', [])
                     else {
                         console.log("Invited user is not registered, push email invites.");
                         // Get the link to the Registered User
-                        var fbInvites = new Firebase(fbRef + "/Invites/" + id);
+                        var fbInvites = firebase.database().ref("/Invites/" + id);
 
                         // Save the CircleId under Invites and Push the invite
                         fbInvites.push({
@@ -1576,22 +1695,31 @@ angular.module('starter.controllers', [])
 
     //Cancel a group - set the flag to true
     $scope.cancelCircle = function () {
-        console.log("fbCircles"+ fbCircles);
         fbCircles.update({
             circleCancelled: true
+        }).then(function(success){
+	        $ionicPopup.alert({
+                title: "Success!",
+                template: "Your circle has now ended. Further transactions will not be made!"
+            });
+        }).catch(function(error){
+	        $ionicPopup.alert({
+                title: "Unable to process request",
+                template: "Please try again."
+            });
         });
     }
 	
 	// Display credit and debit dates
-	var fbCredits = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/NotificationDates-test/");
+	var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates-test/");
 	$scope.credit = $firebaseObject((fbCredits).limitToLast(1));
-	var fbDebits = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/DebitDates-test/");
+	var fbDebits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/DebitDates-test/");
 	$scope.debit = $firebaseObject((fbDebits).limitToLast(1));
 })
 
 // Controller for chat
 .controller('ChatCtrl', function($scope, $stateParams, $state, $rootScope, $ionicNavBarDelegate, $timeout, $ionicScrollDelegate, $firebaseArray, $firebaseObject, UpdateMessages) {
-    var fbMessages = new Firebase("https://walletbuddies.firebaseio.com/Messages/" + $stateParams.circleID);
+    var fbMessages = firebase.database().ref("/Messages/" + $stateParams.circleID);
     var fbQuery = fbMessages.limitToLast(50);
     // Create a synchronized array at the firebase reference
     $scope.messages = $firebaseArray(fbQuery);
@@ -1604,7 +1732,6 @@ angular.module('starter.controllers', [])
 	$scope.inputClick = function () { // triggered by an ngClick placed in the <textarea>
 		$scope.isFocused = "true";
 	}
-
 	
 	$scope.onBlur = function() {
         if ($scope.isFocused == "true") {
@@ -1624,9 +1751,9 @@ angular.module('starter.controllers', [])
         $ionicScrollDelegate.scrollBottom(true, true);
         cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
         // Updating chat badge counter
-		var ref = new Firebase("https://walletbuddies.firebaseio.com");
+		var ref = firebase.database().ref();
 		// Get a reference to where the User's accepted circles are going to be stored
-		var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID + "/Members/" + $rootScope.fbAuthData.uid);
+		var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID + "/Members/" + $rootScope.fbAuthData.uid);
 		fbUserAcceptedCircles.once("value", function(data){
 			ref.child('Users').child($rootScope.fbAuthData.uid).once("value", function(userData){
 				// Get the existing total notification count
@@ -1667,10 +1794,10 @@ angular.module('starter.controllers', [])
 
 	// Updating chat badge counter
 	$scope.$on('$ionicView.leave', function() {
-		var ref = new Firebase("https://walletbuddies.firebaseio.com");
+		var ref = firebase.database().ref();
 		cordova.plugins.Keyboard.hideKeyboardAccessoryBar(false);
 		// Get a reference to where the User's accepted circles are going to be stored
-		var fbUserAcceptedCircles = new Firebase(ref + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+		var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
 		fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
 			ref.child('Users').child($rootScope.fbAuthData.uid).once("value", function(userData){
 				//Decrement this circle's chat counter from totalCount
@@ -1718,11 +1845,11 @@ angular.module('starter.controllers', [])
         alternate = !alternate;
 		
         // Create a firebase reference to get the user's information
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+        var fbRef = firebase.database().ref();
         var profile = $firebaseObject(fbRef.child("Users").child($rootScope.fbAuthData.uid));       
 		
 		//UpdateMessages.update($scope.data.message, $stateParams.circleID);
-		var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+		var fbRef = firebase.database().ref();
 	    var d = Date.now();
 	    fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
 	        console.log("$scope.data.message: " + message, $rootScope.fbAuthData.uid, d, userData.val().firstname);
@@ -1730,13 +1857,12 @@ angular.module('starter.controllers', [])
 	            userId: $rootScope.fbAuthData.uid,
 	            text: message,
 	            time: d,
-	            name: userData.val().firstname,
-	            photo: userData.val().profilePhoto
+	            name: userData.val().firstname
 	        });
 	    });	
 		
-        fbMembers = new Firebase("https://walletbuddies.firebaseio.com/Circles/").child($stateParams.circleID);
-        fbPush = new Firebase("https://walletbuddies.firebaseio.com/");
+        fbMembers = firebase.database().ref("/Circles/"+$stateParams.circleID);
+        fbPush = firebase.database().ref();
         var obj = $firebaseObject(fbMembers);
         obj.$loaded().then(function() {
             // To iterate the key/value pairs of the object, use angular.forEach()
@@ -1748,7 +1874,7 @@ angular.module('starter.controllers', [])
                     fbPush.child('Users').child($rootScope.fbAuthData.uid).once('value', function(name) {
                         fbPush.child('PushNotifications').push({
                             uid: key,
-                            message: name.val().firstname + ' @ ' + obj.circleName + ': ' + $scope.data.message,
+                            message: name.val().firstname + ' @ ' + obj.circleName + ': ' + message,
                             payload: $stateParams.circleID,
                             tab: "chat"
                         });
@@ -1785,13 +1911,13 @@ angular.module('starter.controllers', [])
 // Controller for requests tab
 .controller('RequestsCtrl', function($scope, $firebaseArray, $firebaseObject, $rootScope, fbCallback) {
     // Get a reference to the Firebase account
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    var fbRef = firebase.database().ref();
 
     // Get a reference to where the User's circle IDs are stored
-    var fbUserCircle = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+    var fbUserCircle = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
 
     // Get a reference to where the User's pending circles are going to be stored
-    var fbUserPendingCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/");
+    var fbUserPendingCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/");
 
     // Clear all the data
     fbUserPendingCircles.remove();
@@ -1814,8 +1940,8 @@ angular.module('starter.controllers', [])
     // Obtain list of circle IDs with a "pending" status
     // NOTE: This callback gets called on a 'child_removal'	event.
     fbCallback.childAdded(fbUserCircle, "pending", function(data) {
-        console.log("Circles Id(pending added): " + data.val().Status + data.key());
-        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+        console.log("Circles Id(pending added): " + data.val().Status + data.key);
+        var fbCircles = firebase.database().ref("/Circles/" + data.key);
         console.log("Circles FBCircles(pending added): " + fbCircles);
 
         // Obtain circle data for the pending circles
@@ -1833,8 +1959,8 @@ angular.module('starter.controllers', [])
     // Obtain list of circle IDs with a "pending" status
     // NOTE: This callback gets called on a 'child_removal'	event.
     fbCallback.childRemoved(fbUserCircle, "pending", function(data) {
-        console.log("Circles Id(pending removal): " + data.val().Status + data.key());
-        var fbCircles = new Firebase(fbRef + "/Circles/" + data.key());
+        console.log("Circles Id(pending removal): " + data.val().Status + data.key);
+        var fbCircles = firebase.database().ref("/Circles/" + data.key);
         console.log("Circles FBCircles(pending removal): " + fbCircles);
 
         // Obtain circle data for the pending circles
@@ -1845,7 +1971,7 @@ angular.module('starter.controllers', [])
             // and remove the corresponding entry in the "cache"
             fbUserPendingCircles.on('child_added', function(snapshot) {
                 if (snapshot.val().circleName == pendingCircleVal.circleName) {
-                    var fbPendingRemove = new Firebase(fbUserPendingCircles + "/" + snapshot.key());
+                    var fbPendingRemove = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/" + snapshot.key);
                     console.log("Removal:" + fbPendingRemove);
                     fbPendingRemove.remove();
                 }
@@ -1857,9 +1983,9 @@ angular.module('starter.controllers', [])
 // Controller for requests-detail page
 .controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, $ionicPopup) {
     // Get a reference to the Firebase account
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+    var fbRef = firebase.database().ref();
 
-    var fbCircles = new Firebase(fbRef + "/Circles/" + $stateParams.circleID);
+    var fbCircles = firebase.database().ref("/Circles/" + $stateParams.circleID);
     var obj = $firebaseObject(fbCircles);
     obj.$loaded().then(function() {
         console.log("loaded record for CircleId:", obj.$id);
@@ -1874,13 +2000,13 @@ angular.module('starter.controllers', [])
 
     // Called when user clicks "Accept"
     $scope.onAccept = function() {
-        var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
+        var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
         fbUser.once("value", function(data) {
             // Check if user's bank account is linked and KYC info verified before the user can accept an invite
             if (data.child("Payments/Bank").exists() && data.child("Payments/KYC").exists()) {
                 // Send out a push and inform users of accepted invite
-                var fbCircle = new Firebase("https://walletbuddies.firebaseio.com/Circles/");
-                var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
+                var fbCircle = firebase.database().ref("/Circles/");
+                var fbPush = firebase.database().ref("/PushNotifications/");
                 fbCircle.child($stateParams.circleID).once('value', function(circle) {
 	                // Remove this user from the contacts list so he doesn't get reminders
 					fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
@@ -1888,7 +2014,7 @@ angular.module('starter.controllers', [])
 		                for(var i in data.val().contacts) {
 		                    var val = data.val().contacts[i];
 							//  Loop for removing symbols in phone numbers
-				            var str = val.phone.toString();
+				            var str = val().phone.toString();
 				            var temp = str.replace(/\D/g, '');
 				            console.log("temp", str, temp);
 				            // Removing 1 from the phone number
@@ -1929,14 +2055,14 @@ angular.module('starter.controllers', [])
 					}
                     var d = Date.now();
 					//d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
-                	fbCircle.child($stateParams.circleID).child('Messages').push({
+                	fbRef.child('Messages').child($stateParams.circleID).push({
                     	name: "WalletBuddies",
                     	time: d,
                     	text: data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " circle."
             		});
 
-            		for(var uid in circle.val().Members) {
-                        if (circle.val().Members.hasOwnProperty(uid)) {
+            		for(var uid in circle.val().AcceptedMembers) {
+                        if (circle.val().AcceptedMembers.hasOwnProperty(uid)) {
                             fbPush.push({
 			                    uid: uid,
 								message: "WalletBuddies" + ' @ ' + circle.val().circleName + ': ' + data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " circle.",
@@ -1947,7 +2073,7 @@ angular.module('starter.controllers', [])
                 	}
                 });
                 // Get a reference to the NewsFeed of the user
-		        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+		        var fbNewsFeedRef = firebase.database().ref("/Users/"+$rootScope.fbAuthData.uid+"/NewsFeed/");
 		        var dt = Date.now();
 		        var feedToPush = "You accepted an invite to the circle <b>" + $scope.circle.circleName + "</b>.";
 
@@ -1960,15 +2086,14 @@ angular.module('starter.controllers', [])
 		        });
 
                 // Get the reference for the push and store the relevant user information
-                var fbAcceptedMembers = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers");
-                var fbAcceptedMembersPushRef = new Firebase(fbRef + "/Circles/" + $stateParams.circleID + "/AcceptedMembers").push();
-                var fbUser = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
+                var fbAcceptedMembers = firebase.database().ref("/Circles/" + $stateParams.circleID + "/AcceptedMembers/" + $rootScope.fbAuthData.uid);
+                var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
                 fbUser.once("value", function(userData) {
 
                     // Store the user information
                     // NOTE: By default when a user accepts an invite the user is
                     //       not an admin
-                    fbAcceptedMembersPushRef.update({
+                    fbAcceptedMembers.update({
                         admin: false,
                         firstName: userData.val().firstname,
                         lastName: userData.val().lastname,
@@ -2015,6 +2140,29 @@ angular.module('starter.controllers', [])
 						fbRef.child("Circles").child($stateParams.circleID).child("contacts").child(i).remove();
 					}
 	            };
+	            
+	            // Send out a push and inform users of declined invite
+				var fbCircle = firebase.database().ref("/Circles/");
+				var fbPush = firebase.database().ref("/PushNotifications/");
+	            var d = Date.now();
+				//d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+	        	fbRef.child('Messages').child($stateParams.circleID).push({
+	            	name: "WalletBuddies",
+	            	time: d,
+	            	text: userData.val().firstname + " has declined the invite to the " + data.val().circleName + " circle."
+	    		});
+	
+	    		for(var uid in data.val().AcceptedMembers) {
+	                if (data.val().AcceptedMembers.hasOwnProperty(uid)) {
+	                    fbPush.push({
+		                    uid: uid,
+							message: "WalletBuddies" + ' @ ' + data.val().circleName + ': ' + userData.val().firstname + " has declined the invite to the " + circle.val().circleName + " circle.",
+							payload: $stateParams.circleID,
+							tab: "chat"
+	                	});
+	                }
+	        	}
+	            
 			});
 	        if (data.val().circleType == 'Singular') {
 				// Change Status of the circle to "false"
@@ -2035,39 +2183,14 @@ angular.module('starter.controllers', [])
 			}
             fbRef.child('Sendgrid').push({
                 from: 'hello@walletbuddies.co',
-                to: $rootScope.fbAuthData.password.email,
+                to: $rootScope.fbAuthData.email,
                 subject: "Confirmation from WalletBuddies",
                 text: "This message is to confirm that you have declined to join the Circle " + data.val().circleName + ". \n\n- WalletBuddies"
             });
         });
 
-        // Send out a push and inform users of declined invite
-        var fbCircle = new Firebase("https://walletbuddies.firebaseio.com/Circles/");
-        var fbPush = new Firebase("https://walletbuddies.firebaseio.com/PushNotifications/");
-        fbCircle.child($stateParams.circleID).once('value', function(circle) {
-
-            var d = Date.now();
-			//d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
-        	fbCircle.child($stateParams.circleID).child('Messages').push({
-            	name: "WalletBuddies",
-            	time: d,
-            	text: data.val().firstname + " has declined the invite to the " + circle.val().circleName + " circle."
-    		});
-
-    		for(var uid in circle.val().Members) {
-                if (circle.val().Members.hasOwnProperty(uid)) {
-                    fbPush.push({
-	                    uid: uid,
-						message: "WalletBuddies" + ' @ ' + circle.val().circleName + ': ' + data.val().firstname + " has declined the invite to the " + circle.val().circleName + " circle.",
-						payload: $stateParams.circleID,
-						tab: "chat"
-                	});
-                }
-        	}
-        });
-
         // Get a reference to the NewsFeed of the user
-        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+        var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
         var dt = Date.now();
         var feedToPush = "You declined an invite to the circle <b>" + $scope.circle.circleName + "</b>.";
 
@@ -2092,10 +2215,17 @@ angular.module('starter.controllers', [])
 // Controller for tab-settings
 .controller('SettingsCtrl', function($scope, $firebaseObject, $ionicHistory, $ionicActionSheet, $cordovaCamera, $ionicNavBarDelegate, $state, $rootScope, $stateParams, $ionicLoading, $ionicPopup) {
     // Create a firebase reference
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+    var fbRef = firebase.database().ref();
+    
+	// Get a reference to the firebase storage service, which is used to create references in your storage bucket
+	var storage = firebase.storage();
 
+	// Create a storage reference from firebase storage service
+	var storageRef = storage.ref();	
+	
     var profile = $firebaseObject(fbRef.child("Users").child($rootScope.fbAuthData.uid));
-
+	
+	var profilePic = storageRef.child("Users").child($rootScope.fbAuthData.uid+"/ProfilePhoto.jpg");
     profile.$bindTo($scope, "data");
 
     // Record entry into Settings Controlller
@@ -2126,8 +2256,8 @@ angular.module('starter.controllers', [])
                         sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
                         allowEdit: true,
                         encodingType: Camera.EncodingType.JPEG,
-                        targetWidth: 600,
-                        targetHeight: 600,
+                        targetWidth: 400,
+                        targetHeight: 400,
                         popoverOptions: CameraPopoverOptions,
                         saveToPhotoAlbum: false
                     };
@@ -2135,9 +2265,25 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
-                        fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
-                            profilePhoto: $scope.imageSrc
-                        });
+                        var blob = base64toBlob(imageData, "image/jpeg")
+                        var uploadTask = storageRef.child('Users/' + $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
+                        uploadTask.on('state_changed', function(snapshot){
+						  // Observe state change events such as progress, pause, and resume
+						  // See below for more detail
+						}, function(error) {
+						  // Handle unsuccessful uploads
+						  $ionicLoading.show({
+                            template: 'We had trouble uploading your photo. Please try later.',
+                            duration: 2000
+                          });
+						}, function() {
+						  // Handle successful uploads on complete
+						  var downloadURL = uploadTask.snapshot.downloadURL;
+						  console.log("Profile Pic Download link", downloadURL)
+						  fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
+                            profilePhoto: downloadURL
+                          });
+						});
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -2153,8 +2299,8 @@ angular.module('starter.controllers', [])
                         sourceType: Camera.PictureSourceType.CAMERA,
                         allowEdit: true,
                         encodingType: Camera.EncodingType.JPEG,
-                        targetWidth: 600,
-                        targetHeight: 600,
+                        targetWidth: 400,
+                        targetHeight: 400,
                         popoverOptions: CameraPopoverOptions,
                         saveToPhotoAlbum: false
                     };
@@ -2162,9 +2308,25 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
-                        fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
-                            profilePhoto: $scope.imageSrc
-                        });
+                        var blob = base64toBlob(imageData, "image/jpeg")
+                        var uploadTask = storageRef.child('Users/' + $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
+                        uploadTask.on('state_changed', function(snapshot){
+						  // Observe state change events such as progress, pause, and resume
+						  // See below for more detail
+						}, function(error) {
+						  // Handle unsuccessful uploads
+						  $ionicLoading.show({
+                            template: 'We had trouble uploading your photo. Please try later.',
+                            duration: 2000
+                          });
+						}, function() {
+						  // Handle successful uploads on complete
+						  var downloadURL = uploadTask.snapshot.downloadURL;
+						  console.log("Profile Pic Download link", downloadURL)
+						  fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
+                            profilePhoto: downloadURL
+                          });
+						});
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -2175,7 +2337,31 @@ angular.module('starter.controllers', [])
             }
         });
     };
-
+	
+	function base64toBlob(b64Data, contentType) {
+	  contentType = contentType || '';
+	  sliceSize = 512;
+	  var newb64 = b64Data.replace(/\s/g, "")
+	  var byteCharacters = atob(newb64);
+	  var byteArrays = [];
+	
+	  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+	    var slice = byteCharacters.slice(offset, offset + sliceSize);
+	
+	    var byteNumbers = new Array(slice.length);
+	    for (var i = 0; i < slice.length; i++) {
+	      byteNumbers[i] = slice.charCodeAt(i);
+	    }
+	
+	    var byteArray = new Uint8Array(byteNumbers);
+	
+	    byteArrays.push(byteArray);
+	  }
+	
+	  var blob = new Blob(byteArrays, {type: contentType});
+	  return blob;
+	}
+	
     // Go to tab-account
     $scope.account = function() {
         $state.go("tab.account");
@@ -2199,21 +2385,29 @@ angular.module('starter.controllers', [])
             duration: 1000
         });
         // Get a reference to where the User's pending circles are going to be stored
-        var fbUserPendingCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/");
+        var fbUserPendingCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/PendingCircles/");
 
         // Delete all the pending circles cached data
         fbUserPendingCircles.remove();
 
         // Get a reference to where the User's accepted circles are going to be stored
-        var fbUserAcceptedCircles = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/");
+        var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/");
 
         // Delete all the accepted circles cached data
         fbUserAcceptedCircles.remove();
 
         $ionicHistory.clearCache();
         $ionicHistory.clearHistory();
-        fbRef.unauth();
-        $state.go('launch');
+        firebase.auth().signOut().then(function() {
+		  // Sign-out successful.
+		  $state.go('launch');
+		}, function(error) {
+		  // An error happened.
+		  $ionicLoading.show({
+            template: 'We had trouble signing you out! Please try again.',
+            duration: 1000
+          });
+		});
     };
 
     // Called when the user clicks the "Survey" button
@@ -2236,7 +2430,7 @@ angular.module('starter.controllers', [])
 // Controller for Reset Password
 .controller('SurveyPageCtrl', function($scope, $state, $rootScope, fbCallback, $ionicPopup) {
     // Create a firebase reference
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com");
+    var fbRef = firebase.database().ref();
 
     // Record entry into Survey Page Controlller
     if(typeof analytics !== 'undefined') {
@@ -2396,7 +2590,7 @@ angular.module('starter.controllers', [])
             survey: true
         });
 
-        var fbUserSurveyResults = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid + "/SurveyResults/");
+        var fbUserSurveyResults = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/SurveyResults/");
 
         // Store the survey information
         fbUserSurveyResults.update({
@@ -2416,9 +2610,9 @@ angular.module('starter.controllers', [])
 
     setTimeout(function () {
         // Updating walletTab badge counter
-		var fbRef = new Firebase("https://walletbuddies.firebaseio.com/");
+		var fbRef = firebase.database().ref();
 		// Get a reference to where the User's accepted circles are going to be stored
-		var fbUser = new Firebase(fbRef + "/Users/" + $rootScope.fbAuthData.uid);
+		var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
 		$scope.counter = $firebaseObject(fbUser);
     }, 1000);
 
@@ -2492,9 +2686,9 @@ angular.module('starter.controllers', [])
 	});
 		
 /*
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
-    var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid + "/Payments");
-    var ref = new Firebase("https://walletbuddies.firebaseio.com");
+    var fbRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
+    var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Payments");
+    var ref = firebase.database().ref();
     
     // Go to manual account setup
     $scope.account = function() {
@@ -2751,9 +2945,9 @@ angular.module('starter.controllers', [])
         class: ''
     };
 	
-	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid);
-    var fbUser = new Firebase("https://walletbuddies.firebaseio.com/Users/" + $rootScope.fbAuthData.uid + "/Payments");
-    var ref = new Firebase("https://walletbuddies.firebaseio.com");
+	var fbRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
+    var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Payments");
+    var ref = firebase.database().ref();
     
 	$scope.connect = function(user) {
         $ionicLoading.show({
@@ -3058,7 +3252,7 @@ angular.module('starter.controllers', [])
                 title: "Alright!",
                 template: "Your " + $scope.data.nodes[$scope.temp].info.class + " " + $scope.data.nodes[$scope.temp].info.type + " account is now linked."
             });
-            var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid).child("Payments").child("Bank");
+            var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid).child("Payments").child("Bank");
             fbRef.update({
                 account_num: $scope.data.nodes[$scope.temp].info.account_num,
                 routing: $scope.data.nodes[$scope.temp].info.routing_num,
@@ -3080,7 +3274,7 @@ angular.module('starter.controllers', [])
 
     $scope.data = $rootScope.data;
 
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+    var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
 
     $scope.validateUser = function(user) {
         // Check if user has uploaded a image
@@ -3178,7 +3372,7 @@ fbRef.once("value", function(data) {
                     });
 
                     // Get a reference to the NewsFeed of the user
-                    var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+                    var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
                     var dt = Date.now();
                     var feedToPush = "Yay!! Your bank account was linked successfully!";
 
@@ -3229,7 +3423,7 @@ fbRef.once("value", function(data) {
 
 .controller('DocUploadCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
 
-	var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+	var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
 
 	// For selecting a photo
     $scope.selectPicture = function() {
@@ -3341,7 +3535,7 @@ fbRef.once("value", function(data) {
                             clientid: res.data.user.client.id
                         });
                         // Get a reference to the NewsFeed of the user
-                        var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+                        var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
                         var dt = Date.now();
                         var feedToPush = "Yay!! Your bank account was linked successfully!";
 
@@ -3380,7 +3574,7 @@ fbRef.once("value", function(data) {
         $ionicLoading.show({
             template: 'Loading..Hold tight.'
         });
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+        var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
         fbRef.child("Payments/oauth").once('value', function(data) {
             //Decipher oauth keys before POST
             var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
@@ -3423,7 +3617,7 @@ fbRef.once("value", function(data) {
                 });
 
                 // Get a reference to the NewsFeed of the user
-                var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+                var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
                 var dt = Date.now();
                 var feedToPush = "Yay!! Your bank account was linked successfully!";
 
@@ -3467,7 +3661,7 @@ fbRef.once("value", function(data) {
         $ionicLoading.show({
             template: 'Loading..Hold tight.'
         });
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+        var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
         fbRef.child("Payments/oauth").once('value', function(data) {
             //Decipher oauth keys before POST
             var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
@@ -3533,7 +3727,7 @@ fbRef.once("value", function(data) {
         $ionicLoading.show({
             template: 'Loading..Hold tight.'
         });
-        var fbRef = new Firebase("https://walletbuddies.firebaseio.com/").child("Users").child($rootScope.fbAuthData.uid);
+        var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
         fbRef.child("Payments/oauth").once('value', function(data) {
             //Decipher oauth keys before POST
             var oauth_key = $cipherFactory.decrypt(data.val().oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().oauth_key.salt, data.val().oauth_key.iv);
@@ -3604,8 +3798,8 @@ fbRef.once("value", function(data) {
 
 .controller('HomeCtrl', function($scope, $rootScope, $firebaseArray, $sce) {
     // Get a reference to the NewsFeed of the user
-    var badgeRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child('Badges');
-    var fbNewsFeedRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+    var badgeRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + '/Badges/');
+    var fbNewsFeedRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + '/NewsFeed/');
 	$scope.$on('$ionicView.enter', function() {
 		badgeRef.update({
 			feedCounter: 0
@@ -3617,7 +3811,7 @@ fbRef.once("value", function(data) {
     // Link to $scope to have 3-way data binding
     $scope.newsfeed = $firebaseArray(fbLimitedFeed);
 
-    var fbRef = new Firebase("https://walletbuddies.firebaseio.com/Users").child($rootScope.fbAuthData.uid).child("Transactions");
+    var fbRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + '/Transactions/');
     // all server changes are applied in realtime
     $scope.transactions = $firebaseArray(fbRef);
 

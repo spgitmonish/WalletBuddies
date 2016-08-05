@@ -54,14 +54,26 @@
             <div class="item item-divider item-dark">
                 Plan
             </div>
-            <div class="item item-text-wrap" ng-repeat="date in debit">
+            <div class="item item-text-wrap" ng-if="debit.value" ng-repeat="date in debit">
                 ${{circle.amount}} {{circle.plan}}: Debits for current cycle occur on <b>{{date.debitDate}}</b>
+            </div>
+            <div class="item item-text-wrap" ng-if="!debit.value">
+                ${{circle.amount}} {{circle.plan}}
             </div>
             <div class="item item-divider item-dark">
                 Pool Amount
             </div>
-            <div class="item item-text-wrap" ng-repeat="date in credit">
+            <div class="item item-text-wrap" ng-if="credit.value" ng-repeat="date in credit">
                 ${{circle.amount * members.length}} will be credited to the group on <b>{{date.notificationDate}}</b>
+            </div>
+            <div class="item item-text-wrap" ng-if="!credit.value">
+                ${{circle.amount * members.length}} will be credited to the group
+            </div>
+            <div class="item item-divider item-dark" ng-if="circle.circleCancelled">
+                Circle Status
+            </div>
+            <div class="item item-text-wrap" ng-if="circle.circleCancelled">
+                This circle has now ended. No new transactions will be initiated. Pending credits will be completed.
             </div>
             <!-- Picking contacts -->
             <div class="item item-divider item-dark" ng-if="data.selectedContacts.length!=0">
@@ -92,7 +104,7 @@
                 <button class="button button-block button-balanced" ng-click="addGroup()">Invite</button>
             </div>
         </div>
-        <div align="center" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority==0">
+        <div align="center" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority==0 && circle.circleCancelled==false">
             <div class="list">
                 <button class="button button-outline button-dark" ng-click="cancelCircle()">End Circle</button>
             </div>

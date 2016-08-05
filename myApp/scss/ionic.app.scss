@@ -24,6 +24,10 @@ $help-1: '../img/Help-1.png';
 $help-2: '../img/Help-2.png';
 $help-3: '../img/Help-3.png';  
 
+.card-grey .item{
+  background: #3c3b3b;
+}
+
 .scroll-bg {
   background: url($big-bg) no-repeat center center fixed;
   background-size: cover;
