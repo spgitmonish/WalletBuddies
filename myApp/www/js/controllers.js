@@ -1948,11 +1948,8 @@ angular.module('starter.controllers', [])
         fbCallback.fetch(fbCircles, function(output) {
             var pendingCircleVal = output;
 
-            // Get the reference for the push
-            var fbPendingCirclePushRef = fbUserPendingCircles.push();
-
             // Update the location(temporary cache)
-            fbPendingCirclePushRef.update(pendingCircleVal);
+            fbUserPendingCircles.child(data.key).update(pendingCircleVal);
         });
     });
 
