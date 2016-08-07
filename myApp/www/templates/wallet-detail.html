@@ -26,16 +26,25 @@
                     <div class="col button-icon" ng-click="selectContacts()" style="text-align: right"><span class="icon ion-ios7-plus-outline"></span></div>
                 </div>
             </div>
-            <div class="item item-divider item-dark" ng-if="circle.circleType!='Singular' || circle.circleType==null">
+            <div class="item item-divider item-dark" ng-if="circle.circleType!='Singular' || circle.circleType==null && !circle.requestsExpired">
                 Buddies
             </div>
-            <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && Member.Priority!=0">
+            <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && Member.Priority!=0 && !circle.requestsExpired">
                 Buddies
             </div>
-            <div class="row">
+            <div class="item item-divider item-dark" ng-if="circle.requestsExpired">
+                Invitees
+            </div>
+            <div class="row" ng-if="!circle.requestsExpired">
 				<div class="col" style="vertical-align: top; display: inline-block; text-align: center; width: 120px;" ng-repeat="member in members">
 					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{member.profilePhoto}}"/>
 					<span style="display: block">{{member.firstName}}</span>
+				</div>
+            </div>
+            <div class="row" ng-if="circle.requestsExpired">
+				<div class="col" style="display: inline-block; text-align: center; width: 120px;" ng-repeat="contact in circle.contacts">
+					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{contact.profilePhoto}}"/>
+					<span style="display: block">{{contact.name}}</span>
 				</div>
             </div>
             <!--<div class="item"  ng-click="openModal(member)">
