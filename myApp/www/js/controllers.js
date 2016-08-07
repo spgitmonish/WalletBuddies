@@ -2030,22 +2030,44 @@ angular.module('starter.controllers', [])
 			            };
 					});
 					if (circle.val().circleType == 'Singular') {
-						// Change Status of the circle to "true" and initializing notification badge to 0
-		                fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
-		                    Status: true,
-		                    badgeCounter: 0
-		                });
-
-		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
-		                    Status: true
-		                });
+						
+						fbRef.child("Circles").child($stateParams.circleID).child('DebitDates').once('value', function(snapshot) {
+							// Check if this circle is already running
+							if(snapshot.exists()) {
+								// Change Status of the circle to "true" and initializing notification badge to 0
+				                fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
+				                    Status: true,
+				                    badgeCounter: 0
+				                });
+								
+								fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+				                    Status: true,
+				                    badgeCounter: 0
+				                });
+								
+				                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+				                    Status: true
+				                });
+				            // The Circle has not yet kicked off
+							} else {
+								// Change Status of the circle to "true" and initializing notification badge to 0
+								fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+				                    Status: true,
+				                    badgeCounter: 0
+				                });
+								
+				                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+				                    Status: true
+				                });
+							}
+						})
 					} else {
 						// Change Status of the circle to "true" and initializing notification badge to 0
 		                fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
 		                    Status: true,
 		                    badgeCounter: 0
 		                });
-
+						
 		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
 		                    Status: true
 		                });
