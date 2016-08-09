@@ -907,7 +907,7 @@ angular.module('starter.controllers', [])
                 });
 
                 // Initialize the counter under CreditDates of the Circle
-                fbCirclePushRef.child('CreditDates-test').child('Counter').update({
+                fbCirclePushRef.child('CreditDates').child('Counter').update({
                     counter: 0
                 });
 
@@ -976,8 +976,8 @@ angular.module('starter.controllers', [])
 
                 // Save the timestamp to trigger the circle-start-scheduler
                 var date = firebase.database.ServerValue.TIMESTAMP;
-                console.log("Firebase.ServerValue.TIMESTAMP @ STARTDATE-test" + date);
-                fbRef.child('StartDate-test').push({
+                console.log("Firebase.ServerValue.TIMESTAMP @ STARTDATE" + date);
+                fbRef.child('StartDate').push({
                     date: date,
                     circleID: groupID,
                     plan: plan,
@@ -1167,7 +1167,7 @@ angular.module('starter.controllers', [])
     // NOTE: This callback gets called on a 'child_added' event.
     fbCallback.childAdded(fbUserCircle, true, function(data) {
         var fbCircles = firebase.database().ref("/Circles/" + data.key);
-
+		console.log("TRUE CIRCLES", data.key);
         // Obtain circle data for the accepted circles
         fbCallback.fetch(fbCircles, function(output) {
             // Get the information within the circle
@@ -1711,9 +1711,9 @@ angular.module('starter.controllers', [])
     }
 	
 	// Display credit and debit dates
-	var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates-test/");
+	var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates/");
 	$scope.credit = $firebaseObject((fbCredits).limitToLast(1));
-	var fbDebits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/DebitDates-test/");
+	var fbDebits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/DebitDates/");
 	$scope.debit = $firebaseObject((fbDebits).limitToLast(1));
 })
 
@@ -2030,15 +2030,32 @@ angular.module('starter.controllers', [])
 			            };
 					});
 					if (circle.val().circleType == 'Singular') {
-						// Change Status of the circle to "true" and initializing notification badge to 0
-		                fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
-		                    Status: true,
-		                    badgeCounter: 0
-		                });
-
-		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
-		                    Status: true
-		                });
+						
+						//Check if the circle is already in progress
+						fbRef.child("Circles").child($stateParams.circleID).child("DebitDates").once('value', function(snapshot) {
+							if(snapshot.exists()){
+								// Update Pending Members & Change Status of the circle to "true" and initializing notification badge to 0
+				                fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
+				                    Status: true,
+				                    badgeCounter: 0
+				                });
+		
+				                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+				                    Status: true
+				                });
+							} else {
+								// Update Members & Change Status of the circle to "true" and initializing notification badge to 0
+				                fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+				                    Status: true,
+				                    badgeCounter: 0
+				                });
+		
+				                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+				                    Status: true
+				                });
+							}
+						})
+						
 					} else {
 						// Change Status of the circle to "true" and initializing notification badge to 0
 		                fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
