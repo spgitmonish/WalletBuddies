@@ -12,6 +12,10 @@ var stripe = require("stripe")(
 );
 console.log("User Reference: " + fbUser);
 
+var temp = "100"
+
+console.log("Var", Int(temp))
+
 // Athenticate the server by giving admin access
 var tokenGenerator = new FirebaseTokenGenerator("vAn9n3WzAMnHv78E8dAoVboexbeCC3HqTm4kOGxl");
 var token = tokenGenerator.createToken(

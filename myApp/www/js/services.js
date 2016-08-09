@@ -212,7 +212,7 @@ angular.module('starter.services', [])
         // Fetch the data on child added events
         childAdded: function(path, status, callback) {
             path.orderByChild("Status").equalTo(status).on('child_added', function(data) {
-                //console.log("SERVICE(Added): " + data.key());
+                console.log("Added Circle " + data.key);
                 callback(data);
             });
         },
