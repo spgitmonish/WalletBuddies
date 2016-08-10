@@ -64,7 +64,7 @@ angular.module('starter.controllers', [])
             firebase.auth().createUserWithEmailAndPassword(account.email, account.password)
             .then(function(){
                firebase.auth().onAuthStateChanged(function(authData) {
-                  if(user) {
+                  if(authData) {
                      $ionicLoading.show({
                         template: 'Creating your account...'
                      });
