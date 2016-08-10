@@ -367,42 +367,40 @@ angular.module('starter.controllers', [])
 
 // Controller for Forgot Password
 .controller('ForgotPassCtrl', function($scope, $state, $rootScope, fbCallback, $ionicPopup) {
-    var fbRef = firebase.database().ref();
+    var fbRef = firebase.auth();
 
     $scope.sendTempPassword = function() {
-        fbRef.resetPassword({
-            email: this.user.email
-        }, function(error) {
-            if (error) {
-                switch (error.code) {
-                    case "INVALID_USER":
-                        if(typeof analytics !== 'undefined') {
-                            analytics.trackEvent('Forgot Password', 'Email not in the system', 'In ForgotPassCtrl', error.code);
-                        }
-                        $ionicPopup.alert({
-                            title: "Email not in the system!",
-                            template: "Please enter the right email."
-                        });
-                        break;
-                    default:
-                        if(typeof analytics !== 'undefined') {
-                            analytics.trackEvent('Forgot Password', 'Error setting password', 'In ForgotPassCtrl', error.code);
-                        }
-                        console.log("Error resetting password:", error);
-                }
-            } else {
-                $ionicPopup.alert({
-                    title: "Temporary password sent"
-                });
+        fbRef.sendPasswordResetEmail(this.user.email)
+        .then(function() {
+           $ionicPopup.alert({
+               title: "Temporary password sent"
+           });
 
-                // Record entry into Forgot Password Controlller
-                if(typeof analytics !== 'undefined') {
-                    analytics.trackView("Forgot Password Controller");
-                    analytics.trackEvent('ForgotPassCtrl', 'Pass', 'In ForgotPassCtrl', 101);
-                }
+           // Record entry into Forgot Password Controlller
+           if(typeof analytics !== 'undefined') {
+               analytics.trackView("Forgot Password Controller");
+               analytics.trackEvent('ForgotPassCtrl', 'Pass', 'In ForgotPassCtrl', 101);
+           }
 
-                $state.go('launch');
-            }
+           $state.go('launch');
+        })
+        .catch(function(error) {
+           switch (error.code) {
+               case "INVALID_USER":
+                   if(typeof analytics !== 'undefined') {
+                       analytics.trackEvent('Forgot Password', 'Email not in the system', 'In ForgotPassCtrl', error.code);
+                   }
+                   $ionicPopup.alert({
+                       title: "Email not in the system!",
+                       template: "Please enter the right email."
+                   });
+                   break;
+               default:
+                   if(typeof analytics !== 'undefined') {
+                       analytics.trackEvent('Forgot Password', 'Error setting password', 'In ForgotPassCtrl', error.code);
+                   }
+                   console.log("Error resetting password:", error);
+           }
         });
     }
 })
@@ -471,6 +469,7 @@ angular.module('starter.controllers', [])
         // Called when the user clicks the "Forgot Password" button
         $scope.forgotPassword = function() {
             // Go to the forgot password page
+            console.log("forgotPassword");
             $state.go('forgotpassword');
         }
 
