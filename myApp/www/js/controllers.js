@@ -25,7 +25,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for Account Creation and Sign Up
-.controller('AccountCtrl', function($scope, $ionicHistory, $firebaseObject, $ionicPopup, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPush, $cipherFactory, $cordovaDevice) {
+.controller('AccountCtrl', function($scope, $ionicHistory, $firebaseObject, $ionicPopup, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPushV5, $cipherFactory, $cordovaDevice) {
 
     $scope.check = {
         data: false
@@ -195,84 +195,6 @@ angular.module('starter.controllers', [])
 								var last = account.lastname;
 
 	                            //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
-								console.log("SynapsePay User1: " + account.email, account.phonenumber.toString(), account.firstname + " " + account.lastname);
-								fbRef.child('SynapsePay').once('value', function(data) {
-									// Create a SynapsePay user account
-									console.log("SynapsePay User: " + data.val().client_id + data.val().client_secret + email + number + first + " " + last);
-									// get host ip address of client
-									var json = 'http://ipv4.myexternalip.com/json';
-									$http.get(json).then(function(result) {
-										var ip = result.data.ip;
-										var uuid = $cordovaDevice.getUUID();
-										console.log("uuid: " + uuid);
-										console.log("IP ADDRESS: " + ip);
-			                            $http.post('https://synapsepay.com/api/v3/user/create', {
-			                                "client": {
-			                                    //your client ID and secret
-			                                    "client_id": data.val().client_id,
-			                                    "client_secret": data.val().client_secret
-			                                },
-			                                "logins": [
-			                                    //email and password of the user. Passwords are optional.
-			                                    //yes you can add multiple emails and multiple users for one account here
-			                                    {
-			                                        "email": email,
-			                                        "read_only": false
-			                                    }
-			                                ],
-			                                "phone_numbers": [
-			                                    //user's mobile numbers. Can be used for 2FA
-			                                    number
-			                                ],
-			                                "legal_names": [
-			                                    //user's legal names. If multiple user's are being added, add multiple legal names.
-			                                    //If business account, add the name of the person creating the account and the name of the company
-			                                    first + " " + last
-			                                ],
-			                                "fingerprints": [
-			                                    //fingerprints of the devices that you will be accessing this account from
-			                                    {
-			                                        "fingerprint": uuid
-			                                    }
-			                                ],
-			                                "ips": [
-			                                    //user's IP addresses
-			                                    ip
-			                                ],
-			                                "extra": {
-			                                    //optional fields
-			                                    "note": "WalletBuddies User",
-			                                    "supp_id": "No IDs Here",
-			                                    //toggle to true if its a business account
-			                                    "is_business": false
-			                                }
-			                            }).then(function(response) {
-				                            console.log("SYNAPSEPAY response " + JSON.stringify(response));
-			                                fbUser.child("Payments/oauth").update({
-			                                    oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
-			                                    refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
-			                                    expires_at: response.data.oauth.expires_at,
-			                                    expires_in: response.data.oauth.expires_in,
-			                                    client_id: response.data.user.client.id,
-			                                    fingerprint: uuid,
-			                                    ip: ip,
-			                                    oid: response.data.user._id.$oid
-			                                });
-
-			                            }).catch(function(err) {
-                                            if(typeof analytics !== 'undefined') {
-                                                analytics.trackEvent('SynapsePay AccountCtrl', err.statusText, err.data.error.en, 1);
-                                            }
-			                                console.log("An error occured while communicating with Synapse");
-			                                console.log(JSON.stringify(err));
-			                            });
-		                            }, function(e) {
-                                        if(typeof analytics !== 'undefined') {
-                                            analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', e);
-                                        }
-										alert("An error occured while validating your ip address");
-									});
-								})
 
 	                            // Clear the form
 	                            account.firstname = '';
@@ -315,37 +237,50 @@ angular.module('starter.controllers', [])
 	                            $scope.$on('$ionicView.afterLeave', function() {
 	                                // Register device for push notifications
 	                                if (ionic.Platform.isAndroid()) {
-	                                    androidConfig = {
-	                                        "senderID": "456019050509" // Project number from GCM
-	                                    };
-	                                    $cordovaPush.register(androidConfig).then(function(deviceToken) {
-	                                        // Success -- Registration ID is received in $notificationReceiver and sent to FireBase
-	                                        console.log("Success: " + deviceToken);
-	                                    }, function(err) {
-                                            if(typeof analytics !== 'undefined') {
-                                                analytics.trackEvent('Push Notification(Android)', 'Registration Error', 'In AccountCtrl', err);
-                                            }
-	                                        alert("Registration error: " + err);
-	                                    })
-	                                } else if (ionic.Platform.isIOS()) {
-	                                    var iosConfig = {
-	                                        "badge": true,
-	                                        "sound": true,
-	                                        "alert": true,
-	                                    };
-	                                    $cordovaPush.register(iosConfig).then(function(deviceToken) {
-	                                        // Success -- send deviceToken to FireBase
-	                                        console.log("deviceToken: " + deviceToken);
-	                                        fbUser.update({
+		                                androidConfig = {
+							                "senderID": "456019050509" // Project number from GCM
+							            };
+							            // initialize
+										$cordovaPushV5.initialize(androidConfig).then(function() {
+										    // start listening for new notifications
+										    $cordovaPushV5.onNotification();
+										    // start listening for errors
+										    $cordovaPushV5.onError();
+										    
+										    // register to get registrationId
+										    $cordovaPushV5.register().then(function(data) {
+										      // `data.registrationId` save it somewhere;
+										      console.log("Registration success app.js", data.registrationId);
+										      fbUser.update({
 	                                            deviceToken: deviceToken,
+	                                            device: "Android"
+	                                          });
+										    })
+										});
+	                                } else if (ionic.Platform.isIOS()) {
+		                                var iosConfig = {
+							                "badge": true,
+							                "sound": true,
+							                "alert": true,
+							            };
+							            
+							            // initialize
+										$cordovaPushV5.initialize(iosConfig).then(function() {
+										    // start listening for new notifications
+										    $cordovaPushV5.onNotification();
+										    // start listening for errors
+										    $cordovaPushV5.onError();
+										    
+										    // register to get registrationId
+										    $cordovaPushV5.register().then(function(data) {
+										      // `data.registrationId` save it somewhere;
+										      console.log("Registration success app.js", data.registrationId);
+										      fbUser.update({
+	                                            deviceToken: data.registrationId,
 	                                            device: "iOS"
-	                                        });
-	                                    }, function(err) {
-                                            if(typeof analytics !== 'undefined') {
-                                                analytics.trackEvent('Push Notification(iOS)', 'Registration Error', 'In AccountCtrl', err);
-                                            }
-	                                        alert("Registration error: " + err);
-	                                    });
+	                                          });
+										    })
+										});
 	                                }
 	                            });
 	                        }).catch(function(error) {

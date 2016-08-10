@@ -7,7 +7,7 @@
 
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify', 'ngIOS9UIWebViewPatch', 'jett.ionic.filter.bar', 'ngSanitize'])
 
-.run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory, $ionicLoading) {
+.run(function($ionicPlatform, $cordovaPushV5, $state, $rootScope, $ionicPopup, notify, $ionicHistory, $ionicLoading) {
     return $ionicPlatform.ready(function() {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
@@ -64,28 +64,43 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             androidConfig = {
                 "senderID": "456019050509" // Project number from GCM
             };
-            $cordovaPush.register(androidConfig).then(function(deviceToken) {
-                // Success -- Registration ID is received in $notificationReceiver and sent to FireBase
-                console.log("Registration success app.js");
-            }, function(err) {
-                alert("Registration error: " + err);
-            })
+            // initialize
+			$cordovaPushV5.initialize(androidConfig).then(function() {
+			    // start listening for new notifications
+			    $cordovaPushV5.onNotification();
+			    // start listening for errors
+			    $cordovaPushV5.onError();
+			    
+			    // register to get registrationId
+			    $cordovaPushV5.register().then(function(data) {
+			      // `data.registrationId` save it somewhere;
+			      console.log("Registration success app.js", data.registrationId);
+			    })
+			});
         } else if (ionic.Platform.isIOS()) {
             var iosConfig = {
                 "badge": true,
                 "sound": true,
                 "alert": true,
             };
-            $cordovaPush.register(iosConfig).then(function(deviceToken) {
-                // Success -- send deviceToken to FireBase
-                console.log("Registration success app.js");
-            }, function(err) {
-                alert("Registration error: " + err);
-            });
+            
+            // initialize
+			$cordovaPushV5.initialize(iosConfig).then(function() {
+			    // start listening for new notifications
+			    $cordovaPushV5.onNotification();
+			    // start listening for errors
+			    $cordovaPushV5.onError();
+			    
+			    // register to get registrationId
+			    $cordovaPushV5.register().then(function(data) {
+			      // `data.registrationId` save it somewhere;
+			      console.log("Registration success app.js", data.registrationId);
+			    })
+			});
         }
 
         // Listen and Display for New Push Notifications
-        return $rootScope.$on('$cordovaPush:notificationReceived', function(event, notification) {
+        return $rootScope.$on('$cordovaPushV5:notificationReceived', function(event, notification) {
 	        console.log("Notification : " + JSON.stringify(notification));
 	      if (ionic.Platform.isAndroid()) {
 		      switch(notification.event) {
@@ -213,7 +228,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					}
 
 				    if (notification.badge) {
-				        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+				        $cordovaPushV5.setBadgeNumber(notification.badge).then(function(result) {
 				          // Success!
 				        }, function(err) {
 				          // An error occurred. Show a message to the user
@@ -353,7 +368,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				}
 
 			    if (notification.badge) {
-			        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+			        $cordovaPushV5.setBadgeNumber(notification.badge).then(function(result) {
 			          	// Success!
 			        }, function(err) {
 			          // An error occurred. Show a message to the user
