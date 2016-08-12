@@ -370,7 +370,7 @@ angular.module('starter.controllers', [])
 
 // Controller for Reset Password
 .controller('ResetPassCtrl', function($scope, $state, $rootScope, fbCallback, $ionicPopup) {
-    var fbRef = firebase.database().ref();
+    var fbRef = firebase.auth();
 
     $scope.passwordChange = function() {
         fbRef.changePassword({
