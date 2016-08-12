@@ -22,7 +22,14 @@
     "cordova-plugin-camera",
     "ionic-plugin-keyboard",
     "cordova-plugin-whitelist",
-    "cordova-plugin-wkwebview-engine"
+    "cordova-plugin-wkwebview-engine",
+    {
+      "variables": {
+        "SENDER_ID": "456019050509"
+      },
+      "locator": "phonegap-plugin-push",
+      "id": "phonegap-plugin-push"
+    }
   ],
   "cordovaPlatforms": [
     "android",

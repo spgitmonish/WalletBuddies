@@ -7,7 +7,7 @@
 
 angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ngMessages', 'firebase', 'email', 'cgNotify', 'ngIOS9UIWebViewPatch', 'jett.ionic.filter.bar', 'ngSanitize'])
 
-.run(function($ionicPlatform, $cordovaPush, $state, $rootScope, $ionicPopup, notify, $ionicHistory, $ionicLoading) {
+.run(function($ionicPlatform, $cordovaPushV5, $state, $rootScope, $ionicPopup, notify, $ionicHistory, $ionicLoading) {
     return $ionicPlatform.ready(function() {
         // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
         // for form inputs)
@@ -59,34 +59,52 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             template: 'Your device appears to be offline.'
           });
 	    })
-
+		console.log("Registering device for push notification", ionic.Platform.isIOS())
         if (ionic.Platform.isAndroid()) {
             androidConfig = {
                 "senderID": "456019050509" // Project number from GCM
             };
-            $cordovaPush.register(androidConfig).then(function(deviceToken) {
-                // Success -- Registration ID is received in $notificationReceiver and sent to FireBase
-                console.log("Registration success app.js");
-            }, function(err) {
-                alert("Registration error: " + err);
-            })
+            // initialize
+			$cordovaPushV5.initialize(androidConfig).then(function() {
+			    // start listening for new notifications
+			    $cordovaPushV5.onNotification();
+			    // start listening for errors
+			    $cordovaPushV5.onError();
+			    
+			    // register to get registrationId
+			    $cordovaPushV5.register().then(function(deviceToken) {
+			      // `data.registrationId` save it somewhere;
+			      console.log("Registration success app.js", deviceToken);
+			    })
+			});
         } else if (ionic.Platform.isIOS()) {
+	        console.log("Registering device for push notification, iOS")
             var iosConfig = {
                 "badge": true,
                 "sound": true,
                 "alert": true,
             };
-            $cordovaPush.register(iosConfig).then(function(deviceToken) {
-                // Success -- send deviceToken to FireBase
-                console.log("Registration success app.js");
-            }, function(err) {
-                alert("Registration error: " + err);
-            });
+            
+            // initialize
+			$cordovaPushV5.initialize(iosConfig).then(function() {
+				console.log("Initialized device for push notification, iOS")
+			    // start listening for new notifications
+			    $cordovaPushV5.onNotification();
+			    // start listening for errors
+			    $cordovaPushV5.onError();
+			    
+			    // register to get registrationId
+			    $cordovaPushV5.register().then(function(deviceToken) {
+			      // `data.registrationId` save it somewhere;
+			      console.log("Registration success app.js", deviceToken);
+			    })
+			});
         }
 
         // Listen and Display for New Push Notifications
-        return $rootScope.$on('$cordovaPush:notificationReceived', function(event, notification) {
-	        console.log("Notification : " + JSON.stringify(notification));
+        return $rootScope.$on('$cordovaPushV5:notificationReceived', function(event, data) {
+	        var notification = data.additionalData
+	        console.log("Notification : " + JSON.stringify(notification), data, event);
 	      if (ionic.Platform.isAndroid()) {
 		      switch(notification.event) {
 		        case 'registered':
@@ -213,7 +231,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 					}
 
 				    if (notification.badge) {
-				        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+				        $cordovaPushV5.setBadgeNumber(notification.badge).then(function(result) {
 				          // Success!
 				        }, function(err) {
 				          // An error occurred. Show a message to the user
@@ -232,10 +250,11 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 		      }
 	      }
 	      else if (ionic.Platform.isIOS()) {
+		      console.log("In iOS", data.message)
 		      // Push Notifications for when app is in the foreground
-		      if (notification.foreground == "1") {
+		      if (notification.foreground == true) {
 				if (notification.tab == "requests"){
-					var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
+					var messageTemplate = '<span ng-click="clickedNotification()">' + data.message + '</span>';
 					notify({
 				        messageTemplate: messageTemplate
 				    });
@@ -263,7 +282,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 						$rootScope.walletCount = $rootScope.walletCount + 1;
 					});*/
 					// To display Banner Notifications
-				    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.body + '</span>';
+				    var messageTemplate = '<span ng-click="clickedNotification()">' + data.message + '</span>';
 					notify({
 				        messageTemplate: messageTemplate
 				    });
@@ -289,9 +308,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				        }
 				    };
 				}
-				else if (notification.payload.tab == "feed"){
+				else if (notification.tab == "feed"){
 					// Display Banner Notifications
-				    var messageTemplate = '<span ng-click="clickedNotification()">' + notification.message + '</span>';
+				    var messageTemplate = '<span ng-click="clickedNotification()">' + data.message + '</span>';
 					notify({
 				        messageTemplate: messageTemplate
 				    });
@@ -301,12 +320,12 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				    };
 				}
 
-			    if (notification.sound) {
-			        var snd = new Media(event.sound);
+			    if (data.sound) {
+			        var snd = new Media(data.sound);
 			        snd.play();
 			    }
 		      }
-		      else if (notification.foreground == "0"){ // if app is not open just go to page
+		      else if (notification.foreground == false){ // if app is not open just go to page
 		        if (notification.tab == "requests"){
 			        $state.go('tab.requests', {
 			            circleID: notification.url
@@ -353,7 +372,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 				}
 
 			    if (notification.badge) {
-			        $cordovaPush.setBadgeNumber(notification.badge).then(function(result) {
+			        $cordovaPushV5.setBadgeNumber(notification.badge).then(function(result) {
 			          	// Success!
 			        }, function(err) {
 			          // An error occurred. Show a message to the user
