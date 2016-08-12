@@ -10,7 +10,6 @@ angular.module('starter.controllers', [])
 		    //$ionicHistory.clearCache();
             //$ionicHistory.clearHistory();
             console.log("Not authenticated", authData);
-
 		    if (authData) {
 			    console.log("$rootScope.userSignUpOngoing", $rootScope.userSignUpOngoing)
 			    if($rootScope.userSignUpOngoing !== true) {
@@ -67,6 +66,7 @@ angular.module('starter.controllers', [])
 			
             // Validating if phone number has 10 digits
             if (account.phonenumber.toString().length !== 10) {
+
                $ionicPopup.alert({
                   title: "Invalid",
                   template: "Please enter a valid 10 digit phone number."
