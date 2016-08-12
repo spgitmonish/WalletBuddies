@@ -19,7 +19,21 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // org.apache.cordova.statusbar required
             StatusBar.styleDefault();
         }
-
+        
+        document.addEventListener("resume", onResume, false);
+        
+        function onResume() {
+	        console.log("APP IS RESUMED")
+		    // Handle the resume event
+		    $cordovaPushV5.setBadgeNumber(0).then(function(result) {
+	          // Success!
+	          console.log("Badge Cleared", result)
+	        }, function(err) {
+	          // An error occurred. Show a message to the user
+	          console.log("Badge Not Cleared", err)
+	        });
+		}
+		
         // Set up Google Analytics(with the ID)
         if(typeof analytics !== undefined) {
 //             analytics.startTrackerWithId("UA-68986040-1");
@@ -95,8 +109,16 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			    
 			    // register to get registrationId
 			    $cordovaPushV5.register().then(function(deviceToken) {
-			      // `data.registrationId` save it somewhere;
-			      console.log("Registration success app.js", deviceToken);
+			      	// `data.registrationId` save it somewhere;
+				  	console.log("Registration success app.js", deviceToken);
+			      	// Set device badge count to zero on app launch
+			        $cordovaPushV5.setBadgeNumber(0).then(function(result) {
+			          // Success!
+			          console.log("Badge Cleared 102")
+			        }, function(err) {
+			          // An error occurred. Show a message to the user
+			          console.log("Badge Not Cleared 5500")
+			        });
 			    })
 			});
         }
