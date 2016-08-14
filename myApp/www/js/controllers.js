@@ -564,7 +564,8 @@ angular.module('starter.controllers', [])
 .controller('GroupCtrl', function($scope, $cordovaCamera, $ionicActionSheet, $ionicLoading, $firebaseObject, $ionicModal, ContactsService, fbCallback, $cordovaContacts, $ionicScrollDelegate, $rootScope, $state, $log, $ionicPopup, $ionicFilterBar, $stateParams) {
 
 	var storageRef = firebase.storage().ref();
-
+	var circlePhoto;
+	
 	function base64toBlob(b64Data, contentType) {
 	  contentType = contentType || '';
 	  sliceSize = 512;
@@ -620,21 +621,7 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
-                        var blob = base64toBlob(imageData, "image/jpeg")
-                        var uploadTask = storageRef.child('Circles/Users/'+ $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
-                        uploadTask.on('state_changed', function(snapshot){
-						  // Observe state change events such as progress, pause, and resume
-						  // See below for more detail
-						}, function(error) {
-						  // Handle unsuccessful uploads
-						  $ionicLoading.show({
-                            template: 'We had trouble uploading your photo. Please try later.',
-                            duration: 2000
-                          });
-						}, function() {
-						  // Handle successful uploads on complete
-						  $scope.imageUrl = uploadTask.snapshot.downloadURL;
-						});
+                        circlePhoto = imageData
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -659,6 +646,7 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
+                        var circlePhoto = imageData
                         var blob = base64toBlob(imageData, "image/jpeg")
                         var uploadTask = storageRef.child('Circles/Users/'+ $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
                         uploadTask.on('state_changed', function(snapshot){
@@ -854,7 +842,6 @@ angular.module('starter.controllers', [])
                     amount: amount,
                     groupMessage: groupMessage,
                     contacts: $scope.data.selectedContacts,
-                    circlePhoto: $scope.imageUrl,
                     circleType: circleType,
                     circleComplete: false,
                     circleCancelled: false,
@@ -865,13 +852,29 @@ angular.module('starter.controllers', [])
                 fbCirclePushRef.child('CreditDates').child('Counter').update({
                     counter: 0
                 });
+                
+                var blob = base64toBlob(circlePhoto, "image/jpeg")
+                var uploadTask = storageRef.child('/Circles/'+ groupID +"/CirclePhoto.jpg").put(blob);
+                uploadTask.on('state_changed', function(snapshot){
+				  // Observe state change events such as progress, pause, and resume
+				  // See below for more detail
+				}, function(error) {
+				  // Handle unsuccessful uploads
+
+				}, function() {
+				  // Handle successful uploads on complete
+				  $scope.imageUrl = uploadTask.snapshot.downloadURL;
+				    // Append new data to this FB link
+	                fbCirclePushRef.update({
+	                    circlePhoto: $scope.imageUrl
+	                });
+				});
 
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
                     // Save invitor name photo
                     if (userData.val().profilePhoto == null) {
 	                    fbCirclePushRef.update({
-	                        invitorName: userData.val().firstname + " " + userData.val().lastname,
-	                        invitorPhoto: $scope.imageSrc
+	                        invitorName: userData.val().firstname + " " + userData.val().lastname
 	                    });
                     } else {
 	                    fbCirclePushRef.update({
@@ -2640,11 +2643,19 @@ angular.module('starter.controllers', [])
 				type: "Debits"
 		    }).then(function(response) {
 			    console.log("Successful POST to webhooks server", response)
-			    $ionicLoading.hide();
-			    $ionicPopup.alert({
-	                title: "Success",
-	                template: "Your Bank Account was successfully setup for debits."
-	            });
+			    if(response === "Success") {
+					$ionicLoading.hide();
+				    $ionicPopup.alert({
+		                title: "Success",
+		                template: "Your Bank Account was successfully setup for debits."
+		            });   
+			    } else {
+				    $ionicLoading.hide();
+				    $ionicPopup.alert({
+		                title: "Error",
+		                template: "We had trouble linking your bank account. Please try again later."
+		            });
+			    }
 			    $state.go("tab.settings");
 		    }).catch(function(err) {
 			    console.log("Error making POST to webhooks server", err)
@@ -2891,8 +2902,18 @@ angular.module('starter.controllers', [])
 				type: "Credits"
 		    }).then(function(response) {
 			    console.log("Successful POST to webhooks server", response)
-			    $ionicLoading.hide();
-			    $state.go('tab.kyc-details');
+			    if(response === "Success") {
+					$ionicLoading.hide();
+					$state.go('tab.kyc-details');  
+			    } else {
+				    $ionicLoading.hide();
+				    $ionicPopup.alert({
+		                title: "Error",
+		                template: "We had trouble linking your bank account. Please try again later."
+		            });
+		            $state.go('tab.settings');
+			    }
+			    
 		    }).catch(function(err) {
 			    console.log("Error making POST to webhooks server", err)
 		    })
@@ -3274,11 +3295,20 @@ angular.module('starter.controllers', [])
 			    ip: ip
 		    }).then(function(response) {
 			    console.log("Successful POST to webhooks server", response)
-			    $ionicLoading.hide();
-                $ionicPopup.alert({
-	                title: "Thanks! You're all set.",
-	                template: "Your Bank Account can now receive credits."
-	            });
+			    if(response === "Success") {
+					$ionicLoading.hide();
+	                $ionicPopup.alert({
+		                title: "Thanks! You're all set.",
+		                template: "Your Bank Account can now receive credits."
+		            });  
+			    } else {
+				    $ionicLoading.hide();
+				    $ionicPopup.alert({
+		                title: "Error",
+		                template: "We had trouble submitting your details. Please try again later."
+		            });
+		            $state.go('tab.settings');
+			    }
 			    $state.go('tab.settings');
 		    }).catch(function(err) {
 			    console.log("Error making POST to webhooks server", err)
