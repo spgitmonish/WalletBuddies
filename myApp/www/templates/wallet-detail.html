@@ -17,7 +17,7 @@
                 <p ng-if="circle.circlePhoto">Edit</p>
                 <p ng-if="!circle.circlePhoto">Add Photo</p>
             </label>
-            <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && Member.Priority==0">
+            <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority==0">
                 <div class="row">
                     <div class="col" style="padding-top: 12px">Buddies</div>
                     <div class="col"></div>
@@ -32,16 +32,16 @@
             <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && Member.Priority!=0 && !circle.requestsExpired">
                 Buddies
             </div>
-            <div class="item item-divider item-dark" ng-if="circle.requestsExpired">
+            <div class="item item-divider item-dark" ng-if="!circle.requestsExpired">
                 Invitees
             </div>
-            <div class="row" ng-if="!circle.requestsExpired">
-				<div class="col" style="vertical-align: top; display: inline-block; text-align: center; width: 120px;" ng-repeat="member in members">
+            <div class="row" ng-if="circle.requestsExpired">
+				<div class="col" style="vertical-align: top; display: inline-block; text-align: center; width: 120px;" ng-repeat="member in circle.AcceptedMembers">
 					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{member.profilePhoto}}"/>
 					<span style="display: block">{{member.firstName}}</span>
 				</div>
             </div>
-            <div class="row" ng-if="circle.requestsExpired">
+            <div class="row" ng-if="!circle.requestsExpired">
 				<div class="col" style="display: inline-block; text-align: center; width: 120px;" ng-repeat="contact in circle.contacts">
 					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{contact.profilePhoto}}"/>
 					<span style="display: block">{{contact.name}}</span>

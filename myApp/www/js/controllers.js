@@ -2643,7 +2643,7 @@ angular.module('starter.controllers', [])
 				type: "Debits"
 		    }).then(function(response) {
 			    console.log("Successful POST to webhooks server", response)
-			    if(response === "Success") {
+			    if(response.data === "Success") {
 					$ionicLoading.hide();
 				    $ionicPopup.alert({
 		                title: "Success",
@@ -2902,7 +2902,7 @@ angular.module('starter.controllers', [])
 				type: "Credits"
 		    }).then(function(response) {
 			    console.log("Successful POST to webhooks server", response)
-			    if(response === "Success") {
+			    if(response.data === "Success") {
 					$ionicLoading.hide();
 					$state.go('tab.kyc-details');  
 			    } else {
@@ -3295,7 +3295,7 @@ angular.module('starter.controllers', [])
 			    ip: ip
 		    }).then(function(response) {
 			    console.log("Successful POST to webhooks server", response)
-			    if(response === "Success") {
+			    if(response.data === "Success") {
 					$ionicLoading.hide();
 	                $ionicPopup.alert({
 		                title: "Thanks! You're all set.",
