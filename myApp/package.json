@@ -17,8 +17,7 @@
   },
   "cordovaPlugins": [
     "http://github.com/don/cordova-filechooser.git",
-    "org.apache.cordova.camera",
-    "org.apache.cordova.contacts",
+    "cordova-plugin-contacts",
     "cordova-plugin-camera",
     "ionic-plugin-keyboard",
     "cordova-plugin-whitelist",
@@ -32,7 +31,7 @@
     }
   ],
   "cordovaPlatforms": [
-    "android",
-    "ios"
+    "ios",
+    "android"
   ]
 }
