@@ -1077,10 +1077,10 @@ angular.module('starter.controllers', [])
 .controller('WalletCtrl', function($scope, $state, $ionicPopup, $rootScope, fbCallback, $firebaseArray, $http, $firebaseObject, $ionicLoading) {
     // Check if user has linked a bank account before he can start a circle
     $scope.newCircle = function() {
-        var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Payments");
+        var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Stripe/");
         fbUser.once("value", function(data) {
             // Check if user's bank account is linked and KYC verified
-            if (data.child("Bank").exists() && data.child("KYC").exists()) {
+            if (data.child("Debits").exists() && data.child("Credits").exists()) {
                 // Set the circleTypePicked to "None"
                 $rootScope.circleTypePicked = "None";
 
@@ -1089,7 +1089,7 @@ angular.module('starter.controllers', [])
             } else {
                 $ionicPopup.alert({
                     title: "You haven't linked your bank account yet!",
-                    template: "You can start a new circle once you've linked an account. Please go to settings to link an account."
+                    template: "You can start a new group once you've linked an account for both credits and debits. Please go to settings to link an account."
                 });
             }
         });
@@ -1170,6 +1170,14 @@ angular.module('starter.controllers', [])
 
 	// Create a storage reference from firebase storage service
 	var storageRef = firebase.storage().ref();
+	
+	// Display credit and debit dates
+	var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates/");
+	$scope.credit = $firebaseObject((fbCredits).limitToLast(1));
+	var fbDebits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/DebitDates/");
+	$scope.debit = $firebaseObject((fbDebits).limitToLast(1));
+	var fbMembersRef = firebase.database().ref("/Circles/" + $stateParams.circleID + "/Members/");
+	$scope.fbMembers = $firebaseArray(fbMembersRef);
 
     var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID);
     // Get the link to the user profile
@@ -1668,11 +1676,6 @@ angular.module('starter.controllers', [])
         });
     }
 
-	// Display credit and debit dates
-	var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates/");
-	$scope.credit = $firebaseObject((fbCredits).limitToLast(1));
-	var fbDebits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/DebitDates/");
-	$scope.debit = $firebaseObject((fbDebits).limitToLast(1));
 })
 
 // Controller for chat
@@ -3267,12 +3270,19 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for providing KYC details.
-.controller('KycCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
+.controller('KycCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup, $ionicHistory) {
 
     $scope.data = $rootScope.data;
 
     var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
-
+	
+	/*
+$scope.$on('$ionicView.leave', function() {
+		console.log("CLEARING EFFIN CACHE")
+      $ionicHistory.clearCache();
+    });
+*/
+    
     $scope.validateUser = function(user) {
         // Check if user has uploaded a image
         $ionicLoading.show({
@@ -3295,6 +3305,15 @@ angular.module('starter.controllers', [])
 			    ip: ip
 		    }).then(function(response) {
 			    console.log("Successful POST to webhooks server", response)
+			    // Clear the form
+			    user.day = "";
+			    user.month = "";
+			    user.year = "";
+			    user.street = "";
+			    user.city = "";
+			    user.state = "";
+			    user.zip = "";
+			    user.ssn = "";
 			    if(response.data === "Success") {
 					$ionicLoading.hide();
 	                $ionicPopup.alert({
@@ -3312,119 +3331,15 @@ angular.module('starter.controllers', [])
 			    $state.go('tab.settings');
 		    }).catch(function(err) {
 			    console.log("Error making POST to webhooks server", err)
+			    $ionicLoading.hide();
+			    $ionicPopup.alert({
+	                title: "Error",
+	                template: "We had trouble submitting your details. Please try again."
+	            });
 		    })
 	    })
-
-        /*
-fbRef.once("value", function(data) {
-            //Decipher oauth keys before POST
-            var oauth_key = $cipherFactory.decrypt(data.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, data.val().Payments.oauth.oauth_key.salt, data.val().Payments.oauth.oauth_key.iv);
-            console.log("USER IMAGE: " + $scope.imageDoc);
-
-            $http.post('https://synapsepay.com/api/v3/user/doc/add', {
-                'login': {
-                    'oauth_key': oauth_key
-                },
-                'user': {
-                    'doc': {
-                        'birth_day': user.day,
-                        'birth_month': user.month,
-                        'birth_year': user.year,
-                        'name_first': data.val().firstname,
-                        'name_last': data.val().lastname,
-                        'address_street1': user.street,
-                        'address_city': user.city,
-                        'address_postal_code': user.zip,
-                        'address_country_code': 'US',
-                        'document_value': user.ssn.toString(),
-                        'document_type': 'SSN',
-                    },
-                    'fingerprint': data.val().Payments.oauth.fingerprint
-                }
-            }).then(function(payload) {
-                console.log("KYC" + JSON.stringify(payload));
-                // POST for submitting user image
-                $http.post('https://synapsepay.com/api/v3/user/doc/attachments/add', {
-                    'login': {
-                        'oauth_key': oauth_key
-                    },
-                    'user': {
-                        'doc': {
-                            'attachment': $scope.imageDoc
-                        },
-                        'fingerprint': data.val().Payments.oauth.fingerprint
-                    }
-                }).then(function(data) {
-                    console.log(data);
-                    console.log("DOCUMENT: " + JSON.stringify(data));
-                }).catch(function(err) {
-                    if(typeof analytics !== 'undefined') {
-                        analytics.trackEvent('user/doc/attachments/add In KycCtrl', err.statusText, err.data.error.en, 1);
-                    }
-                    console.log(err);
-                    console.log(JSON.stringify(err));
-                    alert(err.statusText);
-                });
-
-                if (payload.data.http_code == "200") {
-                    fbRef.child("Payments").child("KYC").update({
-                        oid: payload.data.user._id.$oid,
-                        clientid: payload.data.user.client.id
-                    });
-                    $ionicLoading.hide();
-                    $ionicPopup.alert({
-                        title: "You're all set!",
-                        template: "Your verification is complete"
-                    });
-
-                    // Get a reference to the NewsFeed of the user
-                    var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
-                    var dt = Date.now();
-                    var feedToPush = "Yay!! Your bank account was linked successfully!";
-
-                    // Append new data to this FB link
-                    fbNewsFeedRef.push({
-                        feed: feedToPush,
-                        icon: "ion-checkmark",
-                        color: "my-icon",
-                        time: dt
-                    });
-
-                    // Record entry into Account Verification Complete
-                    if(typeof analytics !== 'undefined') {
-                        analytics.trackView("Account Verification Complete");
-                        analytics.trackEvent('KycCtrl', 'Pass', 'In KycCtrl', 112);
-                    }
-
-                    $state.go("tab.settings");
-                } else {
-                    $ionicLoading.hide();
-                    $ionicPopup.alert({
-                        title: "We need a little more info from you",
-                        template: "Please bear with us :)"
-                    });
-                    $rootScope.kycQuestions = payload.data;
-                    $state.go("tab.kyc-questions");
-                }
-            }).catch(function(err) {
-                if(typeof analytics !== 'undefined') {
-                    analytics.trackEvent('/v3/user/doc/add In KycCtrl', err.statusText, err.data.error.en, 1);
-                }
-                $ionicLoading.hide();
-                if (err.data.http_code == "409" || err.data.http_code == "401" && err.data.error.en != "Error verifying document. Please contact us to learn more.") {
-                    $ionicPopup.alert({
-                        title: "We were unable to verify your SSN",
-                        template: "You need to provide a picture of your Drivers License or Passport!"
-                    });
-                    $state.go("tab.document-upload");
-                } else {
-                	alert(err.data.error.en);
-                }
-                console.log("Attachment" + JSON.stringify(err));
-            });
-        });
-*/
-    };
+	}
+    
 })
 
 .controller('DocUploadCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
