@@ -646,22 +646,7 @@ angular.module('starter.controllers', [])
                     $cordovaCamera.getPicture(options).then(function(imageData) {
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
-                        var circlePhoto = imageData
-                        var blob = base64toBlob(imageData, "image/jpeg")
-                        var uploadTask = storageRef.child('Circles/Users/'+ $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
-                        uploadTask.on('state_changed', function(snapshot){
-						  // Observe state change events such as progress, pause, and resume
-						  // See below for more detail
-						}, function(error) {
-						  // Handle unsuccessful uploads
-						  $ionicLoading.show({
-                            template: 'We had trouble uploading your photo. Please try later.',
-                            duration: 2000
-                          });
-						}, function() {
-						  // Handle successful uploads on complete
-						  $scope.imageUrl = uploadTask.snapshot.downloadURL;
-						});
+                        circlePhoto = imageData
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -1960,8 +1945,14 @@ angular.module('starter.controllers', [])
     $scope.onAccept = function() {
         var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
         fbUser.once("value", function(data) {
+	        console.log("PENDING CIRCLETYPE", data.val().PendingCircles[$stateParams.circleID].circleType, !data.child("Stripe/Debits").exists())
             // Check if user's bank account is linked and KYC info verified before the user can accept an invite
-            if (data.child("Payments/Bank").exists() && data.child("Payments/KYC").exists()) {
+            if(data.val().PendingCircles[$stateParams.circleID].circleType !== "Singular" && !data.child("Stripe/Credits").exists()) {
+	            $ionicPopup.alert({
+                    title: "You haven't linked your bank account for credits!",
+                    template: "You can accept a request for this group once you've linked an account for credits. Please go to settings to link an account."
+                });
+            } else if (data.child("Stripe/Debits").exists()) {
                 // Send out a push and inform users of accepted invite
                 var fbCircle = firebase.database().ref("/Circles/");
                 var fbPush = firebase.database().ref("/PushNotifications/");
