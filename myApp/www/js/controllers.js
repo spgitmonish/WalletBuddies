@@ -14,12 +14,12 @@ angular.module('starter.controllers', [])
 			    console.log("$rootScope.userSignUpOngoing", $rootScope.userSignUpOngoing)
 			    if($rootScope.userSignUpOngoing !== true) {
 					console.log("Authenticated user with uid: ", authData.uid);
-				
+
 		            // Saving auth data to be used across controllers
 		            $rootScope.fbAuthData = authData;
-	
+
 		            // Switch to the Wallet Tab
-		            $state.go('tab.wallet');   
+		            $state.go('tab.wallet');
 			    }
 		    }
 		});
@@ -52,7 +52,7 @@ angular.module('starter.controllers', [])
             }
          } else {
             console.log("All fields entered");
-			
+
 			// Create user's unique Hash.
             // Use a secret string and set the id length to be 4
             var hashids = new Hashids("SecretMonkey", 4);
@@ -63,7 +63,7 @@ angular.module('starter.controllers', [])
             console.log("Phone:   " + account.phonenumber);
             var id = hashids.encode(account.phonenumber);
             console.log("ID after encode: " + id);
-			
+
             // Validating if phone number has 10 digits
             if (account.phonenumber.toString().length !== 10) {
 
@@ -92,24 +92,24 @@ angular.module('starter.controllers', [])
 		              firebase.auth().signInWithEmailAndPassword(account.email, account.password)
 		              .then(function(authData) {
 		                  if(authData) {
-		
+
 		                     // Store information for easier access across controllers
 		                     $rootScope.fbAuthData = authData;
 		                     $rootScope.email = account.email;
-		
+
 		                     console.log("Logged in as: " + authData.uid);
-		
+
 		                     var fbRef = firebase.database().ref();
-		
+
 		                     // Get the Firebase link for this user
 		                     var fbUser = fbRef.child("Users").child(authData.uid);
 		                     console.log("Link: " + fbUser);
-		                     
+
 		                     $ionicLoading.show({
 	                            template: 'Creating your account...',
 	                            duration: 3000
 	                          });
-							 
+
 		                     // Store the user information
 		                     fbUser.update({
 		                        firstname: account.firstname,
@@ -118,21 +118,21 @@ angular.module('starter.controllers', [])
 		                        phonenumber: account.phonenumber,
 		                        survey: false
 		                     });
-		
+
 		                     // Write the user's unique hash to registered users and save his UID
 		                     var fbHashRef = firebase.database().ref("/RegisteredUsers/");
 		                     fbHashRef.child(id).update({
 		                        uid: authData.uid
 		                     });
-		
+
 		                     // Check to see if user has invites
 		                     var fbInvites = firebase.database().ref("/Invites/" + id);
 		                     if (fbInvites != null) {
 		                        var obj = $firebaseObject(fbInvites);
-		
+
 		                        obj.$loaded().then(function() {
 		                           console.log("loaded record:", obj.$id);
-		
+
 		                           // To iterate the key/value pairs of the object, use angular.forEach()
 		                           angular.forEach(obj, function(value, key) {
 		                              console.log(key, value);
@@ -151,7 +151,7 @@ angular.module('starter.controllers', [])
 		                                 fbRef.child("Circles").child(circleID).child("Members").child(data.uid).update({
 		                                    Status: "pending"
 		                                 });
-		
+
 		                                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
 		                                    Status: "pending"
 		                                 });
@@ -159,7 +159,7 @@ angular.module('starter.controllers', [])
 		                           })
 		                        })
 		                     }
-		
+
 		                     // Write email info to /Sendgrid folder to trigger the server to send email
 		                     fbRef.child('Sendgrid').push({
 		                        from: 'hello@walletbuddies.co',
@@ -168,39 +168,39 @@ angular.module('starter.controllers', [])
 		                        text: "Thanks for signing up with WalletBuddies. You can now start doing things more often with your buddies :)" +
 		                           "\n\n WalletBuddies"
 		                     });
-		
+
 		                     var email = account.email;
 		                     var number = account.phonenumber.toString();
 		                     var first = account.firstname;
 		                     var last = account.lastname;
-		
+
 		                     //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
-		
+
 		                     // Clear the form
 		                     account.firstname = '';
 		                     account.lastname = '';
 		                     account.email = '';
 		                     account.phonenumber = '';
 		                     account.password = '';
-		
+
 		                     var dt = Date.now();
 		                     // Get a reference to the NewsFeed of the user
 		                     var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
-		
+
 		                     fbRef.child("Users").child($rootScope.fbAuthData.uid).child('Badges').update({
 		                        walletCounter: 0,
 		                        requestCounter: 0,
 		                        feedCounter: 1
 		                     });
-		
+
 		                     // Record entry into Account Controller
 		                     if (typeof analytics !== 'undefined') {
 		                        analytics.trackView("Account Controller");
 		                        analytics.trackEvent('AccountCtrl', 'Pass', 'In AccountCtrl', 113);
 		                     }
-		
+
 		                     var feedToPush = "Welcome to <b>WalletBuddies</b>, your account was succesfully set up!";
-		
+
 		                     // Append new data to this FB link
 		                     fbNewsFeedRef.push({
 		                        feed: feedToPush,
@@ -208,11 +208,11 @@ angular.module('starter.controllers', [])
 		                        color: "melon-icon",
 		                        time: dt
 		                     });
-		
+
 		                     $ionicLoading.hide();
 		                     // Switch to the Help Sliders Tab
 		                     $state.go('help');
-		
+
 		                     // To request permission for Push Notifications
 		                    $scope.$on('$ionicView.afterLeave', function() {
 			                    console.log("Registering device for push notification", ionic.Platform.isIOS())
@@ -227,7 +227,7 @@ angular.module('starter.controllers', [])
 									    $cordovaPushV5.onNotification();
 									    // start listening for errors
 									    $cordovaPushV5.onError();
-									    
+
 									    // register to get registrationId
 									    $cordovaPushV5.register().then(function(deviceToken) {
 									      // `data.registrationId` save it somewhere;
@@ -244,14 +244,14 @@ angular.module('starter.controllers', [])
 						                "sound": true,
 						                "alert": true,
 						            };
-						            
+
 						            // initialize
 									$cordovaPushV5.initialize(iosConfig).then(function() {
 									    // start listening for new notifications
 									    $cordovaPushV5.onNotification();
 									    // start listening for errors
 									    $cordovaPushV5.onError();
-									    
+
 									    // register to get registrationId
 									    $cordovaPushV5.register().then(function(deviceToken) {
 									      // `data.registrationId` save it somewhere;
@@ -565,7 +565,7 @@ angular.module('starter.controllers', [])
 
 	var storageRef = firebase.storage().ref();
 	var circlePhoto;
-	
+
 	function base64toBlob(b64Data, contentType) {
 	  contentType = contentType || '';
 	  sliceSize = 512;
@@ -669,7 +669,11 @@ angular.module('starter.controllers', [])
             template: 'Fetching your contacts...'
         });
 	    var options = {};
-		options.multiple = true;
+		 options.multiple = true;
+       if (ionic.Platform.platform() == "android") {
+          // hasPhoneNumber only works for android.
+          options.hasPhoneNumber = true;
+       };
 	    $cordovaContacts.find(options).then(function(allContacts) { //omitting parameter to .find() causes all contacts to be returned
 	      $scope.contacts = allContacts;
 	      $scope.modal.show();
@@ -837,7 +841,7 @@ angular.module('starter.controllers', [])
                 fbCirclePushRef.child('CreditDates').child('Counter').update({
                     counter: 0
                 });
-                
+
                 var blob = base64toBlob(circlePhoto, "image/jpeg")
                 var uploadTask = storageRef.child('/Circles/'+ groupID +"/CirclePhoto.jpg").put(blob);
                 uploadTask.on('state_changed', function(snapshot){
@@ -1155,7 +1159,7 @@ angular.module('starter.controllers', [])
 
 	// Create a storage reference from firebase storage service
 	var storageRef = firebase.storage().ref();
-	
+
 	// Display credit and debit dates
 	var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates/");
 	$scope.credit = $firebaseObject((fbCredits).limitToLast(1));
@@ -1769,7 +1773,7 @@ angular.module('starter.controllers', [])
 				var walletCounter = userData.val().Badges.walletCounter;
                 var badgeCounter = data.val().badgeCounter;
 
-                
+
                 console.log("badgeCounter: " + badgeCounter);
 
                 // If badgeCounter is greater than 0(for this circle),
@@ -2696,7 +2700,7 @@ angular.module('starter.controllers', [])
 			    public_token: public_token,
 				account_id: metadata.account_id,
 				user: $rootScope.fbAuthData.uid,
-				email: $rootScope.fbAuthData.email, 
+				email: $rootScope.fbAuthData.email,
 				type: "Debits"
 		    }).then(function(response) {
 			    console.log("Successful POST to webhooks server", response)
@@ -2705,7 +2709,7 @@ angular.module('starter.controllers', [])
 				    $ionicPopup.alert({
 		                title: "Success",
 		                template: "Your Bank Account was successfully setup for debits."
-		            });   
+		            });
 			    } else {
 				    $ionicLoading.hide();
 				    $ionicPopup.alert({
@@ -2961,7 +2965,7 @@ angular.module('starter.controllers', [])
 			    console.log("Successful POST to webhooks server", response)
 			    if(response.data === "Success") {
 					$ionicLoading.hide();
-					$state.go('tab.kyc-details');  
+					$state.go('tab.kyc-details');
 			    } else {
 				    $ionicLoading.hide();
 				    $ionicPopup.alert({
@@ -2970,7 +2974,7 @@ angular.module('starter.controllers', [])
 		            });
 		            $state.go('tab.settings');
 			    }
-			    
+
 		    }).catch(function(err) {
 			    console.log("Error making POST to webhooks server", err)
 		    })
@@ -3329,14 +3333,14 @@ angular.module('starter.controllers', [])
     $scope.data = $rootScope.data;
 
     var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
-	
+
 	/*
 $scope.$on('$ionicView.leave', function() {
 		console.log("CLEARING EFFIN CACHE")
       $ionicHistory.clearCache();
     });
 */
-    
+
     $scope.validateUser = function(user) {
         // Check if user has uploaded a image
         $ionicLoading.show({
@@ -3373,7 +3377,7 @@ $scope.$on('$ionicView.leave', function() {
 	                $ionicPopup.alert({
 		                title: "Thanks! You're all set.",
 		                template: "Your Bank Account can now receive credits."
-		            });  
+		            });
 			    } else {
 				    $ionicLoading.hide();
 				    $ionicPopup.alert({
@@ -3393,7 +3397,7 @@ $scope.$on('$ionicView.leave', function() {
 		    })
 	    })
 	}
-    
+
 })
 
 .controller('DocUploadCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
