@@ -1646,19 +1646,82 @@ angular.module('starter.controllers', [])
 
     //Cancel a group - set the flag to true
     $scope.cancelCircle = function () {
-        fbCircles.update({
-            circleCancelled: true
-        }).then(function(success){
-	        $ionicPopup.alert({
-                title: "Success!",
-                template: "Your circle has now ended. Further transactions will not be made!"
-            });
-        }).catch(function(error){
-	        $ionicPopup.alert({
-                title: "Unable to process request",
-                template: "Please try again."
-            });
-        });
+	    
+	    firebase.database().ref().child('/Circles/' + $stateParams.circleID).child('DebitDates').once('value', function(debitDates) {
+		    debitDates.forEach(function(date) {
+			    // Get the date stored in firebase
+				var DebitDate = new Date(date.val().debitDate);
+				
+				// Calculate Notification Date from Debit Date
+				var NotifDate = new Date(Date.now());
+				NotifDate.setDate(DebitDate.getDate()+4)
+				
+				//Minus one day from the debit date
+				DebitDate.setDate(DebitDate.getDate()-1)
+				
+				// Get the current date
+				var currentDate = new Date(Date.now());
+				
+				// Check if current date is in between debit date-1 and notification date, since new dates are set the day before debit dates
+				// If true, the current cycle is alredy in progress and only the next cycle will be cancelled.
+				if (currentDate > DebitDate && currentDate < NotifDate) {
+				    console.log("You cannot cancel the circle, it will only be cancelled on", DebitDate.getDate())
+					console.log("Will only be cancelled on", date.val().debitDate)
+				    var confirmPopup = $ionicPopup.confirm({
+				     	title: 'Cancel Circle',
+					 	template: 'The current cycle is in progress and cannot be cancelled. Do you wish to cancel from the next cycle?'
+				   	});
+				
+				    confirmPopup.then(function(res) {
+				      if(res) {
+				        console.log('You are sure');
+				        fbCircles.update({
+			            	circleCancelled: true
+				        }).then(function(success){
+					        $ionicPopup.alert({
+				                title: "Success!",
+				                template: "Your circle has now ended. Further transactions will not be made!"
+				            });
+				        }).catch(function(error){
+					        $ionicPopup.alert({
+				                title: "Unable to process request",
+				                template: "Please try again."
+				            });
+				        });
+				      } else {
+				       console.log('You are not sure');
+				      }
+				    });
+				} else {
+				    console.log("Will be cancelled right away")
+				    var confirmPopup = $ionicPopup.confirm({
+				     	title: 'Cancel Circle',
+					 	template: 'Are you sure you want to end this circle?'
+				   	});
+				
+				    confirmPopup.then(function(res) {
+				      if(res) {
+				        console.log('You are sure');
+				        fbCircles.update({
+			            	circleCancelled: true
+				        }).then(function(success){
+					        $ionicPopup.alert({
+				                title: "Success!",
+				                template: "Your circle has now ended. Further transactions will not be made!"
+				            });
+				        }).catch(function(error){
+					        $ionicPopup.alert({
+				                title: "Unable to process request",
+				                template: "Please try again."
+				            });
+				        });
+				      } else {
+				       console.log('You are not sure');
+				      }
+				    });
+				}
+	        })
+	    })
     }
 
 })
