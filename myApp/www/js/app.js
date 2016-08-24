@@ -19,9 +19,9 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // org.apache.cordova.statusbar required
             StatusBar.styleDefault();
         }
-        
+
         document.addEventListener("resume", onResume, false);
-        
+
         function onResume() {
 	        console.log("APP IS RESUMED")
 		    // Handle the resume event
@@ -33,7 +33,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 	          console.log("Badge Not Cleared", err)
 	        });
 		}
-		
+
         // Set up Google Analytics(with the ID)
         if(typeof analytics !== undefined) {
 //             analytics.startTrackerWithId("UA-68986040-1");
@@ -84,7 +84,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			    $cordovaPushV5.onNotification();
 			    // start listening for errors
 			    $cordovaPushV5.onError();
-			    
+
 			    // register to get registrationId
 			    $cordovaPushV5.register().then(function(deviceToken) {
 			      // `data.registrationId` save it somewhere;
@@ -98,7 +98,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
                 "sound": true,
                 "alert": true,
             };
-            
+
             // initialize
 			$cordovaPushV5.initialize(iosConfig).then(function() {
 				console.log("Initialized device for push notification, iOS")
@@ -106,7 +106,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			    $cordovaPushV5.onNotification();
 			    // start listening for errors
 			    $cordovaPushV5.onError();
-			    
+
 			    // register to get registrationId
 			    $cordovaPushV5.register().then(function(deviceToken) {
 			      	// `data.registrationId` save it somewhere;
@@ -413,15 +413,15 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     link: function(scope, element) {
       scope.$watch('trigger', function(value) {
         if(value === "true") {
-          
+
             //element[0].focus();
 		  $timeout(function() {
             element.on('blur', function() {
 	            //$timeout(function () {
 		            console.log("Hello blur", value, $rootScope.focused);
 		            if ($rootScope.focused != "false") {
-			        console.log("Hello blur focusing", value, $rootScope.focused);    
-			        	element[0].focus();   
+			        console.log("Hello blur focusing", value, $rootScope.focused);
+			        	element[0].focus();
 		            }
 	            //});
             });
@@ -432,7 +432,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
   };
 })*/
 
-// Directive for horizantal radio buttons 
+// Directive for horizantal radio buttons
 .directive('groupedRadio', function() {
  return {
    restrict: 'A',
@@ -657,7 +657,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.account-credit', {
         url: '/account',
         views: {
@@ -667,7 +667,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             }
         }
     })
-    
+
     .state('tab.manual-account', {
         url: '/manual-account',
         views: {

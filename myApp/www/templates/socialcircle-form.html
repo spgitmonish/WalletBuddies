@@ -1,9 +1,9 @@
- <ion-view view-title="New Circle">
-    <ion-content>
-    <form name="signinForm" novalidate="" ng-submit="signIn(signinForm)">
-        <ion-list class="padding">
+<ion-view view-title="New Circle">
+   <ion-content>
+      <form name="signinForm" novalidate="" ng-submit="signIn(signinForm)">
+         <ion-list class="padding">
             <div class="list">
-                <label class="item item-avatar" ng-click="selectPicture()">
+               <label class="item item-avatar" ng-click="selectPicture()">
                   <img ng-src="{{imageSrc}}">
 			      <h2>Circle Photo</h2>
 			      <p>Select a photo</p>
@@ -11,15 +11,15 @@
             </div>
 
             <div class="list">
-	            <h5>&nbsp&nbspGive your circle a name</h5>
-                <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.groupName.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.groupName.$valid  && signinForm.$submitted}">
+               <h5>&nbsp&nbspGive your circle a name</h5>
+               <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.groupName.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.groupName.$valid  && signinForm.$submitted}">
                     <input ng-model='user.groupName' name="groupName" type="text" placeholder="Eg. Sunday Brunch" required>
                 </label>
             </div>
 
             <div class="list">
-	            <h5>&nbsp&nbspPick your plan</h5>
-                <label class="item item-input item-select" ng-class="{ 'has-error-lr' : signinForm.plan.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.plan.$valid  && signinForm.$submitted}">
+               <h5>&nbsp&nbspPick your plan</h5>
+               <label class="item item-input item-select" ng-class="{ 'has-error-lr' : signinForm.plan.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.plan.$valid  && signinForm.$submitted}">
                     <div class="input-label">
                         <p>Click to select a plan</p>
                     </div>
@@ -30,101 +30,101 @@
                     </select>
                 </label>
             </div>
-			<div class="list">
-                <h5>&nbsp&nbspWho should the pool amount go to?</h5>                
-                <div class="button-bar padding" style="padding-left: 50px; padding-right: 50px">
-                    <a grouped-radio="'Singular'" ng-model="user.circleType">Just Me</a>
-                    <a grouped-radio="'Rotational'" ng-model="user.circleType">Everyone</a>
+            <div class="list">
+               <h5>&nbsp&nbspWho should the pool amount go to?</h5>
+               <div class="button-bar padding" style="padding-left: 50px; padding-right: 50px">
+                  <a grouped-radio="'Singular'" ng-model="user.circleType">Just Me</a>
+                  <a grouped-radio="'Rotational'" ng-model="user.circleType">Everyone</a>
                </div>
                <br>
                <div ng-if="user.circleType=='Singular' && user.plan!=null" style="padding-left: 20px; padding-right: 20px">
-                    <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px">Alright! You'll be the admin for this circle. The pooled amount will be credited to <b>you</b> {{user.plan}}.</p>
+                  <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px">Alright! You'll be the admin for this circle. The pooled amount will be credited to <b>you</b> {{user.plan}}.</p>
                </div>
                <div ng-if="user.circleType=='Rotational' && user.plan!=null" style="padding-left: 20px; padding-right: 20px">
-                    <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px">The pooled amount will be credited to <b>everyone</b> in the group on a rotational basis {{user.plan}}.</p>
+                  <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px">The pooled amount will be credited to <b>everyone</b> in the group on a rotational basis {{user.plan}}.</p>
                </div>
             </div>
             <div class="list">
-                <h5>&nbsp&nbspSet your payment amount</h5>
-                <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.amount.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.amount.$valid  && signinForm.$submitted}">
+               <h5>&nbsp&nbspSet your payment amount</h5>
+               <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.amount.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.amount.$valid  && signinForm.$submitted}">
                     <input ng-model='user.amount' name="amount" type="tel" placeholder="$ 50" required>
                 </label>
             </div>
             <div class="list">
-                <h5>&nbsp&nbspSay something to your buddies</h5>
-                <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.groupMessage.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.groupMessage.$valid  && signinForm.$submitted}">
+               <h5>&nbsp&nbspSay something to your buddies</h5>
+               <label class="item item-input" ng-class="{ 'has-error-lr' : signinForm.groupMessage.$invalid  && signinForm.$submitted, 'valid-lr' : signinForm.groupMessage.$valid  && signinForm.$submitted}">
                     <textarea ng-model='user.groupMessage' name="groupMessage" placeholder="Brunch was fun last sunday we should do this more often. Join away!" required></textarea>
                 </label>
             </div>
-        </ion-list>
-		<div class="form-errors"
-		   ng-show="signinForm.$error && signinForm.$submitted"
-		   ng-messages="signinForm.$error"
-		   ng-messages-include="templates/form-errors.html">
-		</div>
-		<div class="list" ng-if="data.selectedContacts.length!=0">
-            	<h5>&nbsp&nbspSelected Contacts</h5>
-        </div>
-        <ion-list>
+         </ion-list>
+         <div class="form-errors" ng-show="signinForm.$error && signinForm.$submitted" ng-messages="signinForm.$error" ng-messages-include="templates/form-errors.html">
+         </div>
+         <div class="list" ng-if="data.selectedContacts.length!=0">
+            <h5>&nbsp&nbspSelected Contacts</h5>
+         </div>
+         <ion-list>
             <!-- Picking contacts -->
             <div class="padding" ng-if="data.selectedContacts.length==0">
-            	<button class="button button-block button-dark" ng-click="pickContact()">Pick Your Buddies</button>
+               <button class="button button-block button-dark" ng-click="pickContact()">Pick Your Buddies</button>
             </div>
             <div class="list">
-                <a class="item" ng-repeat="contact in data.selectedContacts">
-                    <div class="row">
-				    	<div class="col col-90">
-					    	<h2>{{contact.name}}</h2>
-							<p ng-if="contact.email">{{contact.emailType}} : {{contact.email}}</p>
-							<p>{{contact.phoneType}} : {{contact.phone}}</p>
-				    	</div>
-						<div class="col">
-							<i class="icon ion-close-circled melon-icon " ng-click="contactDelete($index)"></i>
-						</div>
-		    		</div>
-                </a>
+               <a class="item" ng-repeat="contact in data.selectedContacts">
+                  <div class="row">
+                     <div class="col col-90">
+                        <h2>{{contact.name}}</h2>
+                        <p ng-if="contact.email">{{contact.emailType}} : {{contact.email}}</p>
+                        <p>{{contact.phoneType}} : {{contact.phone}}</p>
+                     </div>
+                     <div class="col">
+                        <i class="icon ion-close-circled melon-icon " ng-click="contactDelete($index)"></i>
+                     </div>
+                  </div>
+               </a>
             </div>
             <div class="padding" ng-if="data.selectedContacts.length!=0">
-            	<button class="button button-block button-dark" ng-click="pickContact()">Add More Buddies</button>
+               <button class="button button-block button-dark" ng-click="pickContact()">Add More Buddies</button>
             </div>
             <!-- Picking contacts ends here -->
             <div ng-if="user.circleType=='Singular' && user.plan!=null && user.amount!=null && data.selectedContacts.length!=0" style="padding-left: 20px; padding-right: 20px">
-              <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's your circle summary:</b> WalletBuddies will debit <b>${{user.amount}}</b> from everyone <b>{{user.plan}}</b> and the pooled amount of <b>${{user.amount*(data.selectedContacts.length+1)}}</b> will be credited to <b>you</b>.</p>
+               <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's your circle summary:</b> WalletBuddies will debit <b>${{user.amount}}</b> from everyone <b>{{user.plan}}</b> and the pooled amount of <b>${{user.amount*(data.selectedContacts.length+1)}}</b> will be credited to <b>you</b>.</p>
             </div>
             <div ng-if="user.circleType=='Rotational' && user.plan!=null && user.amount!=null && data.selectedContacts.length!=0" style="padding-left: 20px; padding-right: 20px">
-              <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's your circle summary:</b> WalletBuddies will debit <b>${{user.amount}}</b> from everyone <b>{{user.plan}}</b> and the pooled amount of <b>${{user.amount*(data.selectedContacts.length+1)}}</b> will be credited to <b>everyone</b> in the group on a rotational basis.</p>
+               <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's your circle summary:</b> WalletBuddies will debit <b>${{user.amount}}</b> from everyone <b>{{user.plan}}</b> and the pooled amount of <b>${{user.amount*(data.selectedContacts.length+1)}}</b> will be credited to <b>everyone</b> in the group on a rotational basis.</p>
             </div>
             <div class="list padding" ng-if="data.selectedContacts.length!=0">
-                <button class="button button-block button-balanced" ng-click="addGroup(user)">Invite</button>
+               <button class="button button-block button-balanced" ng-click="addGroup(user)">Invite</button>
             </div>
-        </ion-list>
-    </form>
-    </ion-content>
+         </ion-list>
+      </form>
+   </ion-content>
 </ion-view>
 
 <script id="contacts-modal.html" type="text/ng-template">
-  <ion-modal-view>
-    <ion-header-bar class="bar bar-header bar-balanced">
-      <h1 class="title">Pick your buddies</h1>
-      <div class="button button-clear" ng-click="modal.hide()">Done</div>
-    </ion-header-bar>
-    <div class="bar bar-subheader bar-light item-input-inset">
-        <label class="item-input-wrapper">
+   <ion-modal-view>
+      <ion-header-bar class="bar bar-header bar-balanced">
+         <h1 class="title">Pick your buddies</h1>
+         <div class="button button-clear" ng-click="modal.hide()">Done</div>
+      </ion-header-bar>
+      <div class="bar bar-subheader bar-light item-input-inset">
+         <label class="item-input-wrapper">
             <i class="icon ion-ios7-search placeholder-icon"></i>
             <input type="search" placeholder="Search Contacts" ng-model="search.name.formatted" ng-change="scrollTop()">
         </label>
-    </div>
-    <ion-content class="has-subheader">
-    <ion-list>
-	  <div ng-repeat="contact in contacts | filter:search" ng-init="parentIndex=$index" collection-item-height="itemheight(contact.phoneNumbers.length)" collection-item-width="'100%'" style="width:100%">
-		<ion-item>
-	    <ion-checkbox ng-repeat="phoneNumber in contact.phoneNumbers" style="border:none;" ng-model="phoneNumber.selected" ng-init="actIndex=$index" ng-click="phoneSelect(contact, phoneNumber)">
-	    	<div><h5>{{contact.name.formatted}}</h5></div>
-            <div><p style="font-size: smaller">{{phoneNumber.type}} {{phoneNumber.value}}</p></div>
-	    </ion-checkbox>
-		</ion-item>
-	  </div>
-    </ion-list>
-    </ion-content>
-  </ion-modal-view>
+      </div>
+      <ion-content class="has-subheader">
+         <ion-list>
+            <div ng-repeat="contact in contacts | filter:search" ng-init="parentIndex=$index" collection-item-height="itemheight(contact.phoneNumbers.length)" collection-item-width="'100%'" style="width:100%">
+               <ion-item>
+                  <ion-checkbox ng-repeat="phoneNumber in contact.phoneNumbers" style="border:none;" ng-model="phoneNumber.selected" ng-init="actIndex=$index" ng-click="phoneSelect(contact, phoneNumber)">
+                     <div>
+                        <h5>{{contact.name.formatted}}</h5></div>
+                     <div>
+                        <p style="font-size: smaller">{{phoneNumber.type}} {{phoneNumber.value}}</p>
+                     </div>
+                  </ion-checkbox>
+               </ion-item>
+            </div>
+         </ion-list>
+      </ion-content>
+   </ion-modal-view>
 </script>
