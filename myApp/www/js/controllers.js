@@ -2680,7 +2680,7 @@ angular.module('starter.controllers', [])
 	   // Fire Plaid link when view loads
 	   var linkHandler = Plaid.create({
 		  selectAccount: true,
-		  env: 'tartan',
+		  env: 'production',
 		  clientName: 'WalletBuddies',
 		  key: 'fc5e88b3e3b80b99c42edd7c5357c5',
 		  product: 'auth',
@@ -2939,7 +2939,7 @@ angular.module('starter.controllers', [])
 	   // Fire Plaid link when view loads
 	   var linkHandler = Plaid.create({
 		  selectAccount: true,
-		  env: 'tartan',
+		  env: 'production',
 		  clientName: 'WalletBuddies',
 		  key: 'fc5e88b3e3b80b99c42edd7c5357c5',
 		  product: 'auth',
