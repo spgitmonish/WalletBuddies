@@ -848,7 +848,12 @@ angular.module('starter.controllers', [])
 				  // Observe state change events such as progress, pause, and resume
 				  // See below for more detail
 				}, function(error) {
-				  // Handle unsuccessful uploads
+				    // Handle unsuccessful uploads
+	                
+	                // Writing circle ID to the user's path and set Status to true
+	                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
+	                    Status: true
+	                });
 
 				}, function() {
 				  // Handle successful uploads on complete
@@ -856,6 +861,11 @@ angular.module('starter.controllers', [])
 				    // Append new data to this FB link
 	                fbCirclePushRef.update({
 	                    circlePhoto: $scope.imageUrl
+	                });
+	                
+	                // Writing circle ID to the user's path and set Status to true
+	                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
+	                    Status: true
 	                });
 				});
 
@@ -871,11 +881,6 @@ angular.module('starter.controllers', [])
 	                        invitorPhoto: userData.val().profilePhoto
 	                    });
                     }
-                });
-
-                // Writing circle ID to the user's path and set Status to true
-                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
-                    Status: true
                 });
 
                 // Get the reference for the push
@@ -1114,12 +1119,10 @@ angular.module('starter.controllers', [])
     // NOTE: This callback gets called on a 'child_added' event.
     fbCallback.childAdded(fbUserCircle, true, function(data) {
         var fbCircles = firebase.database().ref("/Circles/" + data.key);
-		console.log("TRUE CIRCLES", data.key);
         // Obtain circle data for the accepted circles
         fbCallback.fetch(fbCircles, function(output) {
             // Get the information within the circle
             var acceptedCircleVal = output;
-            console.log(acceptedCircleVal);
 
             // Get the reference for the push
             var fbAcceptedCirclePushRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + data.key);
