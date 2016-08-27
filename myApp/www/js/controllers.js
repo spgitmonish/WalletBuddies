@@ -73,7 +73,8 @@ angular.module('starter.controllers', [])
                });
                return;
             }
-            console.log("Checking if user is registere")
+            console.log("Checking if user is registered");
+
                //Check if user is already registered
             firebase.database().ref("/RegisteredUsers/").child(id).once('value', function(user) {
                   console.log("Checking if user is registered", user.exists())
@@ -210,59 +211,50 @@ angular.module('starter.controllers', [])
                                     });
 
                                     $ionicLoading.hide();
+
                                     // Switch to the Help Sliders Tab
                                     $state.go('help');
 
                                     // To request permission for Push Notifications
                                     $scope.$on('$ionicView.afterLeave', function() {
-                                       console.log("Registering device for push notification", ionic.Platform.isIOS())
-                                          // Register device for push notifications
-                                       if (ionic.Platform.isAndroid()) {
-                                          androidConfig = {
+                                       var options = {
+                                          android: {
                                              "senderID": "456019050509" // Project number from GCM
-                                          };
-                                          // initialize
-                                          $cordovaPushV5.initialize(androidConfig).then(function() {
-                                             // start listening for new notifications
-                                             $cordovaPushV5.onNotification();
-                                             // start listening for errors
-                                             $cordovaPushV5.onError();
+                                          },
+                                          ios: {
+                                             alert: "true",
+                                             badge: "true",
+                                             sound: "true"
+                                          }
+                                       };
 
-                                             // register to get registrationId
-                                             $cordovaPushV5.register().then(function(deviceToken) {
-                                                // `data.registrationId` save it somewhere;
-                                                console.log("Registration success app.js", deviceToken);
+                                       // Initialize
+                                       $cordovaPushV5.initialize(options).then(function() {
+                                          console.log("Initializing for notifications");
+
+                                          // Start listening for new notifications
+                                          $cordovaPushV5.onNotification();
+
+                                          // Start listening for errors
+                                          $cordovaPushV5.onError();
+
+                                          // Register to get registrationId
+                                          $cordovaPushV5.register().then(function(deviceToken) {
+                                             // `data.registrationId` save it somewhere;
+                                             console.log("Registration success app.js", deviceToken);
+                                             if (ionic.Platform.isAndroid()) {
                                                 fbUser.update({
                                                    deviceToken: deviceToken,
                                                    device: "Android"
                                                 });
-                                             })
-                                          });
-                                       } else if (ionic.Platform.isIOS()) {
-                                          var iosConfig = {
-                                             "badge": true,
-                                             "sound": true,
-                                             "alert": true,
-                                          };
-
-                                          // initialize
-                                          $cordovaPushV5.initialize(iosConfig).then(function() {
-                                             // start listening for new notifications
-                                             $cordovaPushV5.onNotification();
-                                             // start listening for errors
-                                             $cordovaPushV5.onError();
-
-                                             // register to get registrationId
-                                             $cordovaPushV5.register().then(function(deviceToken) {
-                                                // `data.registrationId` save it somewhere;
-                                                console.log("Registration success app.js", deviceToken);
+                                             } else if (ionic.Platform.isIOS()) {
                                                 fbUser.update({
                                                    deviceToken: deviceToken,
                                                    device: "iOS"
                                                 });
-                                             })
-                                          });
-                                       }
+                                             }
+                                          })
+                                       });
                                     });
                                  } else {
                                     if (typeof analytics !== 'undefined') {
@@ -456,7 +448,7 @@ angular.module('starter.controllers', [])
                // Saving auth data to be used across controllers
                $rootScope.fbAuthData = authData;
                $rootScope.email = email;
-               console.log("Auth Success", authData)
+               console.log("Auth Success", authData);
                   // Hard coded to be false
                if (false) {
                   var fbInvites = firebase.database().ref("/Invites/" + token);
