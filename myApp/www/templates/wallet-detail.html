@@ -11,9 +11,9 @@
         </div>
         <div class="card">
             <label class="item item-thumbnail-left" ng-click="selectPicture()">
-                <img ng-src="{{circle.circlePhoto}}">
+                <img ng-src="{{circle.circlePhoto || getInitials(circle.circleName)}}">
                 <br>
-                <h2>Circle Photo</h2>
+                <h2>{{circle.circleName}}</h2>
                 <p ng-if="circle.circlePhoto">Edit</p>
                 <p ng-if="!circle.circlePhoto">Add Photo</p>
             </label>
@@ -47,7 +47,7 @@
             
             <div class="row" ng-if="circle.requestsExpired">
 				<div class="col" style="vertical-align: top; display: inline-block; text-align: center; width: 120px;" ng-repeat="member in circle.AcceptedMembers">
-					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{member.profilePhoto}}"/>
+					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{member.profilePhoto || getInitials(member.firstName, $index)}}"/>
 					<span style="display: block">{{member.firstName}}</span>
 				</div>
             </div>
@@ -75,7 +75,7 @@
                 Plan 
             </div>
             <div class="item item-text-wrap" ng-if="debit" ng-repeat="date in debit">
-		            <span style="color: #555555; font-size: medium"><span style="color: #30c0cb">${{circle.amount}} {{circle.plan}}</span>: Debits for current cycle occur on <b>{{date.debitDate}}</b></span>
+		            <span style="color: #555555; font-size: medium"><span style="color: #30c0cb">${{circle.amount}} {{circle.plan}}</span>: Debits for current cycle will be initiated on <b>{{date.debitDate}}</b></span>
             </div>
             <div class="item item-text-wrap" ng-if="!circle.requestsExpired">
 	            <span style="color: #555555; font-size: medium; color: #30c0cb">${{circle.amount}} {{circle.plan}}</span>
@@ -95,7 +95,7 @@
                 Circle Status
             </div>
             <div class="item item-text-wrap" ng-if="circle.circleCancelled || circle.circleComplete">
-                <span style="color: #555555; font-size: medium">This circle has now ended. No new transactions will be initiated. Pending credits will be completed.</span>
+                <span style="color: #555555; font-size: medium">This group has now ended. No new transactions will be initiated. Pending credits will be completed.</span>
             </div>
             
             <!-- Picking contacts -->
@@ -121,7 +121,7 @@
             </div>
             <!-- Picking contacts ends here -->
             <div ng-if="data.selectedContacts.length!=0" style="padding-left: 20px; padding-right: 20px">
-                <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's how your circle will change:</b> WalletBuddies will debit <b>${{circle.amount}}</b> from everyone <b>{{circle.plan}}</b> and the pooled amount of <b>${{circle.amount * (members.length+data.selectedContacts.length)}}</b> will be credited to <b>you</b>.</p>
+                <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's how your group will change:</b> WalletBuddies will debit <b>${{circle.amount}}</b> from everyone <b>{{circle.plan}}</b> and the pooled amount of <b>${{circle.amount * (members.length+data.selectedContacts.length)}}</b> will be credited to <b>you</b>.</p>
             </div>
             <div class="list padding" ng-if="data.selectedContacts.length!=0">
                 <button class="button button-block button-balanced" ng-click="addGroup()">Invite</button>
@@ -129,7 +129,7 @@
         </div>
         <div align="center" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority==0 && circle.circleCancelled==false">
             <div class="list">
-                <button class="button button-outline button-dark" ng-click="cancelCircle()">End Circle</button>
+                <button class="button button-outline button-dark" ng-click="cancelCircle()">End Group</button>
             </div>
         </div>
     </ion-content>

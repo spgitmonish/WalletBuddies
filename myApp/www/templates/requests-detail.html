@@ -3,7 +3,7 @@
     <ion-content>
 		<div class="card">		
 		    <div class="item item-thumbnail-left item-text-wrap">
-			    <img src="{{circle.circlePhoto}}">
+			    <img src="{{circle.circlePhoto  || getInitials(circle.circleName)}}">
 			    <div class="row row-center">
 		    	<div class="col" ng-if="circle.contacts.length==1"><b>{{circle.circleName}}</b> with <b>{{circle.invitorName}}</b></div>
 		    	<div class="col" ng-if="circle.contacts.length>1"><b>{{circle.circleName}}</b> with <b>{{circle.invitorName}}</b> and {{circle.contacts.length}} others</div>
@@ -16,10 +16,10 @@
 		      <b>How Much &nbsp</b> <p> ${{circle.amount}} {{circle.plan}}</p>
 		    </div>
 		    <div class="item item-text-wrap" ng-if="circle.circleType=='Singular'">
-		      <b>Circle Type &nbsp</b> <p>Collector Circle: {{circle.invitorName}} is the Admin for this Circle. The Pooled Amount for this circle will go to {{circle.invitorName}} {{circle.plan}}.</p>
+		      <b>Group Type &nbsp</b> <p><b style="color: #333333">Captain Group</b>: {{circle.invitorName}} is the Admin for this Group. The Pooled Amount for this group will go to {{circle.invitorName}} {{circle.plan}}.</p>
 		    </div>
 		    <div class="item item-text-wrap" ng-if="circle.circleType=='Rotational'">
-		      <b>Circle Type &nbsp</b> <p>Collective Circle: The Pooled Amount will go to a randomly chosen person in this Circle {{circle.plan}}. Every member gets the Pool Amount once.</p>
+		      <b>Group Type &nbsp</b> <p><b style="color: #333333">Crew</b>: Everyone gets a shot at being the Captain. The Pooled Amount will go to a randomly chosen person in this Group {{circle.plan}}. Every member gets the Pool Amount once.</p>
 		    </div>
 		    <div class="item item-text-wrap">
 		      <b>Why &nbsp</b> <p>{{circle.groupMessage}}</p>

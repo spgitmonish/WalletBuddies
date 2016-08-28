@@ -5,9 +5,11 @@
 		      {{data.firstname}} {{data.lastname}}'s Profile
 	      </div>
 	      <label class="item item-thumbnail-left" ng-click="selectPicture()">
-	        <img ng-src="{{data.profilePhoto}}">
+	        <img ng-src="{{data.profilePhoto || getInitials(data.firstname, data.lastname)}}">
 	        <br>
+	        Profile Photo
 		    <p ng-if="!data.profilePhoto">Add Photo</p>
+		    <p ng-if="data.profilePhoto">Edit Photo</p>
 	      </label>
 	      <label class="item item-input">
 			  <input ng-model='data.email' type="text" placeholder="Email">

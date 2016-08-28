@@ -1,11 +1,11 @@
 <ion-view hide-back-button="true" view-title="Wallet">
     <ion-nav-buttons side="secondary">
-        <a class="button button-icon icon ion-compose" ng-click="newCircle()"></a>
+        <a class="button button-icon icon ion-ios7-plus-empty" ng-click="newCircle()"></a>
     </ion-nav-buttons>
     <ion-content ng-show="circles != 0">
         <ion-list>
             <ion-item class="item item-thumbnail-left item-text-wrap item-remove-animate item-icon-right" ng-repeat="circle in circles | reverse" href="#/tab/wallet/{{circle.circleID}}">
-                <img ng-src="{{circle.circlePhoto}}">
+                <img ng-src="{{circle.circlePhoto || getInitials(circle.circleName, $index)}}">
                 <p>
                     <br><b>{{circle.circleName}}</b></br>
                 </p>
@@ -21,7 +21,7 @@
     </ion-content>
     <ion-content ng-show="circles == 0" class="no-data">
         <h3 style="color: gray">
-			No Circles
+			No Groups
     	</h3>
     </ion-content>
 </ion-view>

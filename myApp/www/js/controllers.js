@@ -801,11 +801,6 @@ angular.module('starter.controllers', [])
                     template: "Please select atleast one contact to create a circle."
                 });
                 return false;
-            } else if ($scope.imageSrc == null) {
-                $ionicPopup.alert({
-                    title: "No circle photo",
-                    template: "Add a photo to your circle. :)"
-                });
             } else {
                 // Use angular.copy to avoid $$hashKey being added to object
                 $scope.data.selectedContacts = angular.copy($scope.data.selectedContacts);
@@ -841,33 +836,43 @@ angular.module('starter.controllers', [])
                 fbCirclePushRef.child('CreditDates').child('Counter').update({
                     counter: 0
                 });
-
-                var blob = base64toBlob(circlePhoto, "image/jpeg")
-                var uploadTask = storageRef.child('/Circles/'+ groupID +"/CirclePhoto.jpg").put(blob);
-                uploadTask.on('state_changed', function(snapshot){
-				  // Observe state change events such as progress, pause, and resume
-				  // See below for more detail
-				}, function(error) {
-				    // Handle unsuccessful uploads
-	                
-	                // Writing circle ID to the user's path and set Status to true
+				
+				if(circlePhoto != null) {
+					var blob = base64toBlob(circlePhoto, "image/jpeg")
+	                var uploadTask = storageRef.child('/Circles/'+ groupID +"/CirclePhoto.jpg").put(blob);
+	                uploadTask.on('state_changed', function(snapshot){
+					  // Observe state change events such as progress, pause, and resume
+					  // See below for more detail
+					}, function(error) {
+					    // Handle unsuccessful uploads
+		                
+		                // Writing circle ID to the user's path and set Status to true
+		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
+		                    Status: true
+		                });
+	
+					}, function() {
+					  // Handle successful uploads on complete
+					  $scope.imageUrl = uploadTask.snapshot.downloadURL;
+					    // Append new data to this FB link
+		                fbCirclePushRef.update({
+		                    circlePhoto: $scope.imageUrl
+		                });
+		                
+		                // Writing circle ID to the user's path and set Status to true
+		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
+		                    Status: true
+		                });
+					});
+				// No circle photo selected
+				} else {
+					// Writing circle ID to the user's path and set Status to true
 	                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
 	                    Status: true
 	                });
-
-				}, function() {
-				  // Handle successful uploads on complete
-				  $scope.imageUrl = uploadTask.snapshot.downloadURL;
-				    // Append new data to this FB link
-	                fbCirclePushRef.update({
-	                    circlePhoto: $scope.imageUrl
-	                });
-	                
-	                // Writing circle ID to the user's path and set Status to true
-	                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
-	                    Status: true
-	                });
-				});
+				}
+				
+                
 
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
                     // Save invitor name photo
@@ -973,7 +978,7 @@ angular.module('starter.controllers', [])
                                     fbName = output.firstname;
                                     fbRef.child('PushNotifications').push({
                                         uid: data.uid,
-                                        message: fbName + " has invited you to form a Circle on WalletBuddies.",
+                                        message: fbName + " has invited you to form a Group on WalletBuddies.",
                                         payload: groupID,
                                         tab: "requests"
                                     });
@@ -1003,26 +1008,26 @@ angular.module('starter.controllers', [])
                                         fbRef.child('Sendgrid').push({
                                             from: 'hello@walletbuddies.co',
                                             to: email,
-                                            subject: "You've been invited to form a Circle on WalletBuddies by " + fbName,
-                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download the app and join this Circle. Have fun. :)"
+                                            subject: "You've been invited to form a Group on WalletBuddies by " + fbName,
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download the app and join this Group. Have fun. :)"
                                         });
-                                        console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + email);
+                                        console.log("Invites sent by: " + fbName + " for the group: " + groupName + " to " + email);
                                     } else if (email) {
                                         // Write email info to /Sendgrid folder to trigger the server to send email
                                         fbRef.child('Sendgrid').push({
                                             from: 'hello@walletbuddies.co',
                                             to: email,
-                                            subject: "You've been invited to form a Circle on WalletBuddies by " + fbName,
-                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download and join this Circle. Have fun. :)"
+                                            subject: "You've been invited to form a Group on WalletBuddies by " + fbName,
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download and join this Group. Have fun. :)"
                                         });
-                                        console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + email);
+                                        console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + email);
                                     } else {
                                         // Write email info to /Sendgrid folder to trigger the server to send email
                                         fbRef.child('Twilio').push({
                                             to: phone,
-                                            text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download and join this Circle. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download and join this Group. Have fun. :)"
                                         });
-                                        console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + phone);
+                                        console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + phone);
                                     }
                                 });
                             }
@@ -1044,7 +1049,7 @@ angular.module('starter.controllers', [])
                 // Get a reference to the NewsFeed of the user
                 var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
                 var dt = Date.now();
-                var feedToPush = "You created a new circle <b>" + groupName + "</b>.";
+                var feedToPush = "You created a new group <b>" + groupName + "</b>.";
 
                 // Append new data to this FB link
                 fbNewsFeedRef.push({
@@ -1152,6 +1157,42 @@ angular.module('starter.controllers', [])
             });
         });
     });
+    
+    // This creates a group avatar if no group photo exists
+    $scope.getInitials = function (name, i) {
+	    console.log("IS THIS THE INDEX", name, i)
+		var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
+        var canvas = document.createElement('canvas');
+        canvas.style.display = 'none';
+        var canvasWidth = 300;
+		var canvasHeight = 300;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        document.body.appendChild(canvas);
+        var context = canvas.getContext('2d');
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        if (i < 12) {
+	        context.fillStyle = colorArray[i];
+        } else {
+	    	context.fillStyle = '#EC6B83';   
+        }
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.font = "150px Helvetica";
+        context.fillStyle = "#fff";
+        var first;
+        if (name) {
+            first = name[0];
+            var initials = first;
+            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            var data = canvas.toDataURL();
+            document.body.removeChild(canvas);
+            return data;
+        } else {
+            return false;
+        }
+
+	}
 })
 
 // Controller for wallet-detail page
@@ -1165,9 +1206,9 @@ angular.module('starter.controllers', [])
 
 	// Display credit and debit dates
 	var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates/");
-	$scope.credit = $firebaseObject((fbCredits).limitToLast(1));
+	$scope.credit = $firebaseObject((fbCredits).limitToFirst(1));
 	var fbDebits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/DebitDates/");
-	$scope.debit = $firebaseObject((fbDebits).limitToLast(1));
+	$scope.debit = $firebaseObject((fbDebits).limitToFirst(1));
 	var fbMembersRef = firebase.database().ref("/Circles/" + $stateParams.circleID + "/Members/");
 	$scope.fbMembers = $firebaseArray(fbMembersRef);
 
@@ -1305,7 +1346,6 @@ angular.module('starter.controllers', [])
                           });
 						});
 
-
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -1322,7 +1362,7 @@ angular.module('starter.controllers', [])
     var fbCircleAcceptedMembersObj = $firebaseObject(fbCircleAcceptedMembers);
 
     $ionicLoading.show({
-        template: "Loading circle data..."
+        template: "Loading group data..."
     });
 
     // Hide the notification after the data is loaded
@@ -1418,7 +1458,7 @@ angular.module('starter.controllers', [])
 	    // Show the action sheet
         var hideSheet = $ionicActionSheet.show({
             buttons: [{
-                text: 'Add More Buddies To This Circle'
+                text: 'Add More Buddies To This Group'
             }],
             cancelText: 'Cancel',
             cancel: function() {
@@ -1585,7 +1625,7 @@ angular.module('starter.controllers', [])
                             fbName = output.firstname;
                             fbRef.child('PushNotifications').push({
                                 uid: data.uid,
-                                message: fbName + " has invited you to join a Circle on WalletBuddies.",
+                                message: fbName + " has invited you to join a Group on WalletBuddies.",
                                 payload: groupID,
                                 tab: "requests"
                             });
@@ -1615,26 +1655,26 @@ angular.module('starter.controllers', [])
                                 fbRef.child('Sendgrid').push({
                                     from: 'hello@walletbuddies.co',
                                     to: email,
-                                    subject: "You've been invited to join a Circle on WalletBuddies by " + fbName,
-                                    text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download the app and join this Circle. Have fun. :)"
+                                    subject: "You've been invited to join a Group on WalletBuddies by " + fbName,
+                                    text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download the app and join this Group. Have fun. :)"
                                 });
-                                console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + email);
+                                console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + email);
                             } else if (email) {
                                 // Write email info to /Sendgrid folder to trigger the server to send email
                                 fbRef.child('Sendgrid').push({
                                     from: 'hello@walletbuddies.co',
                                     to: email,
-                                    subject: "You've been invited to join a Circle on WalletBuddies by " + fbName,
-                                    text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download and join this Circle. Have fun. :)"
+                                    subject: "You've been invited to join a Group on WalletBuddies by " + fbName,
+                                    text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download and join this Group. Have fun. :)"
                                 });
-                                console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + email);
+                                console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + email);
                             } else {
                                 // Write email info to /Sendgrid folder to trigger the server to send email
                                 fbRef.child('Twilio').push({
                                     to: phone,
-                                    text: fbName + " has invited you to the " + groupName + " Circle on WalletBuddies. Click here: www.walletbuddies.co to download and join this Circle. Have fun. :)"
+                                    text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download and join this Group. Have fun. :)"
                                 });
-                                console.log("Invites sent by: " + fbName + " for circle: " + groupName + " to " + phone);
+                                console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + phone);
                             }
                         });
                     }
@@ -1672,10 +1712,10 @@ angular.module('starter.controllers', [])
 				// Check if current date is in between debit date-1 and notification date, since new dates are set the day before debit dates
 				// If true, the current cycle is alredy in progress and only the next cycle will be cancelled.
 				if (currentDate > DebitDate && currentDate < NotifDate) {
-				    console.log("You cannot cancel the circle, it will only be cancelled on", DebitDate.getDate())
+				    console.log("You cannot cancel the group, it will only be cancelled on", DebitDate.getDate())
 					console.log("Will only be cancelled on", date.val().debitDate)
 				    var confirmPopup = $ionicPopup.confirm({
-				     	title: 'Cancel Circle',
+				     	title: 'Cancel Group',
 					 	template: 'The current cycle is in progress and cannot be cancelled. Do you wish to cancel from the next cycle?'
 				   	});
 				
@@ -1687,7 +1727,7 @@ angular.module('starter.controllers', [])
 				        }).then(function(success){
 					        $ionicPopup.alert({
 				                title: "Success!",
-				                template: "Your circle has now ended. Further transactions will not be made!"
+				                template: "Your group has now ended. Further transactions will not be made!"
 				            });
 				        }).catch(function(error){
 					        $ionicPopup.alert({
@@ -1702,8 +1742,8 @@ angular.module('starter.controllers', [])
 				} else {
 				    console.log("Will be cancelled right away")
 				    var confirmPopup = $ionicPopup.confirm({
-				     	title: 'Cancel Circle',
-					 	template: 'Are you sure you want to end this circle?'
+				     	title: 'Cancel Group',
+					 	template: 'Are you sure you want to end this group?'
 				   	});
 				
 				    confirmPopup.then(function(res) {
@@ -1714,7 +1754,7 @@ angular.module('starter.controllers', [])
 				        }).then(function(success){
 					        $ionicPopup.alert({
 				                title: "Success!",
-				                template: "Your circle has now ended. Further transactions will not be made!"
+				                template: "Your group has now ended. Further transactions will not be made!"
 				            });
 				        }).catch(function(error){
 					        $ionicPopup.alert({
@@ -1730,6 +1770,73 @@ angular.module('starter.controllers', [])
 	        })
 	    })
     }
+    
+    /*
+// This creates a group avatar if no group photo exists
+    $scope.getInitials = function (name) {
+        var canvas = document.createElement('canvas');
+        canvas.style.display = 'none';
+        var canvasWidth = 300;
+		var canvasHeight = 300;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        document.body.appendChild(canvas);
+        var context = canvas.getContext('2d');
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillStyle = "#247FFF";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.font = "150px Helvetica";
+        context.fillStyle = "#fff";
+        var first;
+        if (name) {
+            first = name[0];
+            var initials = first;
+            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            var data = canvas.toDataURL();
+            document.body.removeChild(canvas);
+            return data;
+        } else {
+            return false;
+        }
+	}
+*/
+	
+	// This creates a user and group avatar if no group/user photo exists
+    $scope.getInitials = function (name, i) {
+	    console.log("IS THIS THE INDEX", name, i)
+		var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
+        var canvas = document.createElement('canvas');
+        canvas.style.display = 'none';
+        var canvasWidth = 300;
+		var canvasHeight = 300;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        document.body.appendChild(canvas);
+        var context = canvas.getContext('2d');
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        if (i < 12) {
+	        context.fillStyle = colorArray[i];
+        } else {
+	    	context.fillStyle = '#247FFF';   
+        }
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.font = "150px Helvetica";
+        context.fillStyle = "#fff";
+        var first;
+        if (name) {
+            first = name[0];
+            var initials = first;
+            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            var data = canvas.toDataURL();
+            document.body.removeChild(canvas);
+            return data;
+        } else {
+            return false;
+        }
+
+	}
 
 })
 
@@ -1991,6 +2098,42 @@ angular.module('starter.controllers', [])
             });
         });
     });
+    
+    // This creates a user avatar if no profile image exists
+    $scope.getInitials = function (name, i) {
+		var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
+        var canvas = document.createElement('canvas');
+        canvas.style.display = 'none';
+        var canvasWidth = 300;
+		var canvasHeight = 300;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        document.body.appendChild(canvas);
+        var context = canvas.getContext('2d');
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        if (i < 12) {
+	        context.fillStyle = colorArray[i];
+        } else {
+	    	context.fillStyle = '#EC6B83';   
+        }
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.font = "150px Helvetica";
+        context.fillStyle = "#fff";
+        var first;
+        if (name) {
+            first = name[0];
+            var initials = first;
+            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            var data = canvas.toDataURL();
+            document.body.removeChild(canvas);
+            return data;
+        } else {
+            return false;
+        }
+
+	}
+
 })
 
 // Controller for requests-detail page
@@ -2099,14 +2242,14 @@ angular.module('starter.controllers', [])
                 	fbRef.child('Messages').child($stateParams.circleID).push({
                     	name: "WalletBuddies",
                     	time: d,
-                    	text: data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " circle."
+                    	text: data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " group."
             		});
 
             		for(var uid in circle.val().AcceptedMembers) {
                         if (circle.val().AcceptedMembers.hasOwnProperty(uid)) {
                             fbPush.push({
 			                    uid: uid,
-								message: "WalletBuddies" + ' @ ' + circle.val().circleName + ': ' + data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " circle.",
+								message: "WalletBuddies" + ' @ ' + circle.val().circleName + ': ' + data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " group.",
 								payload: $stateParams.circleID,
 								tab: "chat"
 		                	});
@@ -2116,7 +2259,7 @@ angular.module('starter.controllers', [])
                 // Get a reference to the NewsFeed of the user
 		        var fbNewsFeedRef = firebase.database().ref("/Users/"+$rootScope.fbAuthData.uid+"/NewsFeed/");
 		        var dt = Date.now();
-		        var feedToPush = "You accepted an invite to the circle <b>" + $scope.circle.circleName + "</b>.";
+		        var feedToPush = "You accepted an invite to the group <b>" + $scope.circle.circleName + "</b>.";
 
 		        // Append new data to this FB link
 		        fbNewsFeedRef.push({
@@ -2190,14 +2333,14 @@ angular.module('starter.controllers', [])
 	        	fbRef.child('Messages').child($stateParams.circleID).push({
 	            	name: "WalletBuddies",
 	            	time: d,
-	            	text: userData.val().firstname + " has declined the invite to the " + data.val().circleName + " circle."
+	            	text: userData.val().firstname + " has declined the invite to the " + data.val().circleName + " group."
 	    		});
 
 	    		for(var uid in data.val().AcceptedMembers) {
 	                if (data.val().AcceptedMembers.hasOwnProperty(uid)) {
 	                    fbPush.push({
 		                    uid: uid,
-							message: "WalletBuddies" + ' @ ' + data.val().circleName + ': ' + userData.val().firstname + " has declined the invite to the " + data.val().circleName + " circle.",
+							message: "WalletBuddies" + ' @ ' + data.val().circleName + ': ' + userData.val().firstname + " has declined the invite to the " + data.val().circleName + " group.",
 							payload: $stateParams.circleID,
 							tab: "chat"
 	                	});
@@ -2226,14 +2369,14 @@ angular.module('starter.controllers', [])
                 from: 'hello@walletbuddies.co',
                 to: $rootScope.fbAuthData.email,
                 subject: "Confirmation from WalletBuddies",
-                text: "This message is to confirm that you have declined to join the Circle " + data.val().circleName + ". \n\n- WalletBuddies"
+                text: "This message is to confirm that you have declined to join the Group " + data.val().circleName + ". \n\n- WalletBuddies"
             });
         });
 
         // Get a reference to the NewsFeed of the user
         var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
         var dt = Date.now();
-        var feedToPush = "You declined an invite to the circle <b>" + $scope.circle.circleName + "</b>.";
+        var feedToPush = "You declined an invite to the group <b>" + $scope.circle.circleName + "</b>.";
 
         // Append new data to this FB link
         fbNewsFeedRef.push({
@@ -2251,6 +2394,35 @@ angular.module('starter.controllers', [])
 
         $state.go('tab.requests');
     }
+    
+    // This creates a group avatar if no profile image exists
+    $scope.getInitials = function (name) {
+        var canvas = document.createElement('canvas');
+        canvas.style.display = 'none';
+        var canvasWidth = 300;
+		var canvasHeight = 300;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        document.body.appendChild(canvas);
+        var context = canvas.getContext('2d');
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillStyle = "#FF9C95";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.font = "150px Helvetica";
+        context.fillStyle = "#fff";
+        var first;
+        if (name) {
+            first = name[0];
+            var initials = first;
+            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            var data = canvas.toDataURL();
+            document.body.removeChild(canvas);
+            return data;
+        } else {
+            return false;
+        }
+	}
 })
 
 // Controller for tab-settings
@@ -2466,6 +2638,41 @@ angular.module('starter.controllers', [])
             }
         });
     }
+    
+    // This creates a user avatar if no profile image exists
+    $scope.getInitials = function (fname, lname) {
+        var canvas = document.createElement('canvas');
+        canvas.style.display = 'none';
+        var canvasWidth = 300;
+		var canvasHeight = 300;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        document.body.appendChild(canvas);
+        var context = canvas.getContext('2d');
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillStyle = "#E45270";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.font = "150px Helvetica";
+        context.fillStyle = "#fff";
+        var first, last;
+        if (fname || lname) {
+            first = fname[0];
+            last = lname != '' ? lname[0] : null;
+            if (last) {
+                var initials = first + last;
+                context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            } else {
+                var initials = first;
+                context.fillText(initials.toUpperCase(), 10, 23);
+            }
+            var data = canvas.toDataURL();
+            document.body.removeChild(canvas);
+            return data;
+        } else {
+            return false;
+        }
+	}
 })
 
 // Controller for Reset Password
@@ -2480,19 +2687,19 @@ angular.module('starter.controllers', [])
     }
 
     $scope.questionList = [{
-        text: "How big was your Savings Circle?",
+        text: "How big was your Savings Group?",
         value: "Question1"
     }, {
-        text: "Which plan did you select for the Social Circle?",
+        text: "Which plan did you select for the Social Group?",
         value: "Question2"
     }, {
-        text: "What was the amount selected for the Social Circle?",
+        text: "What was the amount selected for the Social Group?",
         value: "Question3"
     }, {
         text: "What did you spend the money on after you got your share?",
         value: "Question4"
     }, {
-        text: "If you had an option on our app to spend the money you got paid from your circle? Would you be willing to use it? Similar to the credit card cashback redeem option. ",
+        text: "If you had an option on our app to spend the money you got paid from your group? Would you be willing to use it? Similar to the credit card cashback redeem option. ",
         value: "Question5"
     }, ]
 

@@ -2,7 +2,7 @@
     <ion-content ng-show="circles != 0">
         <ion-list>
             <ion-item class="item item-thumbnail-left item-text-wrap" ng-repeat="circle in circles track by $index" href="#/tab/requests/{{circle.circleID}}">
-            <img src="{{circle.invitorPhoto}}">
+            <img src="{{circle.invitorPhoto || circle.circlePhoto || getInitials(circle.invitorName, $index)}}">
             	<b>{{circle.invitorName}}</b> invited you to join the circle <b>{{circle.circleName}}</b></p>
             	<p ng-if="circle.requestsExpired" style="color: red; margin-top: 5px">This request has expired</p>
 				<button class="button button-small button-outline button-balanced" style="margin: 10px 0px 0px 0px">
