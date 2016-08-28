@@ -790,7 +790,7 @@ angular.module('starter.controllers', [])
             if ($scope.data.selectedContacts.length == 0) {
                 $ionicPopup.alert({
                     title: "No contacts selected",
-                    template: "Please select atleast one contact to create a circle."
+                    template: "Please select atleast one contact to create a group."
                 });
                 return false;
             } else {
