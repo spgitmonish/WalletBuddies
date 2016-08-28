@@ -73,246 +73,238 @@ angular.module('starter.controllers', [])
                });
                return;
             }
-			console.log("Checking if user is registere")
-			//Check if user is already registered
+            console.log("Checking if user is registered");
+
+               //Check if user is already registered
             firebase.database().ref("/RegisteredUsers/").child(id).once('value', function(user) {
-	            console.log("Checking if user is registered", user.exists())
-	            if(user.exists()) {
-		            $ionicPopup.alert({
-	                  title: "User Already Registered",
-	                  template: "This phone number is already linked to an existing account. Please Signin or use another number."
-	                });
-	                return;
-	            } else {
-		            // Create the User
-		            firebase.auth().createUserWithEmailAndPassword(account.email, account.password)
-		            .then(function(){
-			           $rootScope.userSignUpOngoing = true
-		               // Authorize the user with email/password
-		              firebase.auth().signInWithEmailAndPassword(account.email, account.password)
-		              .then(function(authData) {
-		                  if(authData) {
+                  console.log("Checking if user is registered", user.exists())
+                  if (user.exists()) {
+                     $ionicPopup.alert({
+                        title: "User Already Registered",
+                        template: "This phone number is already linked to an existing account. Please Signin or use another number."
+                     });
+                     return;
+                  } else {
+                     // Create the User
+                     firebase.auth().createUserWithEmailAndPassword(account.email, account.password)
+                        .then(function() {
+                           $rootScope.userSignUpOngoing = true
+                              // Authorize the user with email/password
+                           firebase.auth().signInWithEmailAndPassword(account.email, account.password)
+                              .then(function(authData) {
+                                 if (authData) {
 
-		                     // Store information for easier access across controllers
-		                     $rootScope.fbAuthData = authData;
-		                     $rootScope.email = account.email;
+                                    // Store information for easier access across controllers
+                                    $rootScope.fbAuthData = authData;
+                                    $rootScope.email = account.email;
 
-		                     console.log("Logged in as: " + authData.uid);
+                                    console.log("Logged in as: " + authData.uid);
 
-		                     var fbRef = firebase.database().ref();
+                                    var fbRef = firebase.database().ref();
 
-		                     // Get the Firebase link for this user
-		                     var fbUser = fbRef.child("Users").child(authData.uid);
-		                     console.log("Link: " + fbUser);
+                                    // Get the Firebase link for this user
+                                    var fbUser = fbRef.child("Users").child(authData.uid);
+                                    console.log("Link: " + fbUser);
 
-		                     $ionicLoading.show({
-	                            template: 'Creating your account...',
-	                            duration: 3000
-	                          });
+                                    $ionicLoading.show({
+                                       template: 'Creating your account...',
+                                       duration: 3000
+                                    });
 
-		                     // Store the user information
-		                     fbUser.update({
-		                        firstname: account.firstname,
-		                        lastname: account.lastname,
-		                        email: account.email,
-		                        phonenumber: account.phonenumber,
-		                        survey: false
-		                     });
+                                    // Store the user information
+                                    fbUser.update({
+                                       firstname: account.firstname,
+                                       lastname: account.lastname,
+                                       email: account.email,
+                                       phonenumber: account.phonenumber,
+                                       survey: false
+                                    });
 
-		                     // Write the user's unique hash to registered users and save his UID
-		                     var fbHashRef = firebase.database().ref("/RegisteredUsers/");
-		                     fbHashRef.child(id).update({
-		                        uid: authData.uid
-		                     });
+                                    // Write the user's unique hash to registered users and save his UID
+                                    var fbHashRef = firebase.database().ref("/RegisteredUsers/");
+                                    fbHashRef.child(id).update({
+                                       uid: authData.uid
+                                    });
 
-		                     // Check to see if user has invites
-		                     var fbInvites = firebase.database().ref("/Invites/" + id);
-		                     if (fbInvites != null) {
-		                        var obj = $firebaseObject(fbInvites);
+                                    // Check to see if user has invites
+                                    var fbInvites = firebase.database().ref("/Invites/" + id);
+                                    if (fbInvites != null) {
+                                       var obj = $firebaseObject(fbInvites);
 
-		                        obj.$loaded().then(function() {
-		                           console.log("loaded record:", obj.$id);
+                                       obj.$loaded().then(function() {
+                                          console.log("loaded record:", obj.$id);
 
-		                           // To iterate the key/value pairs of the object, use angular.forEach()
-		                           angular.forEach(obj, function(value, key) {
-		                              console.log(key, value);
-		                              var circleID = value.circleID;
-		                              console.log("Invites path: " + fbInvites + circleID);
-		                              // Check if the invite was for a Singular or Rotational Circle
-		                              if (value.circleType == 'Singular') {
-		                                 fbRef.child("Circles").child(circleID).child("PendingMembers").child(data.uid).update({
-		                                    Status: "pending"
-		                                 });
-		                                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
-		                                    Status: "pending"
-		                                 });
-		                              } else {
-		                                 // Writing UserID under CircleID and set Status to pending
-		                                 fbRef.child("Circles").child(circleID).child("Members").child(data.uid).update({
-		                                    Status: "pending"
-		                                 });
+                                          // To iterate the key/value pairs of the object, use angular.forEach()
+                                          angular.forEach(obj, function(value, key) {
+                                             console.log(key, value);
+                                             var circleID = value.circleID;
+                                             console.log("Invites path: " + fbInvites + circleID);
+                                             // Check if the invite was for a Singular or Rotational Circle
+                                             if (value.circleType == 'Singular') {
+                                                fbRef.child("Circles").child(circleID).child("PendingMembers").child(data.uid).update({
+                                                   Status: "pending"
+                                                });
+                                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
+                                                   Status: "pending"
+                                                });
+                                             } else {
+                                                // Writing UserID under CircleID and set Status to pending
+                                                fbRef.child("Circles").child(circleID).child("Members").child(data.uid).update({
+                                                   Status: "pending"
+                                                });
 
-		                                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
-		                                    Status: "pending"
-		                                 });
-		                              }
-		                           })
-		                        })
-		                     }
+                                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
+                                                   Status: "pending"
+                                                });
+                                             }
+                                          })
+                                       })
+                                    }
 
-		                     // Write email info to /Sendgrid folder to trigger the server to send email
-		                     fbRef.child('Sendgrid').push({
-		                        from: 'hello@walletbuddies.co',
-		                        to: account.email,
-		                        subject: account.firstname + "! You're all set.",
-		                        text: "Thanks for signing up with WalletBuddies. You can now start doing things more often with your buddies :)" +
-		                           "\n\n WalletBuddies"
-		                     });
+                                    // Write email info to /Sendgrid folder to trigger the server to send email
+                                    fbRef.child('Sendgrid').push({
+                                       from: 'hello@walletbuddies.co',
+                                       to: account.email,
+                                       subject: account.firstname + "! You're all set.",
+                                       text: "Thanks for signing up with WalletBuddies. You can now start doing things more often with your buddies :)" +
+                                          "\n\n WalletBuddies"
+                                    });
 
-		                     var email = account.email;
-		                     var number = account.phonenumber.toString();
-		                     var first = account.firstname;
-		                     var last = account.lastname;
+                                    var email = account.email;
+                                    var number = account.phonenumber.toString();
+                                    var first = account.firstname;
+                                    var last = account.lastname;
 
-		                     //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
+                                    //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
 
-		                     // Clear the form
-		                     account.firstname = '';
-		                     account.lastname = '';
-		                     account.email = '';
-		                     account.phonenumber = '';
-		                     account.password = '';
+                                    // Clear the form
+                                    account.firstname = '';
+                                    account.lastname = '';
+                                    account.email = '';
+                                    account.phonenumber = '';
+                                    account.password = '';
 
-		                     var dt = Date.now();
-		                     // Get a reference to the NewsFeed of the user
-		                     var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+                                    var dt = Date.now();
+                                    // Get a reference to the NewsFeed of the user
+                                    var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
-		                     fbRef.child("Users").child($rootScope.fbAuthData.uid).child('Badges').update({
-		                        walletCounter: 0,
-		                        requestCounter: 0,
-		                        feedCounter: 1
-		                     });
+                                    fbRef.child("Users").child($rootScope.fbAuthData.uid).child('Badges').update({
+                                       walletCounter: 0,
+                                       requestCounter: 0,
+                                       feedCounter: 1
+                                    });
 
-		                     // Record entry into Account Controller
-		                     if (typeof analytics !== 'undefined') {
-		                        analytics.trackView("Account Controller");
-		                        analytics.trackEvent('AccountCtrl', 'Pass', 'In AccountCtrl', 113);
-		                     }
+                                    // Record entry into Account Controller
+                                    if (typeof analytics !== 'undefined') {
+                                       analytics.trackView("Account Controller");
+                                       analytics.trackEvent('AccountCtrl', 'Pass', 'In AccountCtrl', 113);
+                                    }
 
-		                     var feedToPush = "Welcome to <b>WalletBuddies</b>, your account was succesfully set up!";
+                                    var feedToPush = "Welcome to <b>WalletBuddies</b>, your account was succesfully set up!";
 
-		                     // Append new data to this FB link
-		                     fbNewsFeedRef.push({
-		                        feed: feedToPush,
-		                        icon: "ion-happy",
-		                        color: "melon-icon",
-		                        time: dt
-		                     });
+                                    // Append new data to this FB link
+                                    fbNewsFeedRef.push({
+                                       feed: feedToPush,
+                                       icon: "ion-happy",
+                                       color: "melon-icon",
+                                       time: dt
+                                    });
 
-		                     $ionicLoading.hide();
-		                     // Switch to the Help Sliders Tab
-		                     $state.go('help');
+                                    $ionicLoading.hide();
 
-		                     // To request permission for Push Notifications
-		                    $scope.$on('$ionicView.afterLeave', function() {
-			                    console.log("Registering device for push notification", ionic.Platform.isIOS())
-		                        // Register device for push notifications
-		                        if (ionic.Platform.isAndroid()) {
-		                            androidConfig = {
-						                "senderID": "456019050509" // Project number from GCM
-						            };
-						            // initialize
-									$cordovaPushV5.initialize(androidConfig).then(function() {
-									    // start listening for new notifications
-									    $cordovaPushV5.onNotification();
-									    // start listening for errors
-									    $cordovaPushV5.onError();
+                                    // Switch to the Help Sliders Tab
+                                    $state.go('help');
 
-									    // register to get registrationId
-									    $cordovaPushV5.register().then(function(deviceToken) {
-									      // `data.registrationId` save it somewhere;
-									      console.log("Registration success app.js", deviceToken);
-									      fbUser.update({
-		                                    deviceToken: deviceToken,
-		                                    device: "Android"
-		                                  });
-									    })
-									});
-		                        } else if (ionic.Platform.isIOS()) {
-		                            var iosConfig = {
-						                "badge": true,
-						                "sound": true,
-						                "alert": true,
-						            };
+                                    // To request permission for Push Notifications
+                                    $scope.$on('$ionicView.afterLeave', function() {
+                                       var options = {
+                                          android: {
+                                             "senderID": "456019050509" // Project number from GCM
+                                          },
+                                          ios: {
+                                             alert: "true",
+                                             badge: "true",
+                                             sound: "true"
+                                          }
+                                       };
 
-						            // initialize
-									$cordovaPushV5.initialize(iosConfig).then(function() {
-									    // start listening for new notifications
-									    $cordovaPushV5.onNotification();
-									    // start listening for errors
-									    $cordovaPushV5.onError();
+                                       // Initialize
+                                       $cordovaPushV5.initialize(options).then(function() {
+                                          console.log("Initializing for notifications");
 
-									    // register to get registrationId
-									    $cordovaPushV5.register().then(function(deviceToken) {
-									      // `data.registrationId` save it somewhere;
-									      console.log("Registration success app.js", deviceToken);
-									      fbUser.update({
-		                                    deviceToken: deviceToken,
-		                                    device: "iOS"
-		                                  });
-									    })
-									});
-		                        }
-		                    });
-		                  } else {
-		                     if (typeof analytics !== 'undefined') {
-		                        analytics.trackEvent('Authentication', 'Failed', 'In AccountCtrl', error);
-		                     }
-		                     console.error("Authentication failed: " + error);
-		                     $state.go("app.account");
-		                  }
-		               })
-		               .catch(function(error){
-			               console.log("Signin error after account creation.", error)
-		               })
-		            })
-		            .catch(function(error){
-			            console.log("Error Creating User", error)
-		               switch (error.code) {
-		                  case "EMAIL_TAKEN":
-		                     if (typeof analytics !== 'undefined') {
-		                        analytics.trackEvent('Email', 'In Use', 'In AccountCtrl', error.code);
-		                     }
-		                     alert("The new user account cannot be created because the email is already in use.");
-		                     $ionicPopup.alert({
-		                        title: "Email Taken",
-		                        template: "A new account cannot be created because the email is already in use."
-		                     });
-		                     break;
-		                  case "INVALID_EMAIL":
-		                     if (typeof analytics !== 'undefined') {
-		                        analytics.trackEvent('Email', 'Invalid', 'In AccountCtrl', error.code);
-		                     }
-		                     $ionicPopup.alert({
-		                        title: "Invalid Email",
-		                        template: "Please enter a valid email."
-		                     });
-		                     break;
-		                  default:
-		                     if (typeof analytics !== 'undefined') {
-		                        analytics.trackEvent('Account Creation', 'Error', 'In AccountCtrl', error.code);
-		                     }
-		                     $ionicPopup.alert({
-		                        title: "Error Signing Up",
-		                        template: error.message
-		                     });
-		                  }
-		            });
-	            }
-            })
-            .catch(function(error){
-	            console.log("FB Reg Error", error)
-            })
+                                          // Start listening for new notifications
+                                          $cordovaPushV5.onNotification();
+
+                                          // Start listening for errors
+                                          $cordovaPushV5.onError();
+
+                                          // Register to get registrationId
+                                          $cordovaPushV5.register().then(function(deviceToken) {
+                                             // `data.registrationId` save it somewhere;
+                                             console.log("Registration success app.js", deviceToken);
+                                             if (ionic.Platform.isAndroid()) {
+                                                fbUser.update({
+                                                   deviceToken: deviceToken,
+                                                   device: "Android"
+                                                });
+                                             } else if (ionic.Platform.isIOS()) {
+                                                fbUser.update({
+                                                   deviceToken: deviceToken,
+                                                   device: "iOS"
+                                                });
+                                             }
+                                          })
+                                       });
+                                    });
+                                 } else {
+                                    if (typeof analytics !== 'undefined') {
+                                       analytics.trackEvent('Authentication', 'Failed', 'In AccountCtrl', error);
+                                    }
+                                    console.error("Authentication failed: " + error);
+                                    $state.go("app.account");
+                                 }
+                              })
+                              .catch(function(error) {
+                                 console.log("Signin error after account creation.", error)
+                              })
+                        })
+                        .catch(function(error) {
+                           console.log("Error Creating User", error)
+                           switch (error.code) {
+                              case "EMAIL_TAKEN":
+                                 if (typeof analytics !== 'undefined') {
+                                    analytics.trackEvent('Email', 'In Use', 'In AccountCtrl', error.code);
+                                 }
+                                 alert("The new user account cannot be created because the email is already in use.");
+                                 $ionicPopup.alert({
+                                    title: "Email Taken",
+                                    template: "A new account cannot be created because the email is already in use."
+                                 });
+                                 break;
+                              case "INVALID_EMAIL":
+                                 if (typeof analytics !== 'undefined') {
+                                    analytics.trackEvent('Email', 'Invalid', 'In AccountCtrl', error.code);
+                                 }
+                                 $ionicPopup.alert({
+                                    title: "Invalid Email",
+                                    template: "Please enter a valid email."
+                                 });
+                                 break;
+                              default:
+                                 if (typeof analytics !== 'undefined') {
+                                    analytics.trackEvent('Account Creation', 'Error', 'In AccountCtrl', error.code);
+                                 }
+                                 $ionicPopup.alert({
+                                    title: "Error Signing Up",
+                                    template: error.message
+                                 });
+                           }
+                        });
+                  }
+               })
+               .catch(function(error) {
+                  console.log("FB Reg Error", error)
+               })
          }
       } else {
          // User didn't accept the terms

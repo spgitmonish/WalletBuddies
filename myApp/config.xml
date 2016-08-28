@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <widget id="com.ionicframework.myapp721532" version="1.1.4" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
   <name>WalletBuddies</name>
-  <description>&#xD;&#xD;
-  App for groups to pool in money periodically.&#xD;&#xD;
+  <description>&#xD;&#xD;&#xD;
+  App for groups to pool in money periodically.&#xD;&#xD;&#xD;
   </description>
-  <author email="deepesh.sunku@walletbuddies.co" href="http://walletbuddies.co/">&#xD;&#xD;
-      WalletBuddies&#xD;&#xD;
+  <author email="deepesh.sunku@walletbuddies.co" href="http://walletbuddies.co/">&#xD;&#xD;&#xD;
+      WalletBuddies&#xD;&#xD;&#xD;
     </author>
   <content src="index.html"/>
   <access origin="*"/>
@@ -16,6 +16,11 @@
   <preference name="BackupWebStorage" value="none"/>
   <preference name="SplashScreen" value="screen"/>
   <preference name="SplashScreenDelay" value="3000"/>
+  <preference name="xwalkVersion" value="20+"/>
+  <preference name="xwalkCommandLine" value="--disable-pull-to-refresh-effect"/>
+  <preference name="xwalkMode" value="embedded"/>
+  <preference name="xwalkMultipleApk" value="true"/>
+  <preference name="android-minSdkVersion" value="16"/>
   <feature name="StatusBar">
     <param name="ios-package" onload="true" value="CDVStatusBar"/>
   </feature>
