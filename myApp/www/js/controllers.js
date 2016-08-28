@@ -6,318 +6,318 @@ angular.module('starter.controllers', [])
         var ref = firebase.auth();
         var authData = ref.onAuthStateChanged;
 
-		ref.onAuthStateChanged(function(authData) {
-		    //$ionicHistory.clearCache();
+        ref.onAuthStateChanged(function(authData) {
+            //$ionicHistory.clearCache();
             //$ionicHistory.clearHistory();
             console.log("Not authenticated", authData);
-		    if (authData) {
-			    console.log("$rootScope.userSignUpOngoing", $rootScope.userSignUpOngoing)
-			    if($rootScope.userSignUpOngoing !== true) {
-					console.log("Authenticated user with uid: ", authData.uid);
+            if (authData) {
+                console.log("$rootScope.userSignUpOngoing", $rootScope.userSignUpOngoing)
+                if ($rootScope.userSignUpOngoing !== true) {
+                    console.log("Authenticated user with uid: ", authData.uid);
 
-		            // Saving auth data to be used across controllers
-		            $rootScope.fbAuthData = authData;
+                    // Saving auth data to be used across controllers
+                    $rootScope.fbAuthData = authData;
 
-		            // Switch to the Wallet Tab
-		            $state.go('tab.wallet');
-			    }
-		    }
-		});
+                    // Switch to the Wallet Tab
+                    $state.go('tab.wallet');
+                }
+            }
+        });
     });
 })
 
 // Controller for Account Creation and Sign Up
 .controller('AccountCtrl', function($scope, $ionicHistory, $firebaseObject, $ionicPopup, $state, $ionicLoading, $rootScope, $log, $firebaseAuth, $http, $cordovaPushV5, $cipherFactory, $cordovaDevice) {
 
-   $scope.check = {
-      data: false
-   };
-   $scope.TC = function(index) {
-      console.log('array index is ' + index + $scope.check.data);
-      var checked = index;
-   }
-   $scope.$on('$ionicView.enter', function() {
-      $ionicHistory.clearCache();
-      //$ionicHistory.clearHistory();
-   });
+    $scope.check = {
+        data: false
+    };
+    $scope.TC = function(index) {
+        console.log('array index is ' + index + $scope.check.data);
+        var checked = index;
+    }
+    $scope.$on('$ionicView.enter', function() {
+        $ionicHistory.clearCache();
+        //$ionicHistory.clearHistory();
+    });
 
-   // Function to do the Sign Up and Add the Account
-   $scope.addAccount = function(account) {
-      // Check if terms and conditions are accepted
-      if ($scope.check.data) {
-         // Make sure all the fields have a value
-         if (!account.email || !account.password || !account.firstname || !account.lastname || !account.phonenumber) {
+    // Function to do the Sign Up and Add the Account
+    $scope.addAccount = function(account) {
+        // Check if terms and conditions are accepted
+        if ($scope.check.data) {
+            // Make sure all the fields have a value
+            if (!account.email || !account.password || !account.firstname || !account.lastname || !account.phonenumber) {
+                if (typeof analytics !== 'undefined') {
+                    analytics.trackEvent('Sign up Fields', 'Not Entered', 'In AccountCtrl', 1);
+                }
+            } else {
+                console.log("All fields entered");
+
+                // Create user's unique Hash.
+                // Use a secret string and set the id length to be 4
+                var hashids = new Hashids("SecretMonkey", 4);
+                // Use the user's phone number
+                // Converting string to integer
+                var temp = parseInt(account.phonenumber);
+                account.phonenumber = temp;
+                console.log("Phone:   " + account.phonenumber);
+                var id = hashids.encode(account.phonenumber);
+                console.log("ID after encode: " + id);
+
+                // Validating if phone number has 10 digits
+                if (account.phonenumber.toString().length !== 10) {
+
+                    $ionicPopup.alert({
+                        title: "Invalid",
+                        template: "Please enter a valid 10 digit phone number."
+                    });
+                    return;
+                }
+                console.log("Checking if user is registered");
+
+                //Check if user is already registered
+                firebase.database().ref("/RegisteredUsers/").child(id).once('value', function(user) {
+                        console.log("Checking if user is registered", user.exists())
+                        if (user.exists()) {
+                            $ionicPopup.alert({
+                                title: "User Already Registered",
+                                template: "This phone number is already linked to an existing account. Please Signin or use another number."
+                            });
+                            return;
+                        } else {
+                            // Create the User
+                            firebase.auth().createUserWithEmailAndPassword(account.email, account.password)
+                                .then(function() {
+                                    $rootScope.userSignUpOngoing = true
+                                        // Authorize the user with email/password
+                                    firebase.auth().signInWithEmailAndPassword(account.email, account.password)
+                                        .then(function(authData) {
+                                            if (authData) {
+
+                                                // Store information for easier access across controllers
+                                                $rootScope.fbAuthData = authData;
+                                                $rootScope.email = account.email;
+
+                                                console.log("Logged in as: " + authData.uid);
+
+                                                var fbRef = firebase.database().ref();
+
+                                                // Get the Firebase link for this user
+                                                var fbUser = fbRef.child("Users").child(authData.uid);
+                                                console.log("Link: " + fbUser);
+
+                                                $ionicLoading.show({
+                                                    template: 'Creating your account...',
+                                                    duration: 3000
+                                                });
+
+                                                // Store the user information
+                                                fbUser.update({
+                                                    firstname: account.firstname,
+                                                    lastname: account.lastname,
+                                                    email: account.email,
+                                                    phonenumber: account.phonenumber,
+                                                    survey: false
+                                                });
+
+                                                // Write the user's unique hash to registered users and save his UID
+                                                var fbHashRef = firebase.database().ref("/RegisteredUsers/");
+                                                fbHashRef.child(id).update({
+                                                    uid: authData.uid
+                                                });
+
+                                                // Check to see if user has invites
+                                                var fbInvites = firebase.database().ref("/Invites/" + id);
+                                                if (fbInvites != null) {
+                                                    var obj = $firebaseObject(fbInvites);
+
+                                                    obj.$loaded().then(function() {
+                                                        console.log("loaded record:", obj.$id);
+
+                                                        // To iterate the key/value pairs of the object, use angular.forEach()
+                                                        angular.forEach(obj, function(value, key) {
+                                                            console.log(key, value);
+                                                            var circleID = value.circleID;
+                                                            console.log("Invites path: " + fbInvites + circleID);
+                                                            // Check if the invite was for a Singular or Rotational Circle
+                                                            if (value.circleType == 'Singular') {
+                                                                fbRef.child("Circles").child(circleID).child("PendingMembers").child(data.uid).update({
+                                                                    Status: "pending"
+                                                                });
+                                                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
+                                                                    Status: "pending"
+                                                                });
+                                                            } else {
+                                                                // Writing UserID under CircleID and set Status to pending
+                                                                fbRef.child("Circles").child(circleID).child("Members").child(data.uid).update({
+                                                                    Status: "pending"
+                                                                });
+
+                                                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
+                                                                    Status: "pending"
+                                                                });
+                                                            }
+                                                        })
+                                                    })
+                                                }
+
+                                                // Write email info to /Sendgrid folder to trigger the server to send email
+                                                fbRef.child('Sendgrid').push({
+                                                    from: 'hello@walletbuddies.co',
+                                                    to: account.email,
+                                                    subject: account.firstname + "! You're all set.",
+                                                    text: "Thanks for signing up with WalletBuddies. You can now start doing things more often with your buddies :)" +
+                                                        "\n\n WalletBuddies"
+                                                });
+
+                                                var email = account.email;
+                                                var number = account.phonenumber.toString();
+                                                var first = account.firstname;
+                                                var last = account.lastname;
+
+                                                //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
+
+                                                // Clear the form
+                                                account.firstname = '';
+                                                account.lastname = '';
+                                                account.email = '';
+                                                account.phonenumber = '';
+                                                account.password = '';
+
+                                                var dt = Date.now();
+                                                // Get a reference to the NewsFeed of the user
+                                                var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
+
+                                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child('Badges').update({
+                                                    walletCounter: 0,
+                                                    requestCounter: 0,
+                                                    feedCounter: 1
+                                                });
+
+                                                // Record entry into Account Controller
+                                                if (typeof analytics !== 'undefined') {
+                                                    analytics.trackView("Account Controller");
+                                                    analytics.trackEvent('AccountCtrl', 'Pass', 'In AccountCtrl', 113);
+                                                }
+
+                                                var feedToPush = "Welcome to <b>WalletBuddies</b>, your account was succesfully set up!";
+
+                                                // Append new data to this FB link
+                                                fbNewsFeedRef.push({
+                                                    feed: feedToPush,
+                                                    icon: "ion-happy",
+                                                    color: "melon-icon",
+                                                    time: dt
+                                                });
+
+                                                $ionicLoading.hide();
+
+                                                // Switch to the Help Sliders Tab
+                                                $state.go('help');
+
+                                                // To request permission for Push Notifications
+                                                $scope.$on('$ionicView.afterLeave', function() {
+                                                    var options = {
+                                                        android: {
+                                                            "senderID": "456019050509" // Project number from GCM
+                                                        },
+                                                        ios: {
+                                                            alert: "true",
+                                                            badge: "true",
+                                                            sound: "true"
+                                                        }
+                                                    };
+
+                                                    // Initialize
+                                                    $cordovaPushV5.initialize(options).then(function() {
+                                                        console.log("Initializing for notifications");
+
+                                                        // Start listening for new notifications
+                                                        $cordovaPushV5.onNotification();
+
+                                                        // Start listening for errors
+                                                        $cordovaPushV5.onError();
+
+                                                        // Register to get registrationId
+                                                        $cordovaPushV5.register().then(function(deviceToken) {
+                                                            // `data.registrationId` save it somewhere;
+                                                            console.log("Registration success app.js", deviceToken);
+                                                            if (ionic.Platform.isAndroid()) {
+                                                                fbUser.update({
+                                                                    deviceToken: deviceToken,
+                                                                    device: "Android"
+                                                                });
+                                                            } else if (ionic.Platform.isIOS()) {
+                                                                fbUser.update({
+                                                                    deviceToken: deviceToken,
+                                                                    device: "iOS"
+                                                                });
+                                                            }
+                                                        })
+                                                    });
+                                                });
+                                            } else {
+                                                if (typeof analytics !== 'undefined') {
+                                                    analytics.trackEvent('Authentication', 'Failed', 'In AccountCtrl', error);
+                                                }
+                                                console.error("Authentication failed: " + error);
+                                                $state.go("app.account");
+                                            }
+                                        })
+                                        .catch(function(error) {
+                                            console.log("Signin error after account creation.", error)
+                                        })
+                                })
+                                .catch(function(error) {
+                                    console.log("Error Creating User", error)
+                                    switch (error.code) {
+                                        case "EMAIL_TAKEN":
+                                            if (typeof analytics !== 'undefined') {
+                                                analytics.trackEvent('Email', 'In Use', 'In AccountCtrl', error.code);
+                                            }
+                                            alert("The new user account cannot be created because the email is already in use.");
+                                            $ionicPopup.alert({
+                                                title: "Email Taken",
+                                                template: "A new account cannot be created because the email is already in use."
+                                            });
+                                            break;
+                                        case "INVALID_EMAIL":
+                                            if (typeof analytics !== 'undefined') {
+                                                analytics.trackEvent('Email', 'Invalid', 'In AccountCtrl', error.code);
+                                            }
+                                            $ionicPopup.alert({
+                                                title: "Invalid Email",
+                                                template: "Please enter a valid email."
+                                            });
+                                            break;
+                                        default:
+                                            if (typeof analytics !== 'undefined') {
+                                                analytics.trackEvent('Account Creation', 'Error', 'In AccountCtrl', error.code);
+                                            }
+                                            $ionicPopup.alert({
+                                                title: "Error Signing Up",
+                                                template: error.message
+                                            });
+                                    }
+                                });
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log("FB Reg Error", error)
+                    })
+            }
+        } else {
+            // User didn't accept the terms
             if (typeof analytics !== 'undefined') {
-               analytics.trackEvent('Sign up Fields', 'Not Entered', 'In AccountCtrl', 1);
+                analytics.trackEvent('Terms', 'Not Accepted', 'In AccountCtrl', 2);
             }
-         } else {
-            console.log("All fields entered");
 
-			// Create user's unique Hash.
-            // Use a secret string and set the id length to be 4
-            var hashids = new Hashids("SecretMonkey", 4);
-            // Use the user's phone number
-            // Converting string to integer
-            var temp = parseInt(account.phonenumber);
-            account.phonenumber = temp;
-            console.log("Phone:   " + account.phonenumber);
-            var id = hashids.encode(account.phonenumber);
-            console.log("ID after encode: " + id);
-
-            // Validating if phone number has 10 digits
-            if (account.phonenumber.toString().length !== 10) {
-
-               $ionicPopup.alert({
-                  title: "Invalid",
-                  template: "Please enter a valid 10 digit phone number."
-               });
-               return;
-            }
-            console.log("Checking if user is registered");
-
-               //Check if user is already registered
-            firebase.database().ref("/RegisteredUsers/").child(id).once('value', function(user) {
-                  console.log("Checking if user is registered", user.exists())
-                  if (user.exists()) {
-                     $ionicPopup.alert({
-                        title: "User Already Registered",
-                        template: "This phone number is already linked to an existing account. Please Signin or use another number."
-                     });
-                     return;
-                  } else {
-                     // Create the User
-                     firebase.auth().createUserWithEmailAndPassword(account.email, account.password)
-                        .then(function() {
-                           $rootScope.userSignUpOngoing = true
-                              // Authorize the user with email/password
-                           firebase.auth().signInWithEmailAndPassword(account.email, account.password)
-                              .then(function(authData) {
-                                 if (authData) {
-
-                                    // Store information for easier access across controllers
-                                    $rootScope.fbAuthData = authData;
-                                    $rootScope.email = account.email;
-
-                                    console.log("Logged in as: " + authData.uid);
-
-                                    var fbRef = firebase.database().ref();
-
-                                    // Get the Firebase link for this user
-                                    var fbUser = fbRef.child("Users").child(authData.uid);
-                                    console.log("Link: " + fbUser);
-
-                                    $ionicLoading.show({
-                                       template: 'Creating your account...',
-                                       duration: 3000
-                                    });
-
-                                    // Store the user information
-                                    fbUser.update({
-                                       firstname: account.firstname,
-                                       lastname: account.lastname,
-                                       email: account.email,
-                                       phonenumber: account.phonenumber,
-                                       survey: false
-                                    });
-
-                                    // Write the user's unique hash to registered users and save his UID
-                                    var fbHashRef = firebase.database().ref("/RegisteredUsers/");
-                                    fbHashRef.child(id).update({
-                                       uid: authData.uid
-                                    });
-
-                                    // Check to see if user has invites
-                                    var fbInvites = firebase.database().ref("/Invites/" + id);
-                                    if (fbInvites != null) {
-                                       var obj = $firebaseObject(fbInvites);
-
-                                       obj.$loaded().then(function() {
-                                          console.log("loaded record:", obj.$id);
-
-                                          // To iterate the key/value pairs of the object, use angular.forEach()
-                                          angular.forEach(obj, function(value, key) {
-                                             console.log(key, value);
-                                             var circleID = value.circleID;
-                                             console.log("Invites path: " + fbInvites + circleID);
-                                             // Check if the invite was for a Singular or Rotational Circle
-                                             if (value.circleType == 'Singular') {
-                                                fbRef.child("Circles").child(circleID).child("PendingMembers").child(data.uid).update({
-                                                   Status: "pending"
-                                                });
-                                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
-                                                   Status: "pending"
-                                                });
-                                             } else {
-                                                // Writing UserID under CircleID and set Status to pending
-                                                fbRef.child("Circles").child(circleID).child("Members").child(data.uid).update({
-                                                   Status: "pending"
-                                                });
-
-                                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
-                                                   Status: "pending"
-                                                });
-                                             }
-                                          })
-                                       })
-                                    }
-
-                                    // Write email info to /Sendgrid folder to trigger the server to send email
-                                    fbRef.child('Sendgrid').push({
-                                       from: 'hello@walletbuddies.co',
-                                       to: account.email,
-                                       subject: account.firstname + "! You're all set.",
-                                       text: "Thanks for signing up with WalletBuddies. You can now start doing things more often with your buddies :)" +
-                                          "\n\n WalletBuddies"
-                                    });
-
-                                    var email = account.email;
-                                    var number = account.phonenumber.toString();
-                                    var first = account.firstname;
-                                    var last = account.lastname;
-
-                                    //$ionicLoading.show({template: 'Welcome! You\'re signed up!', duration:1500});
-
-                                    // Clear the form
-                                    account.firstname = '';
-                                    account.lastname = '';
-                                    account.email = '';
-                                    account.phonenumber = '';
-                                    account.password = '';
-
-                                    var dt = Date.now();
-                                    // Get a reference to the NewsFeed of the user
-                                    var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
-
-                                    fbRef.child("Users").child($rootScope.fbAuthData.uid).child('Badges').update({
-                                       walletCounter: 0,
-                                       requestCounter: 0,
-                                       feedCounter: 1
-                                    });
-
-                                    // Record entry into Account Controller
-                                    if (typeof analytics !== 'undefined') {
-                                       analytics.trackView("Account Controller");
-                                       analytics.trackEvent('AccountCtrl', 'Pass', 'In AccountCtrl', 113);
-                                    }
-
-                                    var feedToPush = "Welcome to <b>WalletBuddies</b>, your account was succesfully set up!";
-
-                                    // Append new data to this FB link
-                                    fbNewsFeedRef.push({
-                                       feed: feedToPush,
-                                       icon: "ion-happy",
-                                       color: "melon-icon",
-                                       time: dt
-                                    });
-
-                                    $ionicLoading.hide();
-
-                                    // Switch to the Help Sliders Tab
-                                    $state.go('help');
-
-                                    // To request permission for Push Notifications
-                                    $scope.$on('$ionicView.afterLeave', function() {
-                                       var options = {
-                                          android: {
-                                             "senderID": "456019050509" // Project number from GCM
-                                          },
-                                          ios: {
-                                             alert: "true",
-                                             badge: "true",
-                                             sound: "true"
-                                          }
-                                       };
-
-                                       // Initialize
-                                       $cordovaPushV5.initialize(options).then(function() {
-                                          console.log("Initializing for notifications");
-
-                                          // Start listening for new notifications
-                                          $cordovaPushV5.onNotification();
-
-                                          // Start listening for errors
-                                          $cordovaPushV5.onError();
-
-                                          // Register to get registrationId
-                                          $cordovaPushV5.register().then(function(deviceToken) {
-                                             // `data.registrationId` save it somewhere;
-                                             console.log("Registration success app.js", deviceToken);
-                                             if (ionic.Platform.isAndroid()) {
-                                                fbUser.update({
-                                                   deviceToken: deviceToken,
-                                                   device: "Android"
-                                                });
-                                             } else if (ionic.Platform.isIOS()) {
-                                                fbUser.update({
-                                                   deviceToken: deviceToken,
-                                                   device: "iOS"
-                                                });
-                                             }
-                                          })
-                                       });
-                                    });
-                                 } else {
-                                    if (typeof analytics !== 'undefined') {
-                                       analytics.trackEvent('Authentication', 'Failed', 'In AccountCtrl', error);
-                                    }
-                                    console.error("Authentication failed: " + error);
-                                    $state.go("app.account");
-                                 }
-                              })
-                              .catch(function(error) {
-                                 console.log("Signin error after account creation.", error)
-                              })
-                        })
-                        .catch(function(error) {
-                           console.log("Error Creating User", error)
-                           switch (error.code) {
-                              case "EMAIL_TAKEN":
-                                 if (typeof analytics !== 'undefined') {
-                                    analytics.trackEvent('Email', 'In Use', 'In AccountCtrl', error.code);
-                                 }
-                                 alert("The new user account cannot be created because the email is already in use.");
-                                 $ionicPopup.alert({
-                                    title: "Email Taken",
-                                    template: "A new account cannot be created because the email is already in use."
-                                 });
-                                 break;
-                              case "INVALID_EMAIL":
-                                 if (typeof analytics !== 'undefined') {
-                                    analytics.trackEvent('Email', 'Invalid', 'In AccountCtrl', error.code);
-                                 }
-                                 $ionicPopup.alert({
-                                    title: "Invalid Email",
-                                    template: "Please enter a valid email."
-                                 });
-                                 break;
-                              default:
-                                 if (typeof analytics !== 'undefined') {
-                                    analytics.trackEvent('Account Creation', 'Error', 'In AccountCtrl', error.code);
-                                 }
-                                 $ionicPopup.alert({
-                                    title: "Error Signing Up",
-                                    template: error.message
-                                 });
-                           }
-                        });
-                  }
-               })
-               .catch(function(error) {
-                  console.log("FB Reg Error", error)
-               })
-         }
-      } else {
-         // User didn't accept the terms
-         if (typeof analytics !== 'undefined') {
-            analytics.trackEvent('Terms', 'Not Accepted', 'In AccountCtrl', 2);
-         }
-
-         $ionicPopup.alert({
-            title: "Terms and Conditions",
-            template: "You need to agree to terms and conditions in order to continue!"
-         });
-      }
-   }
+            $ionicPopup.alert({
+                title: "Terms and Conditions",
+                template: "You need to agree to terms and conditions in order to continue!"
+            });
+        }
+    }
 })
 
 // Controller for Forgot Password
@@ -326,37 +326,37 @@ angular.module('starter.controllers', [])
 
     $scope.sendTempPassword = function() {
         fbRef.sendPasswordResetEmail(this.user.email)
-        .then(function() {
-           $ionicPopup.alert({
-               title: "Temporary password sent"
-           });
+            .then(function() {
+                $ionicPopup.alert({
+                    title: "Temporary password sent"
+                });
 
-           // Record entry into Forgot Password Controlller
-           if(typeof analytics !== 'undefined') {
-               analytics.trackView("Forgot Password Controller");
-               analytics.trackEvent('ForgotPassCtrl', 'Pass', 'In ForgotPassCtrl', 101);
-           }
+                // Record entry into Forgot Password Controlller
+                if (typeof analytics !== 'undefined') {
+                    analytics.trackView("Forgot Password Controller");
+                    analytics.trackEvent('ForgotPassCtrl', 'Pass', 'In ForgotPassCtrl', 101);
+                }
 
-           $state.go('launch');
-        })
-        .catch(function(error) {
-           switch (error.code) {
-               case "INVALID_USER":
-                   if(typeof analytics !== 'undefined') {
-                       analytics.trackEvent('Forgot Password', 'Email not in the system', 'In ForgotPassCtrl', error.code);
-                   }
-                   $ionicPopup.alert({
-                       title: "Email not in the system!",
-                       template: "Please enter the right email."
-                   });
-                   break;
-               default:
-                   if(typeof analytics !== 'undefined') {
-                       analytics.trackEvent('Forgot Password', 'Error setting password', 'In ForgotPassCtrl', error.code);
-                   }
-                   console.log("Error resetting password:", error);
-           }
-        });
+                $state.go('launch');
+            })
+            .catch(function(error) {
+                switch (error.code) {
+                    case "INVALID_USER":
+                        if (typeof analytics !== 'undefined') {
+                            analytics.trackEvent('Forgot Password', 'Email not in the system', 'In ForgotPassCtrl', error.code);
+                        }
+                        $ionicPopup.alert({
+                            title: "Email not in the system!",
+                            template: "Please enter the right email."
+                        });
+                        break;
+                    default:
+                        if (typeof analytics !== 'undefined') {
+                            analytics.trackEvent('Forgot Password', 'Error setting password', 'In ForgotPassCtrl', error.code);
+                        }
+                        console.log("Error resetting password:", error);
+                }
+            });
     }
 })
 
@@ -372,14 +372,13 @@ angular.module('starter.controllers', [])
         }, function(error) {
             if (error) {
                 switch (error.code) {
-                    default:
-                        if(typeof analytics !== 'undefined') {
+                    default: if (typeof analytics !== 'undefined') {
                             analytics.trackEvent('Changing Password', 'Error', 'In ResetPassCtrl', error.code);
                         }
-                        console.log("Error changing password:", error);
-                        $ionicPopup.alert({
-		                    title: error
-		                });
+                    console.log("Error changing password:", error);
+                    $ionicPopup.alert({
+                        title: error
+                    });
                 }
             } else {
                 $ionicPopup.alert({
@@ -387,7 +386,7 @@ angular.module('starter.controllers', [])
                 });
 
                 // Record entry into Reset Password Controlller
-                if(typeof analytics !== 'undefined') {
+                if (typeof analytics !== 'undefined') {
                     analytics.trackView("Reset Password Controller");
                     analytics.trackEvent('ResetPassCtrl', 'Pass', 'In ResetPassCtrl', 102);
                 }
@@ -408,7 +407,7 @@ angular.module('starter.controllers', [])
             //$ionicHistory.clearHistory();
         });
         var fbRef = firebase.database().ref();
-		var auth = firebase.auth();
+        var auth = firebase.auth();
 
         $scope.user = {
             email: "",
@@ -430,7 +429,7 @@ angular.module('starter.controllers', [])
 
         // Called when the user clicks the "Sign In" button
         $scope.validateUser = function() {
-	        $ionicLoading.show({
+            $ionicLoading.show({
                 template: 'Signing in..'
             });
             var email = this.user.email;
@@ -445,12 +444,12 @@ angular.module('starter.controllers', [])
 
             // Authorize the user with email/password
             auth.signInWithEmailAndPassword(email, password)
-            	.then(function(authData) {
+                .then(function(authData) {
                     // Saving auth data to be used across controllers
                     $rootScope.fbAuthData = authData;
                     $rootScope.email = email;
-					console.log("Auth Success", authData)
-                    // Hard coded to be false
+                    console.log("Auth Success", authData)
+                        // Hard coded to be false
                     if (false) {
                         var fbInvites = firebase.database().ref("/Invites/" + token);
                         console.log("Token Hmmm: " + token);
@@ -524,7 +523,7 @@ angular.module('starter.controllers', [])
                         $ionicLoading.hide();
 
                         // Record entry into Sign In Controlller
-                        if(typeof analytics !== 'undefined') {
+                        if (typeof analytics !== 'undefined') {
                             analytics.trackView("Sign In Controller");
                             analytics.trackEvent('SignInCtrl', 'Pass', 'In SignInCtrl', 103);
                         }
@@ -534,7 +533,7 @@ angular.module('starter.controllers', [])
                     }
                 })
                 .catch(function(error) {
-	                if(typeof analytics !== 'undefined') {
+                    if (typeof analytics !== 'undefined') {
                         analytics.trackEvent('Login Error', 'Username or password incorrect', 'In SignInCtrl', error);
                     }
                     $ionicLoading.hide();
@@ -555,32 +554,34 @@ angular.module('starter.controllers', [])
 // Controller for submitting social circle form
 .controller('GroupCtrl', function($scope, $cordovaCamera, $ionicActionSheet, $ionicLoading, $firebaseObject, $ionicModal, ContactsService, fbCallback, $cordovaContacts, $ionicScrollDelegate, $rootScope, $state, $log, $ionicPopup, $ionicFilterBar, $stateParams) {
 
-	var storageRef = firebase.storage().ref();
-	var circlePhoto;
+    var storageRef = firebase.storage().ref();
+    var circlePhoto;
 
-	function base64toBlob(b64Data, contentType) {
-	  contentType = contentType || '';
-	  sliceSize = 512;
-	  var newb64 = b64Data.replace(/\s/g, "")
-	  var byteCharacters = atob(newb64);
-	  var byteArrays = [];
+    function base64toBlob(b64Data, contentType) {
+        contentType = contentType || '';
+        sliceSize = 512;
+        var newb64 = b64Data.replace(/\s/g, "")
+        var byteCharacters = atob(newb64);
+        var byteArrays = [];
 
-	  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-	    var slice = byteCharacters.slice(offset, offset + sliceSize);
+        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            var slice = byteCharacters.slice(offset, offset + sliceSize);
 
-	    var byteNumbers = new Array(slice.length);
-	    for (var i = 0; i < slice.length; i++) {
-	      byteNumbers[i] = slice.charCodeAt(i);
-	    }
+            var byteNumbers = new Array(slice.length);
+            for (var i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
 
-	    var byteArray = new Uint8Array(byteNumbers);
+            var byteArray = new Uint8Array(byteNumbers);
 
-	    byteArrays.push(byteArray);
-	  }
+            byteArrays.push(byteArray);
+        }
 
-	  var blob = new Blob(byteArrays, {type: contentType});
-	  return blob;
-	}
+        var blob = new Blob(byteArrays, {
+            type: contentType
+        });
+        return blob;
+    }
 
     // For selecting a photo
     $scope.selectPicture = function() {
@@ -657,106 +658,106 @@ angular.module('starter.controllers', [])
 
     // Import all contacts from the address book
     $scope.pickContact = function() {
-	    $ionicLoading.show({
+        $ionicLoading.show({
             template: 'Fetching your contacts...'
         });
-	    var options = {};
-		 options.multiple = true;
-       if (ionic.Platform.platform() == "android") {
-          // hasPhoneNumber only works for android.
-          options.hasPhoneNumber = true;
-       };
-	    $cordovaContacts.find(options).then(function(allContacts) { //omitting parameter to .find() causes all contacts to be returned
-	      $scope.contacts = allContacts;
-	      $scope.modal.show();
-	      $ionicLoading.hide();
-	    });
-  	};
+        var options = {};
+        options.multiple = true;
+        if (ionic.Platform.platform() == "android") {
+            // hasPhoneNumber only works for android.
+            options.hasPhoneNumber = true;
+        };
+        $cordovaContacts.find(options).then(function(allContacts) { //omitting parameter to .find() causes all contacts to be returned
+            $scope.contacts = allContacts;
+            $scope.modal.show();
+            $ionicLoading.hide();
+        });
+    };
 
-  	// Initialize an array to store selected contacts
-  	var temp = [];
+    // Initialize an array to store selected contacts
+    var temp = [];
 
     $scope.scrollTop = function() {
         $ionicScrollDelegate.resize();
     };
 
-  	$scope.phoneSelect = function(parentObj, Obj) {
-	  	var parentIndex = $scope.contacts.indexOf(parentObj);
-	  	var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);
-	  	console.log("PHONE Index: ", parentIndex, index, $scope.contacts[parentIndex].phoneNumbers[index].selected);
+    $scope.phoneSelect = function(parentObj, Obj) {
+            var parentIndex = $scope.contacts.indexOf(parentObj);
+            var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);
+            console.log("PHONE Index: ", parentIndex, index, $scope.contacts[parentIndex].phoneNumbers[index].selected);
 
-	  	// Save the index values received when a user selects a contact
-	  	if($scope.contacts[parentIndex].phoneNumbers[index].selected) {
-			temp.push({
-			  	parent: parentIndex,
-			  	child: index
-			});
-	  	} else if($scope.contacts[parentIndex].phoneNumbers[index].selected == false) {
-		  	for (var i = 0; i < temp.length; i++) {
-			    if(parentIndex == temp[i].parent && index == temp[i].child) {
-				    temp.splice(i, 1);
-			    };
-		    };
-	  	}
-  	}
-  	// For determining the collection-item-length while choosing contacts
-  	$scope.itemheight = function(length) {
-	  	if (length == 1) {
-		  	return 70;
-	  	} else if (length == 2) {
-		  	return 140;
-	  	} else if (length == 3){
-		  	return 210;
-	  	} else if (length == 4){
-		  	return 280;
-	  	} else if (length == 5){
-		  	return 350;
-	  	} else {
-		  	return 420;
-	  	}
-  	}
+            // Save the index values received when a user selects a contact
+            if ($scope.contacts[parentIndex].phoneNumbers[index].selected) {
+                temp.push({
+                    parent: parentIndex,
+                    child: index
+                });
+            } else if ($scope.contacts[parentIndex].phoneNumbers[index].selected == false) {
+                for (var i = 0; i < temp.length; i++) {
+                    if (parentIndex == temp[i].parent && index == temp[i].child) {
+                        temp.splice(i, 1);
+                    };
+                };
+            }
+        }
+        // For determining the collection-item-length while choosing contacts
+    $scope.itemheight = function(length) {
+        if (length == 1) {
+            return 70;
+        } else if (length == 2) {
+            return 140;
+        } else if (length == 3) {
+            return 210;
+        } else if (length == 4) {
+            return 280;
+        } else if (length == 5) {
+            return 350;
+        } else {
+            return 420;
+        }
+    }
 
-  	// Execute action on hide modal
-	$scope.$on('modal.hidden', function(modal) {
-		console.log("Hello, hidden modal", modal.id);
-	    // Execute action
-	    console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
-	    // Initialize an array for storing contacts
-	    $scope.data = {
-	        selectedContacts: []
-	    };
-	    for (var i = 0; i < temp.length; i++) {
-		    if($scope.contacts[temp[i].parent].emails != null) {
-			    $scope.data.selectedContacts.push({
-				    name: $scope.contacts[temp[i].parent].name.formatted,
-				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value,
-				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
-				    email: $scope.contacts[temp[i].parent].emails[0].value,
-				    emailType: $scope.contacts[temp[i].parent].emails[0].type
-			    });
-		    } else {
-				$scope.data.selectedContacts.push({
-				    name: $scope.contacts[temp[i].parent].name.formatted,
-				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
-				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value
-			    });
-		    }
-	    };
-	    console.log("SELECTED CONTACTS: " + JSON.stringify($scope.data.selectedContacts));
-	    $ionicScrollDelegate.scrollBottom(true, true);
-	});
+    // Execute action on hide modal
+    $scope.$on('modal.hidden', function(modal) {
+        console.log("Hello, hidden modal", modal.id);
+        // Execute action
+        console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
+        // Initialize an array for storing contacts
+        $scope.data = {
+            selectedContacts: []
+        };
+        for (var i = 0; i < temp.length; i++) {
+            if ($scope.contacts[temp[i].parent].emails != null) {
+                $scope.data.selectedContacts.push({
+                    name: $scope.contacts[temp[i].parent].name.formatted,
+                    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value,
+                    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
+                    email: $scope.contacts[temp[i].parent].emails[0].value,
+                    emailType: $scope.contacts[temp[i].parent].emails[0].type
+                });
+            } else {
+                $scope.data.selectedContacts.push({
+                    name: $scope.contacts[temp[i].parent].name.formatted,
+                    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
+                    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value
+                });
+            }
+        };
+        console.log("SELECTED CONTACTS: " + JSON.stringify($scope.data.selectedContacts));
+        $ionicScrollDelegate.scrollBottom(true, true);
+    });
 
-  	$ionicModal.fromTemplateUrl('contacts-modal.html', {
-	    scope: $scope,
-	    animation: 'slide-in-up'
-	}).then(function(modal) {
-	    $scope.modal = modal;
-	});
+    $ionicModal.fromTemplateUrl('contacts-modal.html', {
+        scope: $scope,
+        animation: 'slide-in-up'
+    }).then(function(modal) {
+        $scope.modal = modal;
+    });
 
     // Deleting contact selected in error
     $scope.contactDelete = function(item) {
-   		$scope.data.selectedContacts.splice(item, 1);
-   		temp.splice(item, 1);
+        $scope.data.selectedContacts.splice(item, 1);
+        temp.splice(item, 1);
     };
 
     // This function is called when the "Invite your wallet buddies" button is pressed
@@ -828,55 +829,55 @@ angular.module('starter.controllers', [])
                 fbCirclePushRef.child('CreditDates').child('Counter').update({
                     counter: 0
                 });
-				
-				if(circlePhoto != null) {
-					var blob = base64toBlob(circlePhoto, "image/jpeg")
-	                var uploadTask = storageRef.child('/Circles/'+ groupID +"/CirclePhoto.jpg").put(blob);
-	                uploadTask.on('state_changed', function(snapshot){
-					  // Observe state change events such as progress, pause, and resume
-					  // See below for more detail
-					}, function(error) {
-					    // Handle unsuccessful uploads
-		                
-		                // Writing circle ID to the user's path and set Status to true
-		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
-		                    Status: true
-		                });
-	
-					}, function() {
-					  // Handle successful uploads on complete
-					  $scope.imageUrl = uploadTask.snapshot.downloadURL;
-					    // Append new data to this FB link
-		                fbCirclePushRef.update({
-		                    circlePhoto: $scope.imageUrl
-		                });
-		                
-		                // Writing circle ID to the user's path and set Status to true
-		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
-		                    Status: true
-		                });
-					});
-				// No circle photo selected
-				} else {
-					// Writing circle ID to the user's path and set Status to true
-	                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
-	                    Status: true
-	                });
-				}
-				
-                
+
+                if (circlePhoto != null) {
+                    var blob = base64toBlob(circlePhoto, "image/jpeg")
+                    var uploadTask = storageRef.child('/Circles/' + groupID + "/CirclePhoto.jpg").put(blob);
+                    uploadTask.on('state_changed', function(snapshot) {
+                        // Observe state change events such as progress, pause, and resume
+                        // See below for more detail
+                    }, function(error) {
+                        // Handle unsuccessful uploads
+
+                        // Writing circle ID to the user's path and set Status to true
+                        fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
+                            Status: true
+                        });
+
+                    }, function() {
+                        // Handle successful uploads on complete
+                        $scope.imageUrl = uploadTask.snapshot.downloadURL;
+                        // Append new data to this FB link
+                        fbCirclePushRef.update({
+                            circlePhoto: $scope.imageUrl
+                        });
+
+                        // Writing circle ID to the user's path and set Status to true
+                        fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
+                            Status: true
+                        });
+                    });
+                    // No circle photo selected
+                } else {
+                    // Writing circle ID to the user's path and set Status to true
+                    fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(groupID).update({
+                        Status: true
+                    });
+                }
+
+
 
                 fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
                     // Save invitor name photo
                     if (userData.val().profilePhoto == null) {
-	                    fbCirclePushRef.update({
-	                        invitorName: userData.val().firstname + " " + userData.val().lastname
-	                    });
+                        fbCirclePushRef.update({
+                            invitorName: userData.val().firstname + " " + userData.val().lastname
+                        });
                     } else {
-	                    fbCirclePushRef.update({
-	                        invitorName: userData.val().firstname + " " + userData.val().lastname,
-	                        invitorPhoto: userData.val().profilePhoto
-	                    });
+                        fbCirclePushRef.update({
+                            invitorName: userData.val().firstname + " " + userData.val().lastname,
+                            invitorPhoto: userData.val().profilePhoto
+                        });
                     }
                 });
 
@@ -915,9 +916,9 @@ angular.module('starter.controllers', [])
                         Status: true,
                         badgeCounter: 0,
                         Priority: 0
-                   });
+                    });
                 } else {
-                   fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
+                    fbRef.child("Circles").child(groupID).child("Members").child($rootScope.fbAuthData.uid).update({
                         Status: true,
                         badgeCounter: 0
                     });
@@ -1052,7 +1053,7 @@ angular.module('starter.controllers', [])
                 });
 
                 // Record entry into Group Controlller
-                if(typeof analytics !== 'undefined') {
+                if (typeof analytics !== 'undefined') {
                     analytics.trackView("Group Controller");
                     analytics.trackEvent('GroupCtrl', 'Pass', 'In GroupCtrl', 104);
                 }
@@ -1087,7 +1088,7 @@ angular.module('starter.controllers', [])
     };
 
     // Record entry into the Wallet Controller
-    if(typeof analytics !== 'undefined') {
+    if (typeof analytics !== 'undefined') {
         analytics.trackView("Wallet Controller");
         analytics.trackEvent('WalletCtrl', 'Pass', 'In WalletCtrl', 105);
     }
@@ -1149,15 +1150,15 @@ angular.module('starter.controllers', [])
             });
         });
     });
-    
+
     // This creates a group avatar if no group photo exists
-    $scope.getInitials = function (name, i) {
-	    console.log("IS THIS THE INDEX", name, i)
-		var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
+    $scope.getInitials = function(name, i) {
+        console.log("IS THIS THE INDEX", name, i)
+        var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
         var canvas = document.createElement('canvas');
         canvas.style.display = 'none';
         var canvasWidth = 300;
-		var canvasHeight = 300;
+        var canvasHeight = 300;
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
         document.body.appendChild(canvas);
@@ -1165,9 +1166,9 @@ angular.module('starter.controllers', [])
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         if (i < 12) {
-	        context.fillStyle = colorArray[i];
+            context.fillStyle = colorArray[i];
         } else {
-	    	context.fillStyle = '#EC6B83';   
+            context.fillStyle = '#EC6B83';
         }
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.font = "150px Helvetica";
@@ -1176,7 +1177,7 @@ angular.module('starter.controllers', [])
         if (name) {
             first = name[0];
             var initials = first;
-            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            context.fillText(initials.toUpperCase(), canvasWidth / 2, canvasHeight / 2);
             var data = canvas.toDataURL();
             document.body.removeChild(canvas);
             return data;
@@ -1184,7 +1185,7 @@ angular.module('starter.controllers', [])
             return false;
         }
 
-	}
+    }
 })
 
 // Controller for wallet-detail page
@@ -1193,16 +1194,16 @@ angular.module('starter.controllers', [])
     var fbRef = firebase.database().ref();
     var fbCircles = firebase.database().ref("/Circles/" + $stateParams.circleID);
 
-	// Create a storage reference from firebase storage service
-	var storageRef = firebase.storage().ref();
+    // Create a storage reference from firebase storage service
+    var storageRef = firebase.storage().ref();
 
-	// Display credit and debit dates
-	var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates/");
-	$scope.credit = $firebaseObject((fbCredits).limitToFirst(1));
-	var fbDebits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/DebitDates/");
-	$scope.debit = $firebaseObject((fbDebits).limitToFirst(1));
-	var fbMembersRef = firebase.database().ref("/Circles/" + $stateParams.circleID + "/Members/");
-	$scope.fbMembers = $firebaseArray(fbMembersRef);
+    // Display credit and debit dates
+    var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates/");
+    $scope.credit = $firebaseObject((fbCredits).limitToFirst(1));
+    var fbDebits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/DebitDates/");
+    $scope.debit = $firebaseObject((fbDebits).limitToFirst(1));
+    var fbMembersRef = firebase.database().ref("/Circles/" + $stateParams.circleID + "/Members/");
+    $scope.fbMembers = $firebaseArray(fbMembersRef);
 
     var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID);
     // Get the link to the user profile
@@ -1212,30 +1213,33 @@ angular.module('starter.controllers', [])
 
     obj.$bindTo($scope, "circle");
 
-	console.log("$firebaseArray(fbCircles)", obj, obj.$id)
-	function base64toBlob(b64Data, contentType) {
-	  contentType = contentType || '';
-	  sliceSize = 512;
-	  var newb64 = b64Data.replace(/\s/g, "")
-	  var byteCharacters = atob(newb64);
-	  var byteArrays = [];
+    console.log("$firebaseArray(fbCircles)", obj, obj.$id)
 
-	  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-	    var slice = byteCharacters.slice(offset, offset + sliceSize);
+    function base64toBlob(b64Data, contentType) {
+        contentType = contentType || '';
+        sliceSize = 512;
+        var newb64 = b64Data.replace(/\s/g, "")
+        var byteCharacters = atob(newb64);
+        var byteArrays = [];
 
-	    var byteNumbers = new Array(slice.length);
-	    for (var i = 0; i < slice.length; i++) {
-	      byteNumbers[i] = slice.charCodeAt(i);
-	    }
+        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            var slice = byteCharacters.slice(offset, offset + sliceSize);
 
-	    var byteArray = new Uint8Array(byteNumbers);
+            var byteNumbers = new Array(slice.length);
+            for (var i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
 
-	    byteArrays.push(byteArray);
-	  }
+            var byteArray = new Uint8Array(byteNumbers);
 
-	  var blob = new Blob(byteArrays, {type: contentType});
-	  return blob;
-	}
+            byteArrays.push(byteArray);
+        }
+
+        var blob = new Blob(byteArrays, {
+            type: contentType
+        });
+        return blob;
+    }
 
     // For selecting a profile photo
     $scope.selectPicture = function() {
@@ -1271,26 +1275,26 @@ angular.module('starter.controllers', [])
                         var blob = base64toBlob(imageData, "image/jpeg")
                         var uploadTask = storageRef.child('Circles/' + $stateParams.circleID + "/CirclePhoto.jpg").put(blob);
 
-                        uploadTask.on('state_changed', function(snapshot){
-						  // Observe state change events such as progress, pause, and resume
-						  // See below for more detail
-						}, function(error) {
-						  // Handle unsuccessful uploads
-						  $ionicLoading.show({
-                            template: 'We had trouble uploading your photo. Please try later.',
-                            duration: 2000
-                          });
-						}, function() {
-						  // Handle successful uploads on complete
-						  var downloadURL = uploadTask.snapshot.downloadURL;
-						  console.log("Group Profile Pic Download link", downloadURL)
-						  fbCircles.update({
-	                        circlePhoto: downloadURL
-	                      });
-	                      fbUserAcceptedCircles.update({
-                            circlePhoto: downloadURL
-                          });
-						});
+                        uploadTask.on('state_changed', function(snapshot) {
+                            // Observe state change events such as progress, pause, and resume
+                            // See below for more detail
+                        }, function(error) {
+                            // Handle unsuccessful uploads
+                            $ionicLoading.show({
+                                template: 'We had trouble uploading your photo. Please try later.',
+                                duration: 2000
+                            });
+                        }, function() {
+                            // Handle successful uploads on complete
+                            var downloadURL = uploadTask.snapshot.downloadURL;
+                            console.log("Group Profile Pic Download link", downloadURL)
+                            fbCircles.update({
+                                circlePhoto: downloadURL
+                            });
+                            fbUserAcceptedCircles.update({
+                                circlePhoto: downloadURL
+                            });
+                        });
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -1317,26 +1321,26 @@ angular.module('starter.controllers', [])
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
                         var blob = base64toBlob(imageData, "image/jpeg")
                         var uploadTask = storageRef.child('Circles/' + $stateParams.circleID + "/CirclePhoto.jpg").put(blob);
-                        uploadTask.on('state_changed', function(snapshot){
-						  // Observe state change events such as progress, pause, and resume
-						  // See below for more detail
-						}, function(error) {
-						  // Handle unsuccessful uploads
-						  $ionicLoading.show({
-                            template: 'We had trouble uploading your photo. Please try later.',
-                            duration: 2000
-                          });
-						}, function() {
-						  // Handle successful uploads on complete
-						  var downloadURL = uploadTask.snapshot.downloadURL;
-						  console.log("Group Profile Pic Download link", downloadURL)
-						  fbCircles.update({
-	                        circlePhoto: downloadURL
-	                      });
-	                      fbUserAcceptedCircles.update({
-                            circlePhoto: downloadURL
-                          });
-						});
+                        uploadTask.on('state_changed', function(snapshot) {
+                            // Observe state change events such as progress, pause, and resume
+                            // See below for more detail
+                        }, function(error) {
+                            // Handle unsuccessful uploads
+                            $ionicLoading.show({
+                                template: 'We had trouble uploading your photo. Please try later.',
+                                duration: 2000
+                            });
+                        }, function() {
+                            // Handle successful uploads on complete
+                            var downloadURL = uploadTask.snapshot.downloadURL;
+                            console.log("Group Profile Pic Download link", downloadURL)
+                            fbCircles.update({
+                                circlePhoto: downloadURL
+                            });
+                            fbUserAcceptedCircles.update({
+                                circlePhoto: downloadURL
+                            });
+                        });
 
                     }, function(err) {
                         $ionicLoading.show({
@@ -1358,10 +1362,10 @@ angular.module('starter.controllers', [])
     });
 
     // Hide the notification after the data is loaded
-    fbCircleAcceptedMembers.once("value", function(snapshot){
+    fbCircleAcceptedMembers.once("value", function(snapshot) {
         var dataExists = snapshot.exists();
 
-        if(dataExists){
+        if (dataExists) {
             console.log("Data exists");
 
             // Update $scope.members
@@ -1369,7 +1373,7 @@ angular.module('starter.controllers', [])
 
             // Hide the notification
             $ionicLoading.hide();
-        } else{
+        } else {
             // Update $scope.members
             $scope.members = $firebaseArray(fbCircleAcceptedMembers);
 
@@ -1386,12 +1390,11 @@ angular.module('starter.controllers', [])
                 angular.forEach(obj.Members, function(value, key) {
                     fbRef.child("Users").child(key).once('value', function(userData) {
 
-                        fbRef.child("Users").child(key).child("Circles").child($stateParams.circleID).child("Status").once('value', function(acceptStatus){
+                        fbRef.child("Users").child(key).child("Circles").child($stateParams.circleID).child("Status").once('value', function(acceptStatus) {
                             console.log("Accept Status", acceptStatus.val());
 
                             // Show only users who have accepted the invite
-                            if(acceptStatus.val() == true)
-                            {
+                            if (acceptStatus.val() == true) {
                                 // Once the user data is loaded update the information
                                 // Update the location(temporary cache)
                                 fbCircleAcceptedMembers.update({
@@ -1431,7 +1434,7 @@ angular.module('starter.controllers', [])
 
 
     // Record entry into Wallet Detail Controlller
-    if(typeof analytics !== 'undefined') {
+    if (typeof analytics !== 'undefined') {
         analytics.trackView("Wallet Detail Controller");
         analytics.trackEvent('WalletDetailCtrl', 'Pass', 'In WalletDetailCtrl', 106);
     }
@@ -1447,7 +1450,7 @@ angular.module('starter.controllers', [])
     };
     // Adding more buddies for Singular
     $scope.selectContacts = function() {
-	    // Show the action sheet
+        // Show the action sheet
         var hideSheet = $ionicActionSheet.show({
             buttons: [{
                 text: 'Add More Buddies To This Group'
@@ -1458,108 +1461,108 @@ angular.module('starter.controllers', [])
             },
             // For accessing the device's contacts
             buttonClicked: function(index) {
-	            hideSheet();
-			    // Import all contacts from the address book
-			    $ionicLoading.show({
-		            template: 'Fetching your contacts...'
-		        });
-			    var options = {};
-				options.multiple = true;
-			    $cordovaContacts.find(options).then(function(allContacts) { //omitting parameter to .find() causes all contacts to be returned
-			      $scope.contacts = allContacts;
-			      $scope.modal.show();
-			      $ionicLoading.hide();
-			    });
+                hideSheet();
+                // Import all contacts from the address book
+                $ionicLoading.show({
+                    template: 'Fetching your contacts...'
+                });
+                var options = {};
+                options.multiple = true;
+                $cordovaContacts.find(options).then(function(allContacts) { //omitting parameter to .find() causes all contacts to be returned
+                    $scope.contacts = allContacts;
+                    $scope.modal.show();
+                    $ionicLoading.hide();
+                });
             }
         })
     }
 
     // Initialize an array to store selected contacts
-  	var temp = [];
+    var temp = [];
 
     $scope.scrollTop = function() {
         $ionicScrollDelegate.resize();
     };
 
-  	$scope.phoneSelect = function(parentObj, Obj) {
-	  	var parentIndex = $scope.contacts.indexOf(parentObj);
-	  	var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);
-	  	console.log("PHONE Index: ", parentIndex, index, $scope.contacts[parentIndex].phoneNumbers[index].selected);
+    $scope.phoneSelect = function(parentObj, Obj) {
+            var parentIndex = $scope.contacts.indexOf(parentObj);
+            var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);
+            console.log("PHONE Index: ", parentIndex, index, $scope.contacts[parentIndex].phoneNumbers[index].selected);
 
-	  	// Save the index values received when a user selects a contact
-	  	if($scope.contacts[parentIndex].phoneNumbers[index].selected) {
-			temp.push({
-			  	parent: parentIndex,
-			  	child: index
-			});
-	  	} else if($scope.contacts[parentIndex].phoneNumbers[index].selected == false) {
-		  	for (var i = 0; i < temp.length; i++) {
-			    if(parentIndex == temp[i].parent && index == temp[i].child) {
-				    temp.splice(i, 1);
-			    };
-		    };
-	  	}
-  	}
-  	// For determining the collection-item-length while choosing contacts
-  	$scope.itemheight = function(length) {
-	  	if (length == 1) {
-		  	return 70;
-	  	} else if (length == 2) {
-		  	return 140;
-	  	} else if (length == 3){
-		  	return 210;
-	  	} else if (length == 4){
-		  	return 280;
-	  	} else if (length == 5){
-		  	return 350;
-	  	} else {
-		  	return 420;
-	  	}
-  	}
-
-  	// Execute action on hide modal
-	$scope.$on('modal.hidden', function(modal) {
-        if(modal.id == '2'){
-    	    // Execute action
-    	    console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
-    	    // Initialize an array for storing contacts
-    	    $scope.data = {
-    	        selectedContacts: []
-    	    };
-    	    for (var i = 0; i < temp.length; i++) {
-    		    if($scope.contacts[temp[i].parent].emails != null) {
-    			    $scope.data.selectedContacts.push({
-    				    name: $scope.contacts[temp[i].parent].name.formatted,
-    				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value,
-    				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
-    				    email: $scope.contacts[temp[i].parent].emails[0].value,
-    				    emailType: $scope.contacts[temp[i].parent].emails[0].type
-    			    });
-    		    } else {
-    				$scope.data.selectedContacts.push({
-    				    name: $scope.contacts[temp[i].parent].name.formatted,
-    				    phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
-    				    phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value
-    			    });
-    		    }
-    	    };
-    	    console.log("SELECTED CONTACTS: " + JSON.stringify($scope.data.selectedContacts));
-    	    $ionicScrollDelegate.scrollBottom(true, true);
+            // Save the index values received when a user selects a contact
+            if ($scope.contacts[parentIndex].phoneNumbers[index].selected) {
+                temp.push({
+                    parent: parentIndex,
+                    child: index
+                });
+            } else if ($scope.contacts[parentIndex].phoneNumbers[index].selected == false) {
+                for (var i = 0; i < temp.length; i++) {
+                    if (parentIndex == temp[i].parent && index == temp[i].child) {
+                        temp.splice(i, 1);
+                    };
+                };
+            }
         }
-	});
+        // For determining the collection-item-length while choosing contacts
+    $scope.itemheight = function(length) {
+        if (length == 1) {
+            return 70;
+        } else if (length == 2) {
+            return 140;
+        } else if (length == 3) {
+            return 210;
+        } else if (length == 4) {
+            return 280;
+        } else if (length == 5) {
+            return 350;
+        } else {
+            return 420;
+        }
+    }
 
-  	$ionicModal.fromTemplateUrl('contacts-modal.html', {
+    // Execute action on hide modal
+    $scope.$on('modal.hidden', function(modal) {
+        if (modal.id == '2') {
+            // Execute action
+            console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
+            // Initialize an array for storing contacts
+            $scope.data = {
+                selectedContacts: []
+            };
+            for (var i = 0; i < temp.length; i++) {
+                if ($scope.contacts[temp[i].parent].emails != null) {
+                    $scope.data.selectedContacts.push({
+                        name: $scope.contacts[temp[i].parent].name.formatted,
+                        phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value,
+                        phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
+                        email: $scope.contacts[temp[i].parent].emails[0].value,
+                        emailType: $scope.contacts[temp[i].parent].emails[0].type
+                    });
+                } else {
+                    $scope.data.selectedContacts.push({
+                        name: $scope.contacts[temp[i].parent].name.formatted,
+                        phoneType: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].type,
+                        phone: $scope.contacts[temp[i].parent].phoneNumbers[temp[i].child].value
+                    });
+                }
+            };
+            console.log("SELECTED CONTACTS: " + JSON.stringify($scope.data.selectedContacts));
+            $ionicScrollDelegate.scrollBottom(true, true);
+        }
+    });
+
+    $ionicModal.fromTemplateUrl('contacts-modal.html', {
         id: '2',
-	    scope: $scope,
-	    animation: 'slide-in-up'
-	}).then(function(modal) {
-	    $scope.modal = modal;
-	});
+        scope: $scope,
+        animation: 'slide-in-up'
+    }).then(function(modal) {
+        $scope.modal = modal;
+    });
 
     // Deleting contact selected in error
     $scope.contactDelete = function(item) {
-   		$scope.data.selectedContacts.splice(item, 1);
-   		temp.splice(item, 1);
+        $scope.data.selectedContacts.splice(item, 1);
+        temp.splice(item, 1);
     };
 
     // This function is called when the "Invite your wallet buddies" button is pressed
@@ -1602,7 +1605,7 @@ angular.module('starter.controllers', [])
                     if (data != null) {
                         console.log("Invited user is registered with uid: " + data.uid);
 
-                         // Writing UserID under CircleID and set Status to pending
+                        // Writing UserID under CircleID and set Status to pending
                         fbRef.child("Circles").child(groupID).child("PendingMembers").child(data.uid).update({
                             Status: "pending"
                         });
@@ -1680,89 +1683,89 @@ angular.module('starter.controllers', [])
         });
 
         //Reset the contacts array
-		$scope.data.selectedContacts = [];
+        $scope.data.selectedContacts = [];
     }
 
     //Cancel a group - set the flag to true
-    $scope.cancelCircle = function () {
-	    
-	    firebase.database().ref().child('/Circles/' + $stateParams.circleID).child('DebitDates').once('value', function(debitDates) {
-		    debitDates.forEach(function(date) {
-			    // Get the date stored in firebase
-				var DebitDate = new Date(date.val().debitDate);
-				
-				// Calculate Notification Date from Debit Date
-				var NotifDate = new Date(Date.now());
-				NotifDate.setDate(DebitDate.getDate()+4)
-				
-				//Minus one day from the debit date
-				DebitDate.setDate(DebitDate.getDate()-1)
-				
-				// Get the current date
-				var currentDate = new Date(Date.now());
-				
-				// Check if current date is in between debit date-1 and notification date, since new dates are set the day before debit dates
-				// If true, the current cycle is alredy in progress and only the next cycle will be cancelled.
-				if (currentDate > DebitDate && currentDate < NotifDate) {
-				    console.log("You cannot cancel the group, it will only be cancelled on", DebitDate.getDate())
-					console.log("Will only be cancelled on", date.val().debitDate)
-				    var confirmPopup = $ionicPopup.confirm({
-				     	title: 'Cancel Group',
-					 	template: 'The current cycle is in progress and cannot be cancelled. Do you wish to cancel from the next cycle?'
-				   	});
-				
-				    confirmPopup.then(function(res) {
-				      if(res) {
-				        console.log('You are sure');
-				        fbCircles.update({
-			            	circleCancelled: true
-				        }).then(function(success){
-					        $ionicPopup.alert({
-				                title: "Success!",
-				                template: "Your group has now ended. Further transactions will not be made!"
-				            });
-				        }).catch(function(error){
-					        $ionicPopup.alert({
-				                title: "Unable to process request",
-				                template: "Please try again."
-				            });
-				        });
-				      } else {
-				       console.log('You are not sure');
-				      }
-				    });
-				} else {
-				    console.log("Will be cancelled right away")
-				    var confirmPopup = $ionicPopup.confirm({
-				     	title: 'Cancel Group',
-					 	template: 'Are you sure you want to end this group?'
-				   	});
-				
-				    confirmPopup.then(function(res) {
-				      if(res) {
-				        console.log('You are sure');
-				        fbCircles.update({
-			            	circleCancelled: true
-				        }).then(function(success){
-					        $ionicPopup.alert({
-				                title: "Success!",
-				                template: "Your group has now ended. Further transactions will not be made!"
-				            });
-				        }).catch(function(error){
-					        $ionicPopup.alert({
-				                title: "Unable to process request",
-				                template: "Please try again."
-				            });
-				        });
-				      } else {
-				       console.log('You are not sure');
-				      }
-				    });
-				}
-	        })
-	    })
+    $scope.cancelCircle = function() {
+
+        firebase.database().ref().child('/Circles/' + $stateParams.circleID).child('DebitDates').once('value', function(debitDates) {
+            debitDates.forEach(function(date) {
+                // Get the date stored in firebase
+                var DebitDate = new Date(date.val().debitDate);
+
+                // Calculate Notification Date from Debit Date
+                var NotifDate = new Date(Date.now());
+                NotifDate.setDate(DebitDate.getDate() + 4)
+
+                //Minus one day from the debit date
+                DebitDate.setDate(DebitDate.getDate() - 1)
+
+                // Get the current date
+                var currentDate = new Date(Date.now());
+
+                // Check if current date is in between debit date-1 and notification date, since new dates are set the day before debit dates
+                // If true, the current cycle is alredy in progress and only the next cycle will be cancelled.
+                if (currentDate > DebitDate && currentDate < NotifDate) {
+                    console.log("You cannot cancel the group, it will only be cancelled on", DebitDate.getDate())
+                    console.log("Will only be cancelled on", date.val().debitDate)
+                    var confirmPopup = $ionicPopup.confirm({
+                        title: 'Cancel Group',
+                        template: 'The current cycle is in progress and cannot be cancelled. Do you wish to cancel from the next cycle?'
+                    });
+
+                    confirmPopup.then(function(res) {
+                        if (res) {
+                            console.log('You are sure');
+                            fbCircles.update({
+                                circleCancelled: true
+                            }).then(function(success) {
+                                $ionicPopup.alert({
+                                    title: "Success!",
+                                    template: "Your group has now ended. Further transactions will not be made!"
+                                });
+                            }).catch(function(error) {
+                                $ionicPopup.alert({
+                                    title: "Unable to process request",
+                                    template: "Please try again."
+                                });
+                            });
+                        } else {
+                            console.log('You are not sure');
+                        }
+                    });
+                } else {
+                    console.log("Will be cancelled right away")
+                    var confirmPopup = $ionicPopup.confirm({
+                        title: 'Cancel Group',
+                        template: 'Are you sure you want to end this group?'
+                    });
+
+                    confirmPopup.then(function(res) {
+                        if (res) {
+                            console.log('You are sure');
+                            fbCircles.update({
+                                circleCancelled: true
+                            }).then(function(success) {
+                                $ionicPopup.alert({
+                                    title: "Success!",
+                                    template: "Your group has now ended. Further transactions will not be made!"
+                                });
+                            }).catch(function(error) {
+                                $ionicPopup.alert({
+                                    title: "Unable to process request",
+                                    template: "Please try again."
+                                });
+                            });
+                        } else {
+                            console.log('You are not sure');
+                        }
+                    });
+                }
+            })
+        })
     }
-    
+
     /*
 // This creates a group avatar if no group photo exists
     $scope.getInitials = function (name) {
@@ -1793,15 +1796,15 @@ angular.module('starter.controllers', [])
         }
 	}
 */
-	
-	// This creates a user and group avatar if no group/user photo exists
-    $scope.getInitials = function (name, i) {
-	    console.log("IS THIS THE INDEX", name, i)
-		var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
+
+    // This creates a user and group avatar if no group/user photo exists
+    $scope.getInitials = function(name, i) {
+        console.log("IS THIS THE INDEX", name, i)
+        var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
         var canvas = document.createElement('canvas');
         canvas.style.display = 'none';
         var canvasWidth = 300;
-		var canvasHeight = 300;
+        var canvasHeight = 300;
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
         document.body.appendChild(canvas);
@@ -1809,9 +1812,9 @@ angular.module('starter.controllers', [])
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         if (i < 12) {
-	        context.fillStyle = colorArray[i];
+            context.fillStyle = colorArray[i];
         } else {
-	    	context.fillStyle = '#247FFF';   
+            context.fillStyle = '#247FFF';
         }
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.font = "150px Helvetica";
@@ -1820,7 +1823,7 @@ angular.module('starter.controllers', [])
         if (name) {
             first = name[0];
             var initials = first;
-            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            context.fillText(initials.toUpperCase(), canvasWidth / 2, canvasHeight / 2);
             var data = canvas.toDataURL();
             document.body.removeChild(canvas);
             return data;
@@ -1828,7 +1831,7 @@ angular.module('starter.controllers', [])
             return false;
         }
 
-	}
+    }
 
 })
 
@@ -1841,38 +1844,38 @@ angular.module('starter.controllers', [])
 
     // This scope var controls the focus of the keyboard
     $scope.isFocused = "false";
-	$scope.contentClick = function () { // triggered by an ngClick placed in <ion-content>
-	    $scope.isFocused = "false";
-	}
-	$scope.inputClick = function () { // triggered by an ngClick placed in the <textarea>
-		$scope.isFocused = "true";
-	}
+    $scope.contentClick = function() { // triggered by an ngClick placed in <ion-content>
+        $scope.isFocused = "false";
+    }
+    $scope.inputClick = function() { // triggered by an ngClick placed in the <textarea>
+        $scope.isFocused = "true";
+    }
 
-	$scope.onBlur = function() {
+    $scope.onBlur = function() {
         if ($scope.isFocused == "true") {
             $('#message').focus();
         }
     };
 
-	$scope.$on('$ionicView.enter', function() {
+    $scope.$on('$ionicView.enter', function() {
         // Record entry into Chat Controlller
-        if(typeof analytics !== 'undefined') {
+        if (typeof analytics !== 'undefined') {
             analytics.trackView("Chat Controller");
             analytics.trackEvent('ChatCtrl', 'Pass', 'In ChatCtrl', 107);
         }
 
-	    $ionicNavBarDelegate.showBackButton(true);
-	    // Scroll down the content automatically
+        $ionicNavBarDelegate.showBackButton(true);
+        // Scroll down the content automatically
         $ionicScrollDelegate.scrollBottom(true, true);
         cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
         // Updating chat badge counter
-		var ref = firebase.database().ref();
-		// Get a reference to where the User's accepted circles are going to be stored
-		var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID + "/Members/" + $rootScope.fbAuthData.uid);
-		fbUserAcceptedCircles.once("value", function(data){
-			ref.child('Users').child($rootScope.fbAuthData.uid).once("value", function(userData){
-				// Get the existing total notification count
-				var walletCounter = userData.val().Badges.walletCounter;
+        var ref = firebase.database().ref();
+        // Get a reference to where the User's accepted circles are going to be stored
+        var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/" + $stateParams.circleID + "/Members/" + $rootScope.fbAuthData.uid);
+        fbUserAcceptedCircles.once("value", function(data) {
+            ref.child('Users').child($rootScope.fbAuthData.uid).once("value", function(userData) {
+                // Get the existing total notification count
+                var walletCounter = userData.val().Badges.walletCounter;
                 var badgeCounter = data.val().badgeCounter;
 
 
@@ -1882,68 +1885,68 @@ angular.module('starter.controllers', [])
                 // that means the messages haven't been read yet,
                 // so decrement walletCounter if it is not 0 already for
                 // some UNKNOWN reason
-                if(badgeCounter >= 0){
+                if (badgeCounter >= 0) {
                     walletCounter = walletCounter - badgeCounter;
                     console.log("walletCounter: " + walletCounter);
-	                // Update the total badges counter
-	                ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
-		                walletCounter: walletCounter
-					});
+                    // Update the total badges counter
+                    ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
+                        walletCounter: walletCounter
+                    });
                 }
 
                 // Set badgeCounter to 0 only if it not-zero
                 // (otherwise junk data will be displayed in the wallet tab)
-                if(badgeCounter != 0){
+                if (badgeCounter != 0) {
                     // Set badgeCounter to 0
-    				fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-    					badgeCounter: 0
-    				});
+                    fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+                        badgeCounter: 0
+                    });
 
-    				ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-    					badgeCounter: 0
-    				});
+                    ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+                        badgeCounter: 0
+                    });
                 }
-			})
-		});
-	});
+            })
+        });
+    });
 
-	// Updating chat badge counter
-	$scope.$on('$ionicView.leave', function() {
-		var ref = firebase.database().ref();
-		cordova.plugins.Keyboard.hideKeyboardAccessoryBar(false);
-		// Get a reference to where the User's accepted circles are going to be stored
-		var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
-		fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data){
-			ref.child('Users').child($rootScope.fbAuthData.uid).once("value", function(userData){
-				//Decrement this circle's chat counter from totalCount
-				var walletCounter = userData.val().Badges.walletCounter - data.val().badgeCounter;
-				if (walletCounter >= 0) {
-					ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
-						walletCounter: walletCounter
-					});
-				} else {
-					ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
-						walletCounter: 0
-					});
-				}
-				// Set badgeCounter to 0
-				fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-					badgeCounter: 0
-				})
-				ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-					badgeCounter: 0
-				})
-			})
-		});
-	});
+    // Updating chat badge counter
+    $scope.$on('$ionicView.leave', function() {
+        var ref = firebase.database().ref();
+        cordova.plugins.Keyboard.hideKeyboardAccessoryBar(false);
+        // Get a reference to where the User's accepted circles are going to be stored
+        var fbUserAcceptedCircles = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/AcceptedCircles/Info/");
+        fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).once("value", function(data) {
+            ref.child('Users').child($rootScope.fbAuthData.uid).once("value", function(userData) {
+                //Decrement this circle's chat counter from totalCount
+                var walletCounter = userData.val().Badges.walletCounter - data.val().badgeCounter;
+                if (walletCounter >= 0) {
+                    ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
+                        walletCounter: walletCounter
+                    });
+                } else {
+                    ref.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
+                        walletCounter: 0
+                    });
+                }
+                // Set badgeCounter to 0
+                fbUserAcceptedCircles.child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+                    badgeCounter: 0
+                })
+                ref.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+                    badgeCounter: 0
+                })
+            })
+        });
+    });
 
-	$scope.goBack = function() {
-		$state.go('tab.wallet');
-	}
+    $scope.goBack = function() {
+        $state.go('tab.wallet');
+    }
 
-	$scope.text = function() {
-		$ionicScrollDelegate.scrollBottom(true, true);
-	};
+    $scope.text = function() {
+        $ionicScrollDelegate.scrollBottom(true, true);
+    };
 
     // Save the uid to use in the view
     $scope.uid = $rootScope.fbAuthData.uid;
@@ -1954,29 +1957,29 @@ angular.module('starter.controllers', [])
     var isIOS = ionic.Platform.isWebView() && ionic.Platform.isIOS();
 
     $scope.sendMessage = function() {
-	    console.log("SENDING MESSAGE", $scope.data.message);
-	    var message = $scope.data.message;
-	    delete $scope.data.message;
+        console.log("SENDING MESSAGE", $scope.data.message);
+        var message = $scope.data.message;
+        delete $scope.data.message;
         alternate = !alternate;
 
         // Create a firebase reference to get the user's information
         var fbRef = firebase.database().ref();
         var profile = $firebaseObject(fbRef.child("Users").child($rootScope.fbAuthData.uid));
 
-		//UpdateMessages.update($scope.data.message, $stateParams.circleID);
-		var fbRef = firebase.database().ref();
-	    var d = Date.now();
-	    fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
-	        console.log("$scope.data.message: " + message, $rootScope.fbAuthData.uid, d, userData.val().firstname);
-	        fbMessages.push({
-	            userId: $rootScope.fbAuthData.uid,
-	            text: message,
-	            time: d,
-	            name: userData.val().firstname
-	        });
-	    });
+        //UpdateMessages.update($scope.data.message, $stateParams.circleID);
+        var fbRef = firebase.database().ref();
+        var d = Date.now();
+        fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
+            console.log("$scope.data.message: " + message, $rootScope.fbAuthData.uid, d, userData.val().firstname);
+            fbMessages.push({
+                userId: $rootScope.fbAuthData.uid,
+                text: message,
+                time: d,
+                name: userData.val().firstname
+            });
+        });
 
-        fbMembers = firebase.database().ref("/Circles/"+$stateParams.circleID);
+        fbMembers = firebase.database().ref("/Circles/" + $stateParams.circleID);
         fbPush = firebase.database().ref();
         var obj = $firebaseObject(fbMembers);
         obj.$loaded().then(function() {
@@ -2037,17 +2040,17 @@ angular.module('starter.controllers', [])
     // Clear all the data
     fbUserPendingCircles.remove();
 
-	$scope.$on('$ionicView.enter', function() {
-		fbRef.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
-			requestCounter: 0
-		});
-	});
+    $scope.$on('$ionicView.enter', function() {
+        fbRef.child('Users').child($rootScope.fbAuthData.uid).child('Badges').update({
+            requestCounter: 0
+        });
+    });
 
     // Update $scope.circles
     $scope.circles = $firebaseArray(fbUserPendingCircles);
 
     // Record entry into Requests Controlller
-    if(typeof analytics !== 'undefined') {
+    if (typeof analytics !== 'undefined') {
         analytics.trackView("Requests Controller");
         analytics.trackEvent('RequestsCtrl', 'Pass', 'In RequestsCtrl', 108);
     }
@@ -2090,14 +2093,14 @@ angular.module('starter.controllers', [])
             });
         });
     });
-    
+
     // This creates a user avatar if no profile image exists
-    $scope.getInitials = function (name, i) {
-		var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
+    $scope.getInitials = function(name, i) {
+        var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
         var canvas = document.createElement('canvas');
         canvas.style.display = 'none';
         var canvasWidth = 300;
-		var canvasHeight = 300;
+        var canvasHeight = 300;
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
         document.body.appendChild(canvas);
@@ -2105,9 +2108,9 @@ angular.module('starter.controllers', [])
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         if (i < 12) {
-	        context.fillStyle = colorArray[i];
+            context.fillStyle = colorArray[i];
         } else {
-	    	context.fillStyle = '#EC6B83';   
+            context.fillStyle = '#EC6B83';
         }
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.font = "150px Helvetica";
@@ -2116,7 +2119,7 @@ angular.module('starter.controllers', [])
         if (name) {
             first = name[0];
             var initials = first;
-            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            context.fillText(initials.toUpperCase(), canvasWidth / 2, canvasHeight / 2);
             var data = canvas.toDataURL();
             document.body.removeChild(canvas);
             return data;
@@ -2124,7 +2127,7 @@ angular.module('starter.controllers', [])
             return false;
         }
 
-	}
+    }
 
 })
 
@@ -2150,10 +2153,10 @@ angular.module('starter.controllers', [])
     $scope.onAccept = function() {
         var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
         fbUser.once("value", function(data) {
-	        console.log("PENDING CIRCLETYPE", data.val().PendingCircles[$stateParams.circleID].circleType, !data.child("Stripe/Debits").exists())
-            // Check if user's bank account is linked and KYC info verified before the user can accept an invite
-            if(data.val().PendingCircles[$stateParams.circleID].circleType !== "Singular" && !data.child("Stripe/Credits").exists()) {
-	            $ionicPopup.alert({
+            console.log("PENDING CIRCLETYPE", data.val().PendingCircles[$stateParams.circleID].circleType, !data.child("Stripe/Debits").exists())
+                // Check if user's bank account is linked and KYC info verified before the user can accept an invite
+            if (data.val().PendingCircles[$stateParams.circleID].circleType !== "Singular" && !data.child("Stripe/Credits").exists()) {
+                $ionicPopup.alert({
                     title: "You haven't linked your bank account for credits!",
                     template: "You can accept a request for this group once you've linked an account for credits. Please go to settings to link an account."
                 });
@@ -2162,104 +2165,104 @@ angular.module('starter.controllers', [])
                 var fbCircle = firebase.database().ref("/Circles/");
                 var fbPush = firebase.database().ref("/PushNotifications/");
                 fbCircle.child($stateParams.circleID).once('value', function(circle) {
-	                // Remove this user from the contacts list so he doesn't get reminders
-					fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
+                    // Remove this user from the contacts list so he doesn't get reminders
+                    fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
 
-		                for(var i in data.val().contacts) {
-		                    var val = data.val().contacts[i];
-							//  Loop for removing symbols in phone numbers
-				            var str = val().phone.toString();
-				            var temp = str.replace(/\D/g, '');
-				            console.log("temp", str, temp);
-				            // Removing 1 from the phone number
-				            if (temp.length > 10) {
-				                var temp = temp.substring(1);
-				                var temp_int = parseInt(temp);
-				                var phone = temp_int;
-				            } else {
-					            var phone = temp;
-				            }
+                        for (var i in data.val().contacts) {
+                            var val = data.val().contacts[i];
+                            //  Loop for removing symbols in phone numbers
+                            var str = val().phone.toString();
+                            var temp = str.replace(/\D/g, '');
+                            console.log("temp", str, temp);
+                            // Removing 1 from the phone number
+                            if (temp.length > 10) {
+                                var temp = temp.substring(1);
+                                var temp_int = parseInt(temp);
+                                var phone = temp_int;
+                            } else {
+                                var phone = temp;
+                            }
 
-				            // Find the right contact and delete
-							if(userData.val().phonenumber == phone) {
-								fbRef.child("Circles").child($stateParams.circleID).child("contacts").child(i).remove();
-							}
-			            };
-					});
-					if (circle.val().circleType == 'Singular') {
+                            // Find the right contact and delete
+                            if (userData.val().phonenumber == phone) {
+                                fbRef.child("Circles").child($stateParams.circleID).child("contacts").child(i).remove();
+                            }
+                        };
+                    });
+                    if (circle.val().circleType == 'Singular') {
 
-						fbRef.child("Circles").child($stateParams.circleID).child('DebitDates').once('value', function(snapshot) {
-							// Check if this circle is already running
-							if(snapshot.exists()) {
-								// Change Status of the circle to "true" and initializing notification badge to 0
-				                fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
-				                    Status: true,
-				                    badgeCounter: 0
-				                });
+                        fbRef.child("Circles").child($stateParams.circleID).child('DebitDates').once('value', function(snapshot) {
+                            // Check if this circle is already running
+                            if (snapshot.exists()) {
+                                // Change Status of the circle to "true" and initializing notification badge to 0
+                                fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
+                                    Status: true,
+                                    badgeCounter: 0
+                                });
 
-								fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-				                    Status: true,
-				                    badgeCounter: 0
-				                });
+                                fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+                                    Status: true,
+                                    badgeCounter: 0
+                                });
 
-				                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
-				                    Status: true
-				                });
-				            // The Circle has not yet kicked off
-							} else {
-								// Change Status of the circle to "true" and initializing notification badge to 0
-								fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-				                    Status: true,
-				                    badgeCounter: 0
-				                });
+                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+                                    Status: true
+                                });
+                                // The Circle has not yet kicked off
+                            } else {
+                                // Change Status of the circle to "true" and initializing notification badge to 0
+                                fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+                                    Status: true,
+                                    badgeCounter: 0
+                                });
 
-				                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
-				                    Status: true
-				                });
-							}
-						})
-					} else {
-						// Change Status of the circle to "true" and initializing notification badge to 0
-		                fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-		                    Status: true,
-		                    badgeCounter: 0
-		                });
+                                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+                                    Status: true
+                                });
+                            }
+                        })
+                    } else {
+                        // Change Status of the circle to "true" and initializing notification badge to 0
+                        fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+                            Status: true,
+                            badgeCounter: 0
+                        });
 
-		                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
-		                    Status: true
-		                });
-					}
+                        fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).update({
+                            Status: true
+                        });
+                    }
                     var d = Date.now();
-					//d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
-                	fbRef.child('Messages').child($stateParams.circleID).push({
-                    	name: "WalletBuddies",
-                    	time: d,
-                    	text: data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " group."
-            		});
+                    //d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+                    fbRef.child('Messages').child($stateParams.circleID).push({
+                        name: "WalletBuddies",
+                        time: d,
+                        text: data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " group."
+                    });
 
-            		for(var uid in circle.val().AcceptedMembers) {
+                    for (var uid in circle.val().AcceptedMembers) {
                         if (circle.val().AcceptedMembers.hasOwnProperty(uid)) {
                             fbPush.push({
-			                    uid: uid,
-								message: "WalletBuddies" + ' @ ' + circle.val().circleName + ': ' + data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " group.",
-								payload: $stateParams.circleID,
-								tab: "chat"
-		                	});
+                                uid: uid,
+                                message: "WalletBuddies" + ' @ ' + circle.val().circleName + ': ' + data.val().firstname + " has accepted the invite to the " + circle.val().circleName + " group.",
+                                payload: $stateParams.circleID,
+                                tab: "chat"
+                            });
                         }
-                	}
+                    }
                 });
                 // Get a reference to the NewsFeed of the user
-		        var fbNewsFeedRef = firebase.database().ref("/Users/"+$rootScope.fbAuthData.uid+"/NewsFeed/");
-		        var dt = Date.now();
-		        var feedToPush = "You accepted an invite to the group <b>" + $scope.circle.circleName + "</b>.";
+                var fbNewsFeedRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/NewsFeed/");
+                var dt = Date.now();
+                var feedToPush = "You accepted an invite to the group <b>" + $scope.circle.circleName + "</b>.";
 
-		        // Append new data to this FB link
-		        fbNewsFeedRef.push({
-		            feed: feedToPush,
-		            icon: "ion-ios7-heart",
-		            color: "melon-icon",
-		            time: dt
-		        });
+                // Append new data to this FB link
+                fbNewsFeedRef.push({
+                    feed: feedToPush,
+                    icon: "ion-ios7-heart",
+                    color: "melon-icon",
+                    time: dt
+                });
 
                 // Get the reference for the push and store the relevant user information
                 var fbAcceptedMembers = firebase.database().ref("/Circles/" + $stateParams.circleID + "/AcceptedMembers/" + $rootScope.fbAuthData.uid);
@@ -2293,70 +2296,70 @@ angular.module('starter.controllers', [])
     $scope.onDecline = function() {
         // Send email notification to circle creator & user confirming decline (Currently only sending to the user)
         fbRef.child("Circles").child($stateParams.circleID).once('value', function(data) {
-	        // Remove this user from the contacts list so he doesn't get reminders
-			fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
+            // Remove this user from the contacts list so he doesn't get reminders
+            fbRef.child("Users").child($rootScope.fbAuthData.uid).once('value', function(userData) {
 
-                for(var i in data.val().contacts) {
+                for (var i in data.val().contacts) {
                     var val = data.val().contacts[i];
-					//  Loop for removing symbols in phone numbers
-		            var str = val.phone.toString();
-		            var temp = str.replace(/\D/g, '');
-		            console.log("temp", str, temp);
-		            // Removing 1 from the phone number
-		            if (temp.length > 10) {
-		                var temp = temp.substring(1);
-		                var temp_int = parseInt(temp);
-		                var phone = temp_int;
-		            } else {
-			            var phone = temp;
-		            }
+                    //  Loop for removing symbols in phone numbers
+                    var str = val.phone.toString();
+                    var temp = str.replace(/\D/g, '');
+                    console.log("temp", str, temp);
+                    // Removing 1 from the phone number
+                    if (temp.length > 10) {
+                        var temp = temp.substring(1);
+                        var temp_int = parseInt(temp);
+                        var phone = temp_int;
+                    } else {
+                        var phone = temp;
+                    }
 
-		            // Find the right contact and delete
-					if(userData.val().phonenumber == phone) {
-						fbRef.child("Circles").child($stateParams.circleID).child("contacts").child(i).remove();
-					}
-	            };
+                    // Find the right contact and delete
+                    if (userData.val().phonenumber == phone) {
+                        fbRef.child("Circles").child($stateParams.circleID).child("contacts").child(i).remove();
+                    }
+                };
 
-	            // Send out a push and inform users of declined invite
-				var fbCircle = firebase.database().ref("/Circles/");
-				var fbPush = firebase.database().ref("/PushNotifications/");
-	            var d = Date.now();
-				//d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
-	        	fbRef.child('Messages').child($stateParams.circleID).push({
-	            	name: "WalletBuddies",
-	            	time: d,
-	            	text: userData.val().firstname + " has declined the invite to the " + data.val().circleName + " group."
-	    		});
+                // Send out a push and inform users of declined invite
+                var fbCircle = firebase.database().ref("/Circles/");
+                var fbPush = firebase.database().ref("/PushNotifications/");
+                var d = Date.now();
+                //d = d.toLocaleTimeString().replace(/:\d+ /, ' ');
+                fbRef.child('Messages').child($stateParams.circleID).push({
+                    name: "WalletBuddies",
+                    time: d,
+                    text: userData.val().firstname + " has declined the invite to the " + data.val().circleName + " group."
+                });
 
-	    		for(var uid in data.val().AcceptedMembers) {
-	                if (data.val().AcceptedMembers.hasOwnProperty(uid)) {
-	                    fbPush.push({
-		                    uid: uid,
-							message: "WalletBuddies" + ' @ ' + data.val().circleName + ': ' + userData.val().firstname + " has declined the invite to the " + data.val().circleName + " group.",
-							payload: $stateParams.circleID,
-							tab: "chat"
-	                	});
-	                }
-	        	}
+                for (var uid in data.val().AcceptedMembers) {
+                    if (data.val().AcceptedMembers.hasOwnProperty(uid)) {
+                        fbPush.push({
+                            uid: uid,
+                            message: "WalletBuddies" + ' @ ' + data.val().circleName + ': ' + userData.val().firstname + " has declined the invite to the " + data.val().circleName + " group.",
+                            payload: $stateParams.circleID,
+                            tab: "chat"
+                        });
+                    }
+                }
 
-			});
-	        if (data.val().circleType == 'Singular') {
-				// Change Status of the circle to "false"
+            });
+            if (data.val().circleType == 'Singular') {
+                // Change Status of the circle to "false"
                 fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
                     Status: false
                 });
 
                 // Remove the circle from the User's circle path
-				fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).remove();
-			} else {
-				// Change Status of the circle to "false"
-		        fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
-		            Status: false
-		        });
+                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).remove();
+            } else {
+                // Change Status of the circle to "false"
+                fbRef.child("Circles").child($stateParams.circleID).child("Members").child($rootScope.fbAuthData.uid).update({
+                    Status: false
+                });
 
                 // Remove the circle from the User's circle path
-				fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).remove();
-			}
+                fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child($stateParams.circleID).remove();
+            }
             fbRef.child('Sendgrid').push({
                 from: 'hello@walletbuddies.co',
                 to: $rootScope.fbAuthData.email,
@@ -2379,20 +2382,20 @@ angular.module('starter.controllers', [])
         });
 
         // Record entry into Request Detail Controlller
-        if(typeof analytics !== 'undefined') {
+        if (typeof analytics !== 'undefined') {
             analytics.trackView("Request Detail Controller");
             analytics.trackEvent('RequestsDetailCtrl', 'Pass', 'In RequestsDetailCtrl', 109);
         }
 
         $state.go('tab.requests');
     }
-    
+
     // This creates a group avatar if no profile image exists
-    $scope.getInitials = function (name) {
+    $scope.getInitials = function(name) {
         var canvas = document.createElement('canvas');
         canvas.style.display = 'none';
         var canvasWidth = 300;
-		var canvasHeight = 300;
+        var canvasHeight = 300;
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
         document.body.appendChild(canvas);
@@ -2407,14 +2410,14 @@ angular.module('starter.controllers', [])
         if (name) {
             first = name[0];
             var initials = first;
-            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+            context.fillText(initials.toUpperCase(), canvasWidth / 2, canvasHeight / 2);
             var data = canvas.toDataURL();
             document.body.removeChild(canvas);
             return data;
         } else {
             return false;
         }
-	}
+    }
 })
 
 // Controller for tab-settings
@@ -2422,19 +2425,19 @@ angular.module('starter.controllers', [])
     // Create a firebase reference
     var fbRef = firebase.database().ref();
 
-	// Get a reference to the firebase storage service, which is used to create references in your storage bucket
-	var storage = firebase.storage();
+    // Get a reference to the firebase storage service, which is used to create references in your storage bucket
+    var storage = firebase.storage();
 
-	// Create a storage reference from firebase storage service
-	var storageRef = storage.ref();
+    // Create a storage reference from firebase storage service
+    var storageRef = storage.ref();
 
     var profile = $firebaseObject(fbRef.child("Users").child($rootScope.fbAuthData.uid));
 
-	var profilePic = storageRef.child("Users").child($rootScope.fbAuthData.uid+"/ProfilePhoto.jpg");
+    var profilePic = storageRef.child("Users").child($rootScope.fbAuthData.uid + "/ProfilePhoto.jpg");
     profile.$bindTo($scope, "data");
 
     // Record entry into Settings Controlller
-    if(typeof analytics !== 'undefined') {
+    if (typeof analytics !== 'undefined') {
         analytics.trackView("Settings Controller");
         analytics.trackEvent('SettingsCtrl', 'Pass', 'In SettingsCtrl', 110);
     }
@@ -2471,24 +2474,24 @@ angular.module('starter.controllers', [])
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
                         var blob = base64toBlob(imageData, "image/jpeg")
-                        var uploadTask = storageRef.child('Users/' + $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
-                        uploadTask.on('state_changed', function(snapshot){
-						  // Observe state change events such as progress, pause, and resume
-						  // See below for more detail
-						}, function(error) {
-						  // Handle unsuccessful uploads
-						  $ionicLoading.show({
-                            template: 'We had trouble uploading your photo. Please try later.',
-                            duration: 2000
-                          });
-						}, function() {
-						  // Handle successful uploads on complete
-						  var downloadURL = uploadTask.snapshot.downloadURL;
-						  console.log("Profile Pic Download link", downloadURL)
-						  fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
-                            profilePhoto: downloadURL
-                          });
-						});
+                        var uploadTask = storageRef.child('Users/' + $rootScope.fbAuthData.uid + "/ProfilePhoto.jpg").put(blob);
+                        uploadTask.on('state_changed', function(snapshot) {
+                            // Observe state change events such as progress, pause, and resume
+                            // See below for more detail
+                        }, function(error) {
+                            // Handle unsuccessful uploads
+                            $ionicLoading.show({
+                                template: 'We had trouble uploading your photo. Please try later.',
+                                duration: 2000
+                            });
+                        }, function() {
+                            // Handle successful uploads on complete
+                            var downloadURL = uploadTask.snapshot.downloadURL;
+                            console.log("Profile Pic Download link", downloadURL)
+                            fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
+                                profilePhoto: downloadURL
+                            });
+                        });
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -2514,24 +2517,24 @@ angular.module('starter.controllers', [])
                         var image = document.getElementById('myImage');
                         $scope.imageSrc = "data:image/jpeg;base64," + imageData;
                         var blob = base64toBlob(imageData, "image/jpeg")
-                        var uploadTask = storageRef.child('Users/' + $rootScope.fbAuthData.uid+"/ProfilePhoto.jpg").put(blob);
-                        uploadTask.on('state_changed', function(snapshot){
-						  // Observe state change events such as progress, pause, and resume
-						  // See below for more detail
-						}, function(error) {
-						  // Handle unsuccessful uploads
-						  $ionicLoading.show({
-                            template: 'We had trouble uploading your photo. Please try later.',
-                            duration: 2000
-                          });
-						}, function() {
-						  // Handle successful uploads on complete
-						  var downloadURL = uploadTask.snapshot.downloadURL;
-						  console.log("Profile Pic Download link", downloadURL)
-						  fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
-                            profilePhoto: downloadURL
-                          });
-						});
+                        var uploadTask = storageRef.child('Users/' + $rootScope.fbAuthData.uid + "/ProfilePhoto.jpg").put(blob);
+                        uploadTask.on('state_changed', function(snapshot) {
+                            // Observe state change events such as progress, pause, and resume
+                            // See below for more detail
+                        }, function(error) {
+                            // Handle unsuccessful uploads
+                            $ionicLoading.show({
+                                template: 'We had trouble uploading your photo. Please try later.',
+                                duration: 2000
+                            });
+                        }, function() {
+                            // Handle successful uploads on complete
+                            var downloadURL = uploadTask.snapshot.downloadURL;
+                            console.log("Profile Pic Download link", downloadURL)
+                            fbRef.child("Users").child($rootScope.fbAuthData.uid).update({
+                                profilePhoto: downloadURL
+                            });
+                        });
                     }, function(err) {
                         $ionicLoading.show({
                             template: 'No Photo Selected',
@@ -2543,29 +2546,31 @@ angular.module('starter.controllers', [])
         });
     };
 
-	function base64toBlob(b64Data, contentType) {
-	  contentType = contentType || '';
-	  sliceSize = 512;
-	  var newb64 = b64Data.replace(/\s/g, "")
-	  var byteCharacters = atob(newb64);
-	  var byteArrays = [];
+    function base64toBlob(b64Data, contentType) {
+        contentType = contentType || '';
+        sliceSize = 512;
+        var newb64 = b64Data.replace(/\s/g, "")
+        var byteCharacters = atob(newb64);
+        var byteArrays = [];
 
-	  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-	    var slice = byteCharacters.slice(offset, offset + sliceSize);
+        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            var slice = byteCharacters.slice(offset, offset + sliceSize);
 
-	    var byteNumbers = new Array(slice.length);
-	    for (var i = 0; i < slice.length; i++) {
-	      byteNumbers[i] = slice.charCodeAt(i);
-	    }
+            var byteNumbers = new Array(slice.length);
+            for (var i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
 
-	    var byteArray = new Uint8Array(byteNumbers);
+            var byteArray = new Uint8Array(byteNumbers);
 
-	    byteArrays.push(byteArray);
-	  }
+            byteArrays.push(byteArray);
+        }
 
-	  var blob = new Blob(byteArrays, {type: contentType});
-	  return blob;
-	}
+        var blob = new Blob(byteArrays, {
+            type: contentType
+        });
+        return blob;
+    }
 
     // Go to tab-account
     $scope.account = function() {
@@ -2604,15 +2609,15 @@ angular.module('starter.controllers', [])
         $ionicHistory.clearCache();
         $ionicHistory.clearHistory();
         firebase.auth().signOut().then(function() {
-		  // Sign-out successful.
-		  $state.go('launch');
-		}, function(error) {
-		  // An error happened.
-		  $ionicLoading.show({
-            template: 'We had trouble signing you out! Please try again.',
-            duration: 1000
-          });
-		});
+            // Sign-out successful.
+            $state.go('launch');
+        }, function(error) {
+            // An error happened.
+            $ionicLoading.show({
+                template: 'We had trouble signing you out! Please try again.',
+                duration: 1000
+            });
+        });
     };
 
     // Called when the user clicks the "Survey" button
@@ -2630,13 +2635,13 @@ angular.module('starter.controllers', [])
             }
         });
     }
-    
+
     // This creates a user avatar if no profile image exists
-    $scope.getInitials = function (fname, lname) {
+    $scope.getInitials = function(fname, lname) {
         var canvas = document.createElement('canvas');
         canvas.style.display = 'none';
         var canvasWidth = 300;
-		var canvasHeight = 300;
+        var canvasHeight = 300;
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
         document.body.appendChild(canvas);
@@ -2653,7 +2658,7 @@ angular.module('starter.controllers', [])
             last = lname != '' ? lname[0] : null;
             if (last) {
                 var initials = first + last;
-                context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
+                context.fillText(initials.toUpperCase(), canvasWidth / 2, canvasHeight / 2);
             } else {
                 var initials = first;
                 context.fillText(initials.toUpperCase(), 10, 23);
@@ -2664,7 +2669,7 @@ angular.module('starter.controllers', [])
         } else {
             return false;
         }
-	}
+    }
 })
 
 // Controller for Reset Password
@@ -2673,7 +2678,7 @@ angular.module('starter.controllers', [])
     var fbRef = firebase.database().ref();
 
     // Record entry into Survey Page Controlller
-    if(typeof analytics !== 'undefined') {
+    if (typeof analytics !== 'undefined') {
         analytics.trackView("Survey Page Controlller");
         analytics.trackEvent('SurveyPageCtrl', 'Pass', 'In SurveyPageCtrl', 111);
     }
@@ -2848,12 +2853,12 @@ angular.module('starter.controllers', [])
 // Controller for tabs
 .controller('TabsCtrl', function($scope, $rootScope, $firebaseObject, $state) {
 
-    setTimeout(function () {
+    setTimeout(function() {
         // Updating walletTab badge counter
-		var fbRef = firebase.database().ref();
-		// Get a reference to where the User's accepted circles are going to be stored
-		var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
-		$scope.counter = $firebaseObject(fbUser);
+        var fbRef = firebase.database().ref();
+        // Get a reference to where the User's accepted circles are going to be stored
+        var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
+        $scope.counter = $firebaseObject(fbUser);
     }, 1000);
 
     // Define all the views that do not need the tab bar at the bottom
@@ -2878,325 +2883,325 @@ angular.module('starter.controllers', [])
         password: ''
     };
 
-	$scope.$on("$ionicView.enter", function(event, data){
-	   // Fire Plaid link when view loads
-	   var linkHandler = Plaid.create({
-		  selectAccount: true,
-		  env: 'production',
-		  clientName: 'WalletBuddies',
-		  key: 'fc5e88b3e3b80b99c42edd7c5357c5',
-		  product: 'auth',
-		  onLoad: function() {
-		    // The Link module finished loading.
-		  },
-		  onSuccess: function(public_token, metadata) {
-		    // The onSuccess function is called when the user has successfully
-		    // authenticated and selected an account to use.
-		    //
-		    // When called, you will send the public_token and the selected
-		    // account ID, metadata.account_id, to your backend app server.
-			$ionicLoading.show({
-	            template: 'Loading...'
-	        });
-		    $http.post('https://webhook-walletbuddies2.rhcloud.com/authenticate', {
-			    public_token: public_token,
-				account_id: metadata.account_id,
-				user: $rootScope.fbAuthData.uid,
-				email: $rootScope.fbAuthData.email,
-				type: "Debits"
-		    }).then(function(response) {
-			    console.log("Successful POST to webhooks server", response)
-			    if(response.data === "Success") {
-					$ionicLoading.hide();
-				    $ionicPopup.alert({
-		                title: "Success",
-		                template: "Your Bank Account was successfully setup for debits."
-		            });
-			    } else {
-				    $ionicLoading.hide();
-				    $ionicPopup.alert({
-		                title: "Error",
-		                template: "We had trouble linking your bank account. Please try again later."
-		            });
-			    }
-			    $state.go("tab.settings");
-		    }).catch(function(err) {
-			    console.log("Error making POST to webhooks server", err)
-		    })
-		    console.log('Public Token: ' + public_token);
-		    console.log('Customer-selected account ID: ' + metadata.account_id);
-		  },
-		  onExit: function() {
-		    // The user exited the Link flow.
-		    $state.go("tab.settings");
-		  },
-		});
-	   linkHandler.open();
-	});
-
-/*
-    var fbRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
-    var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Payments");
-    var ref = firebase.database().ref();
-
-    // Go to manual account setup
-    $scope.account = function() {
-        $state.go("tab.manual-account");
-    };
-*/
-
-/*
-    $scope.connect = function(user) {
-        $ionicLoading.show({
-            template: 'Loading..Hold tight.'
+    $scope.$on("$ionicView.enter", function(event, data) {
+        // Fire Plaid link when view loads
+        var linkHandler = Plaid.create({
+            selectAccount: true,
+            env: 'production',
+            clientName: 'WalletBuddies',
+            key: 'fc5e88b3e3b80b99c42edd7c5357c5',
+            product: 'auth',
+            onLoad: function() {
+                // The Link module finished loading.
+            },
+            onSuccess: function(public_token, metadata) {
+                // The onSuccess function is called when the user has successfully
+                // authenticated and selected an account to use.
+                //
+                // When called, you will send the public_token and the selected
+                // account ID, metadata.account_id, to your backend app server.
+                $ionicLoading.show({
+                    template: 'Loading...'
+                });
+                $http.post('https://webhook-walletbuddies2.rhcloud.com/authenticate', {
+                    public_token: public_token,
+                    account_id: metadata.account_id,
+                    user: $rootScope.fbAuthData.uid,
+                    email: $rootScope.fbAuthData.email,
+                    type: "Debits"
+                }).then(function(response) {
+                    console.log("Successful POST to webhooks server", response)
+                    if (response.data === "Success") {
+                        $ionicLoading.hide();
+                        $ionicPopup.alert({
+                            title: "Success",
+                            template: "Your Bank Account was successfully setup for debits."
+                        });
+                    } else {
+                        $ionicLoading.hide();
+                        $ionicPopup.alert({
+                            title: "Error",
+                            template: "We had trouble linking your bank account. Please try again later."
+                        });
+                    }
+                    $state.go("tab.settings");
+                }).catch(function(err) {
+                    console.log("Error making POST to webhooks server", err)
+                })
+                console.log('Public Token: ' + public_token);
+                console.log('Customer-selected account ID: ' + metadata.account_id);
+            },
+            onExit: function() {
+                // The user exited the Link flow.
+                $state.go("tab.settings");
+            },
         });
-        fbRef.once('value', function(userData) {
-	        ref.child('SynapsePay').once('value', function(data) {
-	        	// Check if SynapsePay account exists
-		        if (!userData.child("Payments").exists()) {
-					// Create a SynapsePay user account
-					// get host ip address of client
-					var json = 'http://ipv4.myexternalip.com/json';
-					$http.get(json).then(function(result) {
-						var ip = result.data.ip;
-						var uuid = $cordovaDevice.getUUID();
-						console.log("uuid: " + uuid);
-						console.log("IP ADDRESS: " + ip);
-		                $http.post('https://synapsepay.com/api/v3/user/create', {
-		                    "client": {
-		                        //your client ID and secret
-		                        "client_id": data.val().client_id,
-		                        "client_secret": data.val().client_secret
-		                    },
-		                    "logins": [
-		                        //email and password of the user. Passwords are optional.
-		                        //yes you can add multiple emails and multiple users for one account here
-		                        {
-		                            "email": userData.val().email,
-		                            "read_only": false
-		                        }
-		                    ],
-		                    "phone_numbers": [
-		                        //user's mobile numbers. Can be used for 2FA
-		                        userData.val().phonenumber
-		                    ],
-		                    "legal_names": [
-		                        //user's legal names. If multiple user's are being added, add multiple legal names.
-		                        //If business account, add the name of the person creating the account and the name of the company
-		                        userData.val().firstname + " " + userData.val().lastname
-		                    ],
-		                    "fingerprints": [
-		                        //fingerprints of the devices that you will be accessing this account from
-		                        {
-		                            "fingerprint": uuid
-		                        }
-		                    ],
-		                    "ips": [
-		                        //user's IP addresses
-		                        ip
-		                    ],
-		                    "extra": {
-		                        //optional fields
-		                        "note": "WalletBuddies User",
-		                        "supp_id": "No IDs Here",
-		                        //toggle to true if its a business account
-		                        "is_business": false
-		                    }
-		                }).then(function(response) {
-		                    console.log("SYNAPSEPAY response " + JSON.stringify(response));
-		                    // Save the returned oauth and refresh tokens
-		                    fbRef.child("Payments/oauth").update({
-		                        oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
-		                        refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
-		                        expires_at: response.data.oauth.expires_at,
-		                        expires_in: response.data.oauth.expires_in,
-		                        client_id: response.data.user.client.id,
-		                        fingerprint: uuid,
-		                        ip: ip,
-		                        oid: response.data.user._id.$oid
-		                    });
-		                }).catch(function(err) {
-		                    if(typeof analytics !== 'undefined') {
-		                        analytics.trackEvent('SynapsePay ConnectCtrl', err.statusText, err.data.error.en, 1);
-		                    }
-		                    console.log("An error occured while communicating with Synapse");
-		                    console.log(JSON.stringify(err));
-		                });
-		            }, function(e) {
-		                if(typeof analytics !== 'undefined') {
-		                    analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', e);
-		                }
-						alert("An error occured while validating your ip address");
-					});
-		        } else {
-			        //Sign in to the user's Synapse Account to refresh the authToken
-			        var refresh_token = $cipherFactory.decrypt(userData.val().Payments.oauth.refresh_token.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.refresh_token.salt, userData.val().Payments.oauth.refresh_token.iv);
-			        console.log("Signin REFRESH TOKEN: " + refresh_token);
-			        $http.post('https://synapsepay.com/api/v3/user/signin', {
-		                "client": {
-						    //your client ID and secret
-						    "client_id": data.val().client_id,
-						    "client_secret": data.val().client_secret
-						},
-						  "login":{
-						    //Instead of email and password, you can specify refresh_token of the user as well.
-						    "refresh_token": refresh_token
-						},
-						  "user":{
-						    //the id of the user profile that you wish to sign into.
-						    "_id":{
-						      "$oid": userData.val().Payments.oauth.oid
-						},
-						    "fingerprint": userData.val().Payments.oauth.fingerprint,
-						    "ip": userData.val().Payments.oauth.ip
-						}
-		            }).then(function(response) {
-	                    console.log("SYNAPSEPAY SIGNIN response " + JSON.stringify(response));
-	                    // Save the oauth and refresh tokens
-	                    fbRef.child("Payments/oauth").update({
-	                        oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
-	                        refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
-	                        expires_at: response.data.oauth.expires_at,
-	                        expires_in: response.data.oauth.expires_in
-	                    });
-						// Connect to the user's bank
-						//Decipher oauth keys before POST
-			            var oauth_key = $cipherFactory.decrypt(userData.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.oauth_key.salt, userData.val().Payments.oauth.oauth_key.iv);
-			            console.log("oauth_key " + oauth_key);
-			            // $http post for Bank Login
-			            $http.post('https://synapsepay.com/api/v3/node/add', {
-			                'login': {
-			                    'oauth_key': response.data.oauth.oauth_key
-			                },
-			                'user': {
-			                    'fingerprint': userData.val().Payments.oauth.fingerprint
-			                },
-			                'node': {
-			                    'type': 'ACH-US',
-			                    'info': {
-			                        'bank_id': user.username,
-			                        'bank_pw': user.password,
-			                        'bank_name': user.id,
-			                    }
-			                }
-			            }).then(function(payload) {
-			                // Clear the forms
-			                $scope.user = {
-			                    type: '',
-			                    username: '',
-			                    password: ''
-			                };
-			                if (payload.data.success) {
-			                    if (payload.data.nodes[0].allowed == null) {
-			                        $rootScope.question = payload.data;
-			                        $ionicLoading.hide();
-			                        $state.go('tab.auth-question');
-			                    } else {
-			                        $rootScope.data = payload.data;
-			                        $ionicLoading.hide();
-			                        $state.go('tab.choose-account');
-			                    }
-			                }
-			            }).catch(function(err) {
-			                $ionicLoading.hide();
-			                if(typeof analytics !== 'undefined') {
-			                    analytics.trackEvent('Bank Login ConnectCtrl', err.statusText, err.data.error.en, 1);
-			                }
-			                console.log("Got an error in bank login.");
-			                console.log(JSON.stringify(err));
-			                if (err.statusText == 'CONFLICT') {
-				                $ionicPopup.alert({
-					                title: "Incorrect Credentials",
-					                template: "Either your Online ID or password is incorrect!"
-					            });
-			                }
-			                if (err.statusText == 'BAD REQUEST') {
-				                $ionicPopup.alert({
-					                title: "Select your Bank",
-					                template: "Please make sure you've selected your bank from the drop down!"
-					            });
-			                }
-			                //alert(err.statusText);
-			            });
-	                }).catch(function(err) {
-		                $ionicLoading.hide();
-	                    if(typeof analytics !== 'undefined') {
-	                        analytics.trackEvent('SynapsePay ConnectCtrl Signin', err.statusText, err.data.error.en, 1);
-	                    }
-	                    console.log("An error occured while communicating with Synapse");
-	                    console.log(JSON.stringify(err));
-	                    alert(err.data.error.en);
-	                });
-		        }
-		    })
-        })
-    };
-*/
+        linkHandler.open();
+    });
+
+    /*
+        var fbRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
+        var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Payments");
+        var ref = firebase.database().ref();
+
+        // Go to manual account setup
+        $scope.account = function() {
+            $state.go("tab.manual-account");
+        };
+    */
+
+    /*
+        $scope.connect = function(user) {
+            $ionicLoading.show({
+                template: 'Loading..Hold tight.'
+            });
+            fbRef.once('value', function(userData) {
+    	        ref.child('SynapsePay').once('value', function(data) {
+    	        	// Check if SynapsePay account exists
+    		        if (!userData.child("Payments").exists()) {
+    					// Create a SynapsePay user account
+    					// get host ip address of client
+    					var json = 'http://ipv4.myexternalip.com/json';
+    					$http.get(json).then(function(result) {
+    						var ip = result.data.ip;
+    						var uuid = $cordovaDevice.getUUID();
+    						console.log("uuid: " + uuid);
+    						console.log("IP ADDRESS: " + ip);
+    		                $http.post('https://synapsepay.com/api/v3/user/create', {
+    		                    "client": {
+    		                        //your client ID and secret
+    		                        "client_id": data.val().client_id,
+    		                        "client_secret": data.val().client_secret
+    		                    },
+    		                    "logins": [
+    		                        //email and password of the user. Passwords are optional.
+    		                        //yes you can add multiple emails and multiple users for one account here
+    		                        {
+    		                            "email": userData.val().email,
+    		                            "read_only": false
+    		                        }
+    		                    ],
+    		                    "phone_numbers": [
+    		                        //user's mobile numbers. Can be used for 2FA
+    		                        userData.val().phonenumber
+    		                    ],
+    		                    "legal_names": [
+    		                        //user's legal names. If multiple user's are being added, add multiple legal names.
+    		                        //If business account, add the name of the person creating the account and the name of the company
+    		                        userData.val().firstname + " " + userData.val().lastname
+    		                    ],
+    		                    "fingerprints": [
+    		                        //fingerprints of the devices that you will be accessing this account from
+    		                        {
+    		                            "fingerprint": uuid
+    		                        }
+    		                    ],
+    		                    "ips": [
+    		                        //user's IP addresses
+    		                        ip
+    		                    ],
+    		                    "extra": {
+    		                        //optional fields
+    		                        "note": "WalletBuddies User",
+    		                        "supp_id": "No IDs Here",
+    		                        //toggle to true if its a business account
+    		                        "is_business": false
+    		                    }
+    		                }).then(function(response) {
+    		                    console.log("SYNAPSEPAY response " + JSON.stringify(response));
+    		                    // Save the returned oauth and refresh tokens
+    		                    fbRef.child("Payments/oauth").update({
+    		                        oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
+    		                        refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
+    		                        expires_at: response.data.oauth.expires_at,
+    		                        expires_in: response.data.oauth.expires_in,
+    		                        client_id: response.data.user.client.id,
+    		                        fingerprint: uuid,
+    		                        ip: ip,
+    		                        oid: response.data.user._id.$oid
+    		                    });
+    		                }).catch(function(err) {
+    		                    if(typeof analytics !== 'undefined') {
+    		                        analytics.trackEvent('SynapsePay ConnectCtrl', err.statusText, err.data.error.en, 1);
+    		                    }
+    		                    console.log("An error occured while communicating with Synapse");
+    		                    console.log(JSON.stringify(err));
+    		                });
+    		            }, function(e) {
+    		                if(typeof analytics !== 'undefined') {
+    		                    analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', e);
+    		                }
+    						alert("An error occured while validating your ip address");
+    					});
+    		        } else {
+    			        //Sign in to the user's Synapse Account to refresh the authToken
+    			        var refresh_token = $cipherFactory.decrypt(userData.val().Payments.oauth.refresh_token.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.refresh_token.salt, userData.val().Payments.oauth.refresh_token.iv);
+    			        console.log("Signin REFRESH TOKEN: " + refresh_token);
+    			        $http.post('https://synapsepay.com/api/v3/user/signin', {
+    		                "client": {
+    						    //your client ID and secret
+    						    "client_id": data.val().client_id,
+    						    "client_secret": data.val().client_secret
+    						},
+    						  "login":{
+    						    //Instead of email and password, you can specify refresh_token of the user as well.
+    						    "refresh_token": refresh_token
+    						},
+    						  "user":{
+    						    //the id of the user profile that you wish to sign into.
+    						    "_id":{
+    						      "$oid": userData.val().Payments.oauth.oid
+    						},
+    						    "fingerprint": userData.val().Payments.oauth.fingerprint,
+    						    "ip": userData.val().Payments.oauth.ip
+    						}
+    		            }).then(function(response) {
+    	                    console.log("SYNAPSEPAY SIGNIN response " + JSON.stringify(response));
+    	                    // Save the oauth and refresh tokens
+    	                    fbRef.child("Payments/oauth").update({
+    	                        oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
+    	                        refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
+    	                        expires_at: response.data.oauth.expires_at,
+    	                        expires_in: response.data.oauth.expires_in
+    	                    });
+    						// Connect to the user's bank
+    						//Decipher oauth keys before POST
+    			            var oauth_key = $cipherFactory.decrypt(userData.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.oauth_key.salt, userData.val().Payments.oauth.oauth_key.iv);
+    			            console.log("oauth_key " + oauth_key);
+    			            // $http post for Bank Login
+    			            $http.post('https://synapsepay.com/api/v3/node/add', {
+    			                'login': {
+    			                    'oauth_key': response.data.oauth.oauth_key
+    			                },
+    			                'user': {
+    			                    'fingerprint': userData.val().Payments.oauth.fingerprint
+    			                },
+    			                'node': {
+    			                    'type': 'ACH-US',
+    			                    'info': {
+    			                        'bank_id': user.username,
+    			                        'bank_pw': user.password,
+    			                        'bank_name': user.id,
+    			                    }
+    			                }
+    			            }).then(function(payload) {
+    			                // Clear the forms
+    			                $scope.user = {
+    			                    type: '',
+    			                    username: '',
+    			                    password: ''
+    			                };
+    			                if (payload.data.success) {
+    			                    if (payload.data.nodes[0].allowed == null) {
+    			                        $rootScope.question = payload.data;
+    			                        $ionicLoading.hide();
+    			                        $state.go('tab.auth-question');
+    			                    } else {
+    			                        $rootScope.data = payload.data;
+    			                        $ionicLoading.hide();
+    			                        $state.go('tab.choose-account');
+    			                    }
+    			                }
+    			            }).catch(function(err) {
+    			                $ionicLoading.hide();
+    			                if(typeof analytics !== 'undefined') {
+    			                    analytics.trackEvent('Bank Login ConnectCtrl', err.statusText, err.data.error.en, 1);
+    			                }
+    			                console.log("Got an error in bank login.");
+    			                console.log(JSON.stringify(err));
+    			                if (err.statusText == 'CONFLICT') {
+    				                $ionicPopup.alert({
+    					                title: "Incorrect Credentials",
+    					                template: "Either your Online ID or password is incorrect!"
+    					            });
+    			                }
+    			                if (err.statusText == 'BAD REQUEST') {
+    				                $ionicPopup.alert({
+    					                title: "Select your Bank",
+    					                template: "Please make sure you've selected your bank from the drop down!"
+    					            });
+    			                }
+    			                //alert(err.statusText);
+    			            });
+    	                }).catch(function(err) {
+    		                $ionicLoading.hide();
+    	                    if(typeof analytics !== 'undefined') {
+    	                        analytics.trackEvent('SynapsePay ConnectCtrl Signin', err.statusText, err.data.error.en, 1);
+    	                    }
+    	                    console.log("An error occured while communicating with Synapse");
+    	                    console.log(JSON.stringify(err));
+    	                    alert(err.data.error.en);
+    	                });
+    		        }
+    		    })
+            })
+        };
+    */
 })
 
 // Controller for tab-account-credit
 .controller('StripeConnectCtrl', function($scope, $state, $stateParams, $rootScope, $cipherFactory, $cordovaDevice, $firebaseArray, $cipherFactory, $http, $ionicLoading, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
 
-	$scope.$on("$ionicView.enter", function(event, data){
-	   // Fire Plaid link when view loads
-	   var linkHandler = Plaid.create({
-		  selectAccount: true,
-		  env: 'production',
-		  clientName: 'WalletBuddies',
-		  key: 'fc5e88b3e3b80b99c42edd7c5357c5',
-		  product: 'auth',
-		  onLoad: function() {
-		    // The Link module finished loading.
-		  },
-		  onSuccess: function(public_token, metadata) {
-		    // The onSuccess function is called when the user has successfully
-		    // authenticated and selected an account to use.
-		    //
-		    // When called, you will send the public_token and the selected
-		    // account ID, metadata.account_id, to your backend app server.
-			$ionicLoading.show({
-	            template: 'Loading...'
-	        });
-		    $http.post('https://webhook-walletbuddies2.rhcloud.com/authenticate', {
-			    public_token: public_token,
-				account_id: metadata.account_id,
-				user: $rootScope.fbAuthData.uid,
-				email: $rootScope.fbAuthData.email,
-				type: "Credits"
-		    }).then(function(response) {
-			    console.log("Successful POST to webhooks server", response)
-			    if(response.data === "Success") {
-					$ionicLoading.hide();
-					$state.go('tab.kyc-details');
-			    } else {
-				    $ionicLoading.hide();
-				    $ionicPopup.alert({
-		                title: "Error",
-		                template: "We had trouble linking your bank account. Please try again later."
-		            });
-		            $state.go('tab.settings');
-			    }
+    $scope.$on("$ionicView.enter", function(event, data) {
+        // Fire Plaid link when view loads
+        var linkHandler = Plaid.create({
+            selectAccount: true,
+            env: 'production',
+            clientName: 'WalletBuddies',
+            key: 'fc5e88b3e3b80b99c42edd7c5357c5',
+            product: 'auth',
+            onLoad: function() {
+                // The Link module finished loading.
+            },
+            onSuccess: function(public_token, metadata) {
+                // The onSuccess function is called when the user has successfully
+                // authenticated and selected an account to use.
+                //
+                // When called, you will send the public_token and the selected
+                // account ID, metadata.account_id, to your backend app server.
+                $ionicLoading.show({
+                    template: 'Loading...'
+                });
+                $http.post('https://webhook-walletbuddies2.rhcloud.com/authenticate', {
+                    public_token: public_token,
+                    account_id: metadata.account_id,
+                    user: $rootScope.fbAuthData.uid,
+                    email: $rootScope.fbAuthData.email,
+                    type: "Credits"
+                }).then(function(response) {
+                    console.log("Successful POST to webhooks server", response)
+                    if (response.data === "Success") {
+                        $ionicLoading.hide();
+                        $state.go('tab.kyc-details');
+                    } else {
+                        $ionicLoading.hide();
+                        $ionicPopup.alert({
+                            title: "Error",
+                            template: "We had trouble linking your bank account. Please try again later."
+                        });
+                        $state.go('tab.settings');
+                    }
 
-		    }).catch(function(err) {
-			    console.log("Error making POST to webhooks server", err)
-		    })
-		    console.log('Public Token: ' + public_token);
-		    console.log('Customer-selected account ID: ' + metadata.account_id);
-		  },
-		  onExit: function() {
-		    // The user exited the Link flow.
-		    $state.go("tab.settings");
-		  },
-		});
-	   linkHandler.open();
-	});
+                }).catch(function(err) {
+                    console.log("Error making POST to webhooks server", err)
+                })
+                console.log('Public Token: ' + public_token);
+                console.log('Customer-selected account ID: ' + metadata.account_id);
+            },
+            onExit: function() {
+                // The user exited the Link flow.
+                $state.go("tab.settings");
+            },
+        });
+        linkHandler.open();
+    });
 
 })
 
 // Controller for tab-Manual-Account
 .controller('ManualAccountCtrl', function($scope, $state, $stateParams, $rootScope, $cipherFactory, $cordovaDevice, $firebaseArray, $cipherFactory, $http, $ionicLoading, $ionicPopup, $ionicHistory, $ionicNavBarDelegate) {
 
-	// Clear the forms
+    // Clear the forms
     $scope.user = {
         nickname: '',
         accountNumber: '',
@@ -3205,219 +3210,219 @@ angular.module('starter.controllers', [])
         class: ''
     };
 
-	var fbRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
+    var fbRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
     var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Payments");
     var ref = firebase.database().ref();
 
-	$scope.connect = function(user) {
+    $scope.connect = function(user) {
         $ionicLoading.show({
             template: 'Loading..Hold tight.'
         });
-        if(user.accountNumber.length != 12) {
-	        $ionicLoading.hide();
-	        $ionicPopup.alert({
+        if (user.accountNumber.length != 12) {
+            $ionicLoading.hide();
+            $ionicPopup.alert({
                 title: "Invalid Account Number",
                 template: "Please make sure the account number you entered is a 12 digit number!"
             });
-        } else if(user.routingNumber.length != 9) {
-	        $ionicLoading.hide();
-	        $ionicPopup.alert({
+        } else if (user.routingNumber.length != 9) {
+            $ionicLoading.hide();
+            $ionicPopup.alert({
                 title: "Invalid Routing Number",
                 template: "Please make sure the routing number you entered is a 9 digit number!"
             });
-        } else if(user.type == "" || user.class == "" || user.nickname == "") {
-	        $ionicLoading.hide();
-	        $ionicPopup.alert({
+        } else if (user.type == "" || user.class == "" || user.nickname == "") {
+            $ionicLoading.hide();
+            $ionicPopup.alert({
                 title: "Required Field",
                 template: "Please make sure all fields are entered!"
             });
         } else {
-	        fbRef.once('value', function(userData) {
-		        ref.child('SynapsePay').once('value', function(data) {
+            fbRef.once('value', function(userData) {
+                ref.child('SynapsePay').once('value', function(data) {
 
-		        	// Check if SynapsePay account exists
-			        if (!userData.child("Payments").exists()) {
-						// Create a SynapsePay user account
-						// get host ip address of client
-						var json = 'http://ipv4.myexternalip.com/json';
-						$http.get(json).then(function(result) {
-							var ip = result.data.ip;
-							var uuid = $cordovaDevice.getUUID();
-							console.log("uuid: " + uuid);
-							console.log("IP ADDRESS: " + ip);
-			                $http.post('https://synapsepay.com/api/v3/user/create', {
-			                    "client": {
-			                        //your client ID and secret
-			                        "client_id": data.val().client_id,
-			                        "client_secret": data.val().client_secret
-			                    },
-			                    "logins": [
-			                        //email and password of the user. Passwords are optional.
-			                        //yes you can add multiple emails and multiple users for one account here
-			                        {
-			                            "email": userData.val().email,
-			                            "read_only": false
-			                        }
-			                    ],
-			                    "phone_numbers": [
-			                        //user's mobile numbers. Can be used for 2FA
-			                        userData.val().phonenumber
-			                    ],
-			                    "legal_names": [
-			                        //user's legal names. If multiple user's are being added, add multiple legal names.
-			                        //If business account, add the name of the person creating the account and the name of the company
-			                        userData.val().firstname + " " + userData.val().lastname
-			                    ],
-			                    "fingerprints": [
-			                        //fingerprints of the devices that you will be accessing this account from
-			                        {
-			                            "fingerprint": uuid
-			                        }
-			                    ],
-			                    "ips": [
-			                        //user's IP addresses
-			                        ip
-			                    ],
-			                    "extra": {
-			                        //optional fields
-			                        "note": "WalletBuddies User",
-			                        "supp_id": "No IDs Here",
-			                        //toggle to true if its a business account
-			                        "is_business": false
-			                    }
-			                }).then(function(response) {
-			                    console.log("SYNAPSEPAY response " + JSON.stringify(response));
-			                    // Save the returned oauth and refresh tokens
-			                    fbRef.child("Payments/oauth").update({
-			                        oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
-			                        refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
-			                        expires_at: response.data.oauth.expires_at,
-			                        expires_in: response.data.oauth.expires_in,
-			                        client_id: response.data.user.client.id,
-			                        fingerprint: uuid,
-			                        ip: ip,
-			                        oid: response.data.user._id.$oid
-			                    });
-			                }).catch(function(err) {
-			                    if(typeof analytics !== undefined) {
-			                        analytics.trackEvent('SynapsePay ConnectCtrl', err.statusText, err.data.error.en, 1);
-			                    }
-			                    console.log("An error occured while communicating with Synapse");
-			                    console.log(JSON.stringify(err));
-			                });
-			            }, function(e) {
-			                if(typeof analytics !== undefined) {
-			                    analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', e);
-			                }
-							alert("An error occured while validating your ip address");
-						});
-			        } else {
-				        //Sign in to the user's Synapse Account to refresh the authToken
-				        var refresh_token = $cipherFactory.decrypt(userData.val().Payments.oauth.refresh_token.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.refresh_token.salt, userData.val().Payments.oauth.refresh_token.iv);
-				        console.log("Signin REFRESH TOKEN: " + refresh_token);
-				        $http.post('https://synapsepay.com/api/v3/user/signin', {
-			                "client": {
-							    //your client ID and secret
-							    "client_id": data.val().client_id,
-							    "client_secret": data.val().client_secret
-							},
-							  "login":{
-							    //Instead of email and password, you can specify refresh_token of the user as well.
-							    "refresh_token": refresh_token
-							},
-							  "user":{
-							    //the id of the user profile that you wish to sign into.
-							    "_id":{
-							      "$oid": userData.val().Payments.oauth.oid
-							},
-							    "fingerprint": userData.val().Payments.oauth.fingerprint,
-							    "ip": userData.val().Payments.oauth.ip
-							}
-			            }).then(function(response) {
-		                    console.log("SYNAPSEPAY SIGNIN response " + JSON.stringify(response));
-		                    // Save the oauth and refresh tokens
-		                    fbRef.child("Payments/oauth").update({
-		                        oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
-		                        refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
-		                        expires_at: response.data.oauth.expires_at,
-		                        expires_in: response.data.oauth.expires_in
-		                    });
+                    // Check if SynapsePay account exists
+                    if (!userData.child("Payments").exists()) {
+                        // Create a SynapsePay user account
+                        // get host ip address of client
+                        var json = 'http://ipv4.myexternalip.com/json';
+                        $http.get(json).then(function(result) {
+                            var ip = result.data.ip;
+                            var uuid = $cordovaDevice.getUUID();
+                            console.log("uuid: " + uuid);
+                            console.log("IP ADDRESS: " + ip);
+                            $http.post('https://synapsepay.com/api/v3/user/create', {
+                                "client": {
+                                    //your client ID and secret
+                                    "client_id": data.val().client_id,
+                                    "client_secret": data.val().client_secret
+                                },
+                                "logins": [
+                                    //email and password of the user. Passwords are optional.
+                                    //yes you can add multiple emails and multiple users for one account here
+                                    {
+                                        "email": userData.val().email,
+                                        "read_only": false
+                                    }
+                                ],
+                                "phone_numbers": [
+                                    //user's mobile numbers. Can be used for 2FA
+                                    userData.val().phonenumber
+                                ],
+                                "legal_names": [
+                                    //user's legal names. If multiple user's are being added, add multiple legal names.
+                                    //If business account, add the name of the person creating the account and the name of the company
+                                    userData.val().firstname + " " + userData.val().lastname
+                                ],
+                                "fingerprints": [
+                                    //fingerprints of the devices that you will be accessing this account from
+                                    {
+                                        "fingerprint": uuid
+                                    }
+                                ],
+                                "ips": [
+                                    //user's IP addresses
+                                    ip
+                                ],
+                                "extra": {
+                                    //optional fields
+                                    "note": "WalletBuddies User",
+                                    "supp_id": "No IDs Here",
+                                    //toggle to true if its a business account
+                                    "is_business": false
+                                }
+                            }).then(function(response) {
+                                console.log("SYNAPSEPAY response " + JSON.stringify(response));
+                                // Save the returned oauth and refresh tokens
+                                fbRef.child("Payments/oauth").update({
+                                    oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
+                                    refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
+                                    expires_at: response.data.oauth.expires_at,
+                                    expires_in: response.data.oauth.expires_in,
+                                    client_id: response.data.user.client.id,
+                                    fingerprint: uuid,
+                                    ip: ip,
+                                    oid: response.data.user._id.$oid
+                                });
+                            }).catch(function(err) {
+                                if (typeof analytics !== undefined) {
+                                    analytics.trackEvent('SynapsePay ConnectCtrl', err.statusText, err.data.error.en, 1);
+                                }
+                                console.log("An error occured while communicating with Synapse");
+                                console.log(JSON.stringify(err));
+                            });
+                        }, function(e) {
+                            if (typeof analytics !== undefined) {
+                                analytics.trackEvent('IP Address', 'Error Validating', 'In AccountCtrl', e);
+                            }
+                            alert("An error occured while validating your ip address");
+                        });
+                    } else {
+                        //Sign in to the user's Synapse Account to refresh the authToken
+                        var refresh_token = $cipherFactory.decrypt(userData.val().Payments.oauth.refresh_token.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.refresh_token.salt, userData.val().Payments.oauth.refresh_token.iv);
+                        console.log("Signin REFRESH TOKEN: " + refresh_token);
+                        $http.post('https://synapsepay.com/api/v3/user/signin', {
+                            "client": {
+                                //your client ID and secret
+                                "client_id": data.val().client_id,
+                                "client_secret": data.val().client_secret
+                            },
+                            "login": {
+                                //Instead of email and password, you can specify refresh_token of the user as well.
+                                "refresh_token": refresh_token
+                            },
+                            "user": {
+                                //the id of the user profile that you wish to sign into.
+                                "_id": {
+                                    "$oid": userData.val().Payments.oauth.oid
+                                },
+                                "fingerprint": userData.val().Payments.oauth.fingerprint,
+                                "ip": userData.val().Payments.oauth.ip
+                            }
+                        }).then(function(response) {
+                            console.log("SYNAPSEPAY SIGNIN response " + JSON.stringify(response));
+                            // Save the oauth and refresh tokens
+                            fbRef.child("Payments/oauth").update({
+                                oauth_key: $cipherFactory.encrypt(response.data.oauth.oauth_key, $rootScope.fbAuthData.uid), // We need this for making bank transactions, every user has a unique key.
+                                refresh_token: $cipherFactory.encrypt(response.data.oauth.refresh_token, $rootScope.fbAuthData.uid),
+                                expires_at: response.data.oauth.expires_at,
+                                expires_in: response.data.oauth.expires_in
+                            });
 
-							// Connect to the user's bank
-							//Decipher oauth keys before POST
-				            var oauth_key = $cipherFactory.decrypt(userData.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.oauth_key.salt, userData.val().Payments.oauth.oauth_key.iv);
-				            console.log("oauth_key " + oauth_key);
-				            // $http post for Bank Login
-				            $http.post('https://synapsepay.com/api/v3/node/add', {
-					            'login':{
-								    'oauth_key': oauth_key
-								},
-								'user':{
-								    'fingerprint': userData.val().Payments.oauth.fingerprint
-								},
-								'node':{
-								    'type':'ACH-US',
-								    'info':{
-								      'nickname': user.nickname,
-								      'account_num': user.accountNumber,
-								      'routing_num': user.routingNumber,
-								      'type': user.type,
-								      'class': user.class
-								    },
-								    'extra':{
-								      'supp_id': $rootScope.fbAuthData.uid
-								    }
-								}
-				            }).then(function(payload) {
-				                // Clear the forms
-				                $scope.user = {
-				                    nickname: '',
-				                    accountNumber: '',
-				                    routingNumber: '',
-				                    type: '',
-				                    class: ''
-				                };
-				                if (payload.data.success) {
-					                console.log('payload.data.success Manual:', JSON.stringify(payload));
-				                    if (payload.data.nodes[0].allowed == null) {
-				                        $rootScope.question = payload.data;
-				                        $ionicLoading.hide();
-				                        $state.go('tab.auth-question');
-				                    } else {
-				                        $rootScope.data = payload.data;
-				                        $ionicLoading.hide();
-				                        $state.go('tab.choose-account');
-				                    }
-				                }
-				            }).catch(function(err) {
-				                $ionicLoading.hide();
-				                console.log("Got an error in bank login.");
-				                console.log(JSON.stringify(err));
-				                if (err.statusText == 'CONFLICT') {
-					                $ionicPopup.alert({
-						                title: "Incorrect Credentials",
-						                template: "Either your Account Number or Routing Number is incorrect!"
-						            });
-				                }
-				                if (err.statusText == 'BAD REQUEST') {
-					                $ionicPopup.alert({
-						                title: "Incorrect Credentials",
-						                template: "Either your Account Number or Routing Number is incorrect!"
-						            });
-				                }
-				            });
-		                }).catch(function(err) {
-			                $ionicLoading.hide();
-		                    if(typeof analytics !== undefined) {
-		                        analytics.trackEvent('SynapsePay ConnectCtrl Signin', err.statusText, err.data.error.en, 1);
-		                    }
-		                    console.log("An error occured while communicating with Synapse");
-		                    console.log(JSON.stringify(err));
-		                    alert(err.data.error.en);
-		                });
-			        }
-			    })
-	        })
+                            // Connect to the user's bank
+                            //Decipher oauth keys before POST
+                            var oauth_key = $cipherFactory.decrypt(userData.val().Payments.oauth.oauth_key.cipher_text, $rootScope.fbAuthData.uid, userData.val().Payments.oauth.oauth_key.salt, userData.val().Payments.oauth.oauth_key.iv);
+                            console.log("oauth_key " + oauth_key);
+                            // $http post for Bank Login
+                            $http.post('https://synapsepay.com/api/v3/node/add', {
+                                'login': {
+                                    'oauth_key': oauth_key
+                                },
+                                'user': {
+                                    'fingerprint': userData.val().Payments.oauth.fingerprint
+                                },
+                                'node': {
+                                    'type': 'ACH-US',
+                                    'info': {
+                                        'nickname': user.nickname,
+                                        'account_num': user.accountNumber,
+                                        'routing_num': user.routingNumber,
+                                        'type': user.type,
+                                        'class': user.class
+                                    },
+                                    'extra': {
+                                        'supp_id': $rootScope.fbAuthData.uid
+                                    }
+                                }
+                            }).then(function(payload) {
+                                // Clear the forms
+                                $scope.user = {
+                                    nickname: '',
+                                    accountNumber: '',
+                                    routingNumber: '',
+                                    type: '',
+                                    class: ''
+                                };
+                                if (payload.data.success) {
+                                    console.log('payload.data.success Manual:', JSON.stringify(payload));
+                                    if (payload.data.nodes[0].allowed == null) {
+                                        $rootScope.question = payload.data;
+                                        $ionicLoading.hide();
+                                        $state.go('tab.auth-question');
+                                    } else {
+                                        $rootScope.data = payload.data;
+                                        $ionicLoading.hide();
+                                        $state.go('tab.choose-account');
+                                    }
+                                }
+                            }).catch(function(err) {
+                                $ionicLoading.hide();
+                                console.log("Got an error in bank login.");
+                                console.log(JSON.stringify(err));
+                                if (err.statusText == 'CONFLICT') {
+                                    $ionicPopup.alert({
+                                        title: "Incorrect Credentials",
+                                        template: "Either your Account Number or Routing Number is incorrect!"
+                                    });
+                                }
+                                if (err.statusText == 'BAD REQUEST') {
+                                    $ionicPopup.alert({
+                                        title: "Incorrect Credentials",
+                                        template: "Either your Account Number or Routing Number is incorrect!"
+                                    });
+                                }
+                            });
+                        }).catch(function(err) {
+                            $ionicLoading.hide();
+                            if (typeof analytics !== undefined) {
+                                analytics.trackEvent('SynapsePay ConnectCtrl Signin', err.statusText, err.data.error.en, 1);
+                            }
+                            console.log("An error occured while communicating with Synapse");
+                            console.log(JSON.stringify(err));
+                            alert(err.data.error.en);
+                        });
+                    }
+                })
+            })
         }
 
         /*
@@ -3536,7 +3541,7 @@ angular.module('starter.controllers', [])
 
     var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
 
-	/*
+    /*
 $scope.$on('$ionicView.leave', function() {
 		console.log("CLEARING EFFIN CACHE")
       $ionicHistory.clearCache();
@@ -3549,64 +3554,64 @@ $scope.$on('$ionicView.leave', function() {
             template: 'Loading..Hold tight.'
         });
         // get host ip address of client
-		var json = 'http://ipv4.myexternalip.com/json';
-		$http.get(json).then(function(result) {
-			var ip = result.data.ip;
-	        $http.post('https://webhook-walletbuddies2.rhcloud.com/stripe-create-connect-account', {
-				user: $rootScope.fbAuthData.uid,
-				dob_day: user.day,
-			    dob_month: user.month,
-			    dob_year: user.year,
-			    address_line: user.street,
-			    address_postal: user.zip,
-			    address_city: user.city,
-			    address_state: user.state,
-			    ssn: user.ssn.toString(),
-			    ip: ip
-		    }).then(function(response) {
-			    console.log("Successful POST to webhooks server", response)
-			    // Clear the form
-			    user.day = "";
-			    user.month = "";
-			    user.year = "";
-			    user.street = "";
-			    user.city = "";
-			    user.state = "";
-			    user.zip = "";
-			    user.ssn = "";
-			    if(response.data === "Success") {
-					$ionicLoading.hide();
-	                $ionicPopup.alert({
-		                title: "Thanks! You're all set.",
-		                template: "Your Bank Account can now receive credits."
-		            });
-			    } else {
-				    $ionicLoading.hide();
-				    $ionicPopup.alert({
-		                title: "Error",
-		                template: "We had trouble submitting your details. Please try again later."
-		            });
-		            $state.go('tab.settings');
-			    }
-			    $state.go('tab.settings');
-		    }).catch(function(err) {
-			    console.log("Error making POST to webhooks server", err)
-			    $ionicLoading.hide();
-			    $ionicPopup.alert({
-	                title: "Error",
-	                template: "We had trouble submitting your details. Please try again."
-	            });
-		    })
-	    })
-	}
+        var json = 'http://ipv4.myexternalip.com/json';
+        $http.get(json).then(function(result) {
+            var ip = result.data.ip;
+            $http.post('https://webhook-walletbuddies2.rhcloud.com/stripe-create-connect-account', {
+                user: $rootScope.fbAuthData.uid,
+                dob_day: user.day,
+                dob_month: user.month,
+                dob_year: user.year,
+                address_line: user.street,
+                address_postal: user.zip,
+                address_city: user.city,
+                address_state: user.state,
+                ssn: user.ssn.toString(),
+                ip: ip
+            }).then(function(response) {
+                console.log("Successful POST to webhooks server", response)
+                    // Clear the form
+                user.day = "";
+                user.month = "";
+                user.year = "";
+                user.street = "";
+                user.city = "";
+                user.state = "";
+                user.zip = "";
+                user.ssn = "";
+                if (response.data === "Success") {
+                    $ionicLoading.hide();
+                    $ionicPopup.alert({
+                        title: "Thanks! You're all set.",
+                        template: "Your Bank Account can now receive credits."
+                    });
+                } else {
+                    $ionicLoading.hide();
+                    $ionicPopup.alert({
+                        title: "Error",
+                        template: "We had trouble submitting your details. Please try again later."
+                    });
+                    $state.go('tab.settings');
+                }
+                $state.go('tab.settings');
+            }).catch(function(err) {
+                console.log("Error making POST to webhooks server", err)
+                $ionicLoading.hide();
+                $ionicPopup.alert({
+                    title: "Error",
+                    template: "We had trouble submitting your details. Please try again."
+                });
+            })
+        })
+    }
 
 })
 
 .controller('DocUploadCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup) {
 
-	var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
+    var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
 
-	// For selecting a photo
+    // For selecting a photo
     $scope.selectPicture = function() {
         // Show the action sheet
         var hideSheet = $ionicActionSheet.show({
@@ -3707,11 +3712,11 @@ $scope.$on('$ionicView.leave', function() {
                     console.log("DOCUMENT: " + JSON.stringify(res));
                     $ionicLoading.hide();
                     if (res.data.http_code == "200") {
-	                    $ionicPopup.alert({
-			                title: "Thanks!! You're all set now :)",
-			                template: "And we're sorry that last step was a pain in the arse :("
-			            });
-			            fbRef.child("Payments").child("KYC").update({
+                        $ionicPopup.alert({
+                            title: "Thanks!! You're all set now :)",
+                            template: "And we're sorry that last step was a pain in the arse :("
+                        });
+                        fbRef.child("Payments").child("KYC").update({
                             oid: res.data.user._id.$oid,
                             clientid: res.data.user.client.id
                         });
@@ -3729,13 +3734,13 @@ $scope.$on('$ionicView.leave', function() {
                         });
                         $state.go("tab.settings");
                     } else {
-	                    $ionicPopup.alert({
-			                title: "Something went wrong!!",
-			                template: "We were not able to upload your image."
-			            });
+                        $ionicPopup.alert({
+                            title: "Something went wrong!!",
+                            template: "We were not able to upload your image."
+                        });
                     }
                 }).catch(function(err) {
-	                $ionicLoading.hide();
+                    $ionicLoading.hide();
                     console.log(err);
                     console.log(JSON.stringify(err));
                     alert(err.statusText);
@@ -3812,7 +3817,7 @@ $scope.$on('$ionicView.leave', function() {
                 $state.go("tab.settings");
 
             }).catch(function(err) {
-                if(typeof analytics !== 'undefined') {
+                if (typeof analytics !== 'undefined') {
                     analytics.trackEvent('/v3/user/doc/verify KycQuestionCtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
@@ -3875,7 +3880,7 @@ $scope.$on('$ionicView.leave', function() {
                     $state.go('tab.choose-account');
                 }
             }).catch(function(err) {
-                if(typeof analytics !== 'undefined') {
+                if (typeof analytics !== 'undefined') {
                     analytics.trackEvent('MFA QuestionCtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
@@ -3923,7 +3928,7 @@ $scope.$on('$ionicView.leave', function() {
                 $rootScope.data = payload.data;
                 $state.go('tab.choose-account');
             }).catch(function(err) {
-                if(typeof analytics !== 'undefined') {
+                if (typeof analytics !== 'undefined') {
                     analytics.trackEvent('MFA in MFACtrl', err.statusText, err.data.error.en, 1);
                 }
                 $ionicLoading.hide();
@@ -3954,22 +3959,30 @@ $scope.$on('$ionicView.leave', function() {
 .controller('HelpCtrl', function($scope, $state, $ionicSlideBoxDelegate) {
 
     $scope.close = function() {
-	    $state.go('tab.wallet');
+        $state.go('tab.wallet');
     }
     $scope.next = function() {
-	  	$ionicSlideBoxDelegate.next();
-  	};
+        $ionicSlideBoxDelegate.next();
+    };
 
-  	$scope.previous = function() {
-    	$ionicSlideBoxDelegate.previous();
-  	};
+    $scope.previous = function() {
+        $ionicSlideBoxDelegate.previous();
+    };
 
-  	$scope.slides = [{name:"1"},{name:"2"},{name:"3"},{name:"4"}];
+    $scope.slides = [{
+        name: "1"
+    }, {
+        name: "2"
+    }, {
+        name: "3"
+    }, {
+        name: "4"
+    }];
 
-  	// Called each time the slide changes
-  	$scope.slideChanged = function(index) {
-    	$scope.slideIndex = index;
-  	};
+    // Called each time the slide changes
+    $scope.slideChanged = function(index) {
+        $scope.slideIndex = index;
+    };
 
 })
 
@@ -3981,11 +3994,11 @@ $scope.$on('$ionicView.leave', function() {
     // Get a reference to the NewsFeed of the user
     var badgeRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + '/Badges/');
     var fbNewsFeedRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + '/NewsFeed/');
-	$scope.$on('$ionicView.enter', function() {
-		badgeRef.update({
-			feedCounter: 0
-		});
-	});
+    $scope.$on('$ionicView.enter', function() {
+        badgeRef.update({
+            feedCounter: 0
+        });
+    });
     // Get only the last 25 feed messages
     var fbLimitedFeed = fbNewsFeedRef.orderByChild("timestamp").limitToLast(25);
 
