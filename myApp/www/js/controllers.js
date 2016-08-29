@@ -1522,7 +1522,8 @@ angular.module('starter.controllers', [])
 
     // Execute action on hide modal
     $scope.$on('modal.hidden', function(modal) {
-        if (modal.id == '2') {
+	    console.log("MODAL ARAAY", modal.id, JSON.stringify(temp));
+        if (temp.length != 0) {
             // Execute action
             console.log("TEMP CONTACTS ARRAY: " + JSON.stringify(temp));
             // Initialize an array for storing contacts
@@ -1606,12 +1607,12 @@ angular.module('starter.controllers', [])
                         console.log("Invited user is registered with uid: " + data.uid);
 
                         // Writing UserID under CircleID and set Status to pending
-                        fbRef.child("Circles").child(groupID).child("PendingMembers").child(data.uid).update({
+                        fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child(data.uid).update({
                             Status: "pending"
                         });
 
                         // Writing circle ID to the user's path and set Status to pending
-                        fbRef.child("Users").child(data.uid).child("Circles").child(groupID).update({
+                        fbRef.child("Users").child(data.uid).child("Circles").child($stateParams.circleID).update({
                             Status: "pending"
                         });
 
@@ -1621,7 +1622,7 @@ angular.module('starter.controllers', [])
                             fbRef.child('PushNotifications').push({
                                 uid: data.uid,
                                 message: fbName + " has invited you to join a Group on WalletBuddies.",
-                                payload: groupID,
+                                payload: $stateParams.circleID,
                                 tab: "requests"
                             });
                         });
@@ -1634,7 +1635,7 @@ angular.module('starter.controllers', [])
 
                         // Save the CircleId under Invites and Push the invite
                         fbInvites.push({
-                            circleID: groupID,
+                            circleID: $stateParams.circleID,
                             circleType: 'Singular'
                         });
 
@@ -1799,7 +1800,6 @@ angular.module('starter.controllers', [])
 
     // This creates a user and group avatar if no group/user photo exists
     $scope.getInitials = function(name, i) {
-        console.log("IS THIS THE INDEX", name, i)
         var colorArray = ["#7F46DD", "#F8A82A", "#FFDB3C", "#FF4623", "#FF46BB", "#7FE2DD", "#18F0BB", "#247FFF", "#FF9C95", "#21BABA", "#EC6B83", "#0ADD1F"];
         var canvas = document.createElement('canvas');
         canvas.style.display = 'none';
