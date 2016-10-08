@@ -128,11 +128,13 @@ angular.module('starter.controllers', [])
 
                                                 // Check to see if user has invites
                                                 var fbInvites = firebase.database().ref("/Invites/" + id);
+                                                
                                                 if (fbInvites != null) {
+	                                                console.log("In FB invites", fbInvites);
                                                     var obj = $firebaseObject(fbInvites);
 
                                                     obj.$loaded().then(function() {
-                                                        console.log("loaded record:", obj.$id);
+                                                        console.log("loaded record in invites:", obj.$id);
 
                                                         // To iterate the key/value pairs of the object, use angular.forEach()
                                                         angular.forEach(obj, function(value, key) {
@@ -141,7 +143,7 @@ angular.module('starter.controllers', [])
                                                             console.log("Invites path: " + fbInvites + circleID);
                                                             // Check if the invite was for a Singular or Rotational Circle
                                                             if (value.circleType == 'Singular') {
-                                                                fbRef.child("Circles").child(circleID).child("PendingMembers").child(data.uid).update({
+                                                                fbRef.child("Circles").child(circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
                                                                     Status: "pending"
                                                                 });
                                                                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
@@ -149,7 +151,7 @@ angular.module('starter.controllers', [])
                                                                 });
                                                             } else {
                                                                 // Writing UserID under CircleID and set Status to pending
-                                                                fbRef.child("Circles").child(circleID).child("Members").child(data.uid).update({
+                                                                fbRef.child("Circles").child(circleID).child("Members").child($rootScope.fbAuthData.uid).update({
                                                                     Status: "pending"
                                                                 });
 
@@ -1002,7 +1004,7 @@ angular.module('starter.controllers', [])
                                             from: 'hello@walletbuddies.co',
                                             to: email,
                                             subject: "You've been invited to form a Group on WalletBuddies by " + fbName,
-                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download the app and join this Group. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. To join, for iOS download here: apple.co/2dvitCb and here for Android: goo.gl/5hnDZp. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for the group: " + groupName + " to " + email);
                                     } else if (email) {
@@ -1011,14 +1013,14 @@ angular.module('starter.controllers', [])
                                             from: 'hello@walletbuddies.co',
                                             to: email,
                                             subject: "You've been invited to form a Group on WalletBuddies by " + fbName,
-                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download and join this Group. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. To join, for iOS download here: apple.co/2dvitCb and here for Android: goo.gl/5hnDZp. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + email);
                                     } else {
                                         // Write email info to /Sendgrid folder to trigger the server to send email
                                         fbRef.child('Twilio').push({
                                             to: phone,
-                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download and join this Group. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. To join, for iOS download here: apple.co/2dvitCb and here for Android: goo.gl/5hnDZp. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + phone);
                                     }
