@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Launch page
-.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory, fbCallback, $ionicLoading) {
+.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory, fbCallback, $ionicLoading, $cordovaPushV5) {
     $scope.$on('$ionicView.beforeEnter', function() {
         var ref = firebase.auth();
         var authData = ref.onAuthStateChanged;
@@ -11,6 +11,7 @@ angular.module('starter.controllers', [])
             //$ionicHistory.clearHistory();
             console.log("Not authenticated", authData);
             if (authData) {
+	            console.log("Authenticated")
                 console.log("$rootScope.userSignUpOngoing", $rootScope.userSignUpOngoing)
                 if ($rootScope.userSignUpOngoing !== true) {
                     console.log("Authenticated user with uid: ", authData.uid);
@@ -128,11 +129,13 @@ angular.module('starter.controllers', [])
 
                                                 // Check to see if user has invites
                                                 var fbInvites = firebase.database().ref("/Invites/" + id);
+                                                
                                                 if (fbInvites != null) {
+	                                                console.log("In FB invites", fbInvites);
                                                     var obj = $firebaseObject(fbInvites);
 
                                                     obj.$loaded().then(function() {
-                                                        console.log("loaded record:", obj.$id);
+                                                        console.log("loaded record in invites:", obj.$id);
 
                                                         // To iterate the key/value pairs of the object, use angular.forEach()
                                                         angular.forEach(obj, function(value, key) {
@@ -141,7 +144,7 @@ angular.module('starter.controllers', [])
                                                             console.log("Invites path: " + fbInvites + circleID);
                                                             // Check if the invite was for a Singular or Rotational Circle
                                                             if (value.circleType == 'Singular') {
-                                                                fbRef.child("Circles").child(circleID).child("PendingMembers").child(data.uid).update({
+                                                                fbRef.child("Circles").child(circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({
                                                                     Status: "pending"
                                                                 });
                                                                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child("Circles").child(circleID).update({
@@ -149,7 +152,7 @@ angular.module('starter.controllers', [])
                                                                 });
                                                             } else {
                                                                 // Writing UserID under CircleID and set Status to pending
-                                                                fbRef.child("Circles").child(circleID).child("Members").child(data.uid).update({
+                                                                fbRef.child("Circles").child(circleID).child("Members").child($rootScope.fbAuthData.uid).update({
                                                                     Status: "pending"
                                                                 });
 
@@ -998,11 +1001,9 @@ angular.module('starter.controllers', [])
                                     // Check if user has phonenumber only or email only or both
                                     if (email && phone) {
                                         // Write email info to /Sendgrid folder to trigger the server to send email
-                                        fbRef.child('Sendgrid').push({
-                                            from: 'hello@walletbuddies.co',
-                                            to: email,
-                                            subject: "You've been invited to form a Group on WalletBuddies by " + fbName,
-                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download the app and join this Group. Have fun. :)"
+                                        fbRef.child('Twilio').push({
+                                            to: phone,
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. To join, for iOS download here: apple.co/2dvitCb and here for Android: goo.gl/5hnDZp. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for the group: " + groupName + " to " + email);
                                     } else if (email) {
@@ -1011,14 +1012,14 @@ angular.module('starter.controllers', [])
                                             from: 'hello@walletbuddies.co',
                                             to: email,
                                             subject: "You've been invited to form a Group on WalletBuddies by " + fbName,
-                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download and join this Group. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. To join, for iOS download here: apple.co/2dvitCb and here for Android: goo.gl/5hnDZp. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + email);
                                     } else {
                                         // Write email info to /Sendgrid folder to trigger the server to send email
                                         fbRef.child('Twilio').push({
                                             to: phone,
-                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. Click here: www.walletbuddies.co to download and join this Group. Have fun. :)"
+                                            text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. To join, for iOS download here: apple.co/2dvitCb and here for Android: goo.gl/5hnDZp. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for group: " + groupName + " to " + phone);
                                     }

@@ -21,6 +21,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 
         function onResume() {
 	        console.log("APP IS RESUMED")
+	        
 		    // Handle the resume event
 		    $cordovaPushV5.setBadgeNumber(0).then(function(result) {
 	          // Success!
@@ -108,6 +109,14 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			    $cordovaPushV5.register().then(function(deviceToken) {
 			      	// `data.registrationId` save it somewhere;
 				  	console.log("Registration success app.js", deviceToken);
+				  	if($rootScope.fbAuthData.uid){
+					  	console.log("Updating on Firebase for uid", $rootScope.fbAuthData.uid);
+					  	var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
+					  	fbUser.update({
+					  		deviceToken : deviceToken,
+					  		device: "iOS"
+	            	  	});
+				  	}
 			      	// Set device badge count to zero on app launch
 			        $cordovaPushV5.setBadgeNumber(0).then(function(result) {
 			          // Success!
@@ -116,10 +125,19 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
 			          // An error occurred. Show a message to the user
 			          console.log("Badge Not Cleared 5500")
 			        });
+			    }, function(err) {
+			        // An error occurred. Show a message to the user
+			        console.log("Push reg error 6600", err)
 			    })
 			});
         }
-
+		
+		// triggered every time error occurs
+	  $rootScope.$on('$cordovaPushV5:errorOcurred', function(event, e){
+	    // e.message
+	    console.log("Push Error deo $cordovaPushV5:errorOcurred", e.message);
+	  });
+		
         // Listen and Display for New Push Notifications
         return $rootScope.$on('$cordovaPushV5:notificationReceived', function(event, data) {
 	        var notification = data.additionalData
