@@ -1001,10 +1001,8 @@ angular.module('starter.controllers', [])
                                     // Check if user has phonenumber only or email only or both
                                     if (email && phone) {
                                         // Write email info to /Sendgrid folder to trigger the server to send email
-                                        fbRef.child('Sendgrid').push({
-                                            from: 'hello@walletbuddies.co',
-                                            to: email,
-                                            subject: "You've been invited to form a Group on WalletBuddies by " + fbName,
+                                        fbRef.child('Twilio').push({
+                                            to: phone,
                                             text: fbName + " has invited you to the " + groupName + " Group on WalletBuddies. To join, for iOS download here: apple.co/2dvitCb and here for Android: goo.gl/5hnDZp. Have fun. :)"
                                         });
                                         console.log("Invites sent by: " + fbName + " for the group: " + groupName + " to " + email);
