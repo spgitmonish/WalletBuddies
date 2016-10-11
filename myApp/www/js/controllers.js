@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Launch page
-.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory, fbCallback, $ionicLoading) {
+.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory, fbCallback, $ionicLoading, $cordovaPushV5) {
     $scope.$on('$ionicView.beforeEnter', function() {
         var ref = firebase.auth();
         var authData = ref.onAuthStateChanged;
@@ -11,6 +11,7 @@ angular.module('starter.controllers', [])
             //$ionicHistory.clearHistory();
             console.log("Not authenticated", authData);
             if (authData) {
+	            console.log("Authenticated")
                 console.log("$rootScope.userSignUpOngoing", $rootScope.userSignUpOngoing)
                 if ($rootScope.userSignUpOngoing !== true) {
                     console.log("Authenticated user with uid: ", authData.uid);
