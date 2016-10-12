@@ -1403,8 +1403,8 @@ angular.module('starter.controllers', [])
                                     firstName: userData.val().firstname,
                                     lastName: userData.val().lastname,
                                     phone: userData.val().phonenumber,
-                                    email: userData.val().email
-                                    /*profilePhoto: userData.val().profilePhoto*/
+                                    email: userData.val().email,
+                                    profilePhoto: userData.val().profilePhoto
                                 });
                             }
                         });
