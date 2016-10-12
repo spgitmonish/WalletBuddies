@@ -129,7 +129,7 @@ angular.module('starter.controllers', [])
 
                                                 // Check to see if user has invites
                                                 var fbInvites = firebase.database().ref("/Invites/" + id);
-                                                
+
                                                 if (fbInvites != null) {
 	                                                console.log("In FB invites", fbInvites);
                                                     var obj = $firebaseObject(fbInvites);
@@ -1403,8 +1403,8 @@ angular.module('starter.controllers', [])
                                     firstName: userData.val().firstname,
                                     lastName: userData.val().lastname,
                                     phone: userData.val().phonenumber,
-                                    email: userData.val().email,
-                                    profilePhoto: userData.val().profilePhoto
+                                    email: userData.val().email
+                                    /*profilePhoto: userData.val().profilePhoto*/
                                 });
                             }
                         });
@@ -1690,82 +1690,101 @@ angular.module('starter.controllers', [])
 
     //Cancel a group - set the flag to true
     $scope.cancelCircle = function() {
+        var DebitsDateRef = firebase.database().ref().child('/Circles/' + $stateParams.circleID).child('DebitDates');
+        DebitsDateRef.once('value', function(debitDates) {
+            if(debitDates.val() !== null){
+               debitDates.forEach(function(date) {
+                   // Get the date stored in firebase
+                   var DebitDate = new Date(date.val().debitDate);
 
-        firebase.database().ref().child('/Circles/' + $stateParams.circleID).child('DebitDates').once('value', function(debitDates) {
-            debitDates.forEach(function(date) {
-                // Get the date stored in firebase
-                var DebitDate = new Date(date.val().debitDate);
+                   // Calculate Notification Date from Debit Date
+                   var NotifDate = new Date(Date.now());
+                   NotifDate.setDate(DebitDate.getDate() + 4)
 
-                // Calculate Notification Date from Debit Date
-                var NotifDate = new Date(Date.now());
-                NotifDate.setDate(DebitDate.getDate() + 4)
+                   //Minus one day from the debit date
+                   DebitDate.setDate(DebitDate.getDate() - 1)
 
-                //Minus one day from the debit date
-                DebitDate.setDate(DebitDate.getDate() - 1)
+                   // Get the current date
+                   var currentDate = new Date(Date.now());
 
-                // Get the current date
-                var currentDate = new Date(Date.now());
+                   // Check if current date is in between debit date-1 and notification date, since new dates are set the day before debit dates
+                   // If true, the current cycle is alredy in progress and only the next cycle will be cancelled.
+                   if (currentDate > DebitDate && currentDate < NotifDate) {
+                       console.log("You cannot cancel the group, it will only be cancelled on", DebitDate.getDate())
+                       console.log("Will only be cancelled on", date.val().debitDate)
+                       var confirmPopup = $ionicPopup.confirm({
+                           title: 'Cancel Group',
+                           template: 'The current cycle is in progress and cannot be cancelled. Do you wish to cancel from the next cycle?'
+                       });
 
-                // Check if current date is in between debit date-1 and notification date, since new dates are set the day before debit dates
-                // If true, the current cycle is alredy in progress and only the next cycle will be cancelled.
-                if (currentDate > DebitDate && currentDate < NotifDate) {
-                    console.log("You cannot cancel the group, it will only be cancelled on", DebitDate.getDate())
-                    console.log("Will only be cancelled on", date.val().debitDate)
-                    var confirmPopup = $ionicPopup.confirm({
-                        title: 'Cancel Group',
-                        template: 'The current cycle is in progress and cannot be cancelled. Do you wish to cancel from the next cycle?'
-                    });
+                       confirmPopup.then(function(res) {
+                           if (res) {
+                               console.log('You are sure');
+                               fbCircles.update({
+                                   circleCancelled: true
+                               }).then(function(success) {
+                                   $ionicPopup.alert({
+                                       title: "Success!",
+                                       template: "Your group has now ended. Further transactions will not be made!"
+                                   });
+                               }).catch(function(error) {
+                                   $ionicPopup.alert({
+                                       title: "Unable to process request",
+                                       template: "Please try again."
+                                   });
+                               });
+                           } else {
+                               console.log('You are not sure');
+                           }
+                       });
+                   } else {
+                       console.log("Will be cancelled right away")
+                       var confirmPopup = $ionicPopup.confirm({
+                           title: 'Cancel Group',
+                           template: 'Are you sure you want to end this group?'
+                       });
 
-                    confirmPopup.then(function(res) {
-                        if (res) {
-                            console.log('You are sure');
-                            fbCircles.update({
-                                circleCancelled: true
-                            }).then(function(success) {
-                                $ionicPopup.alert({
-                                    title: "Success!",
-                                    template: "Your group has now ended. Further transactions will not be made!"
-                                });
-                            }).catch(function(error) {
-                                $ionicPopup.alert({
-                                    title: "Unable to process request",
-                                    template: "Please try again."
-                                });
-                            });
-                        } else {
-                            console.log('You are not sure');
-                        }
-                    });
-                } else {
-                    console.log("Will be cancelled right away")
-                    var confirmPopup = $ionicPopup.confirm({
-                        title: 'Cancel Group',
-                        template: 'Are you sure you want to end this group?'
-                    });
+                       confirmPopup.then(function(res) {
+                           if (res) {
+                               console.log('You are sure');
+                               fbCircles.update({
+                                   circleCancelled: true
+                               }).then(function(success) {
+                                   $ionicPopup.alert({
+                                       title: "Success!",
+                                       template: "Your group has now ended. Further transactions will not be made!"
+                                   });
+                               }).catch(function(error) {
+                                   $ionicPopup.alert({
+                                       title: "Unable to process request",
+                                       template: "Please try again."
+                                   });
+                               });
+                           } else {
+                               console.log('You are not sure');
+                           }
+                       });
+                   }
+               });
+            } else {
+               console.log("Group wasn't created in time and will be cancelled right away");
 
-                    confirmPopup.then(function(res) {
-                        if (res) {
-                            console.log('You are sure');
-                            fbCircles.update({
-                                circleCancelled: true
-                            }).then(function(success) {
-                                $ionicPopup.alert({
-                                    title: "Success!",
-                                    template: "Your group has now ended. Further transactions will not be made!"
-                                });
-                            }).catch(function(error) {
-                                $ionicPopup.alert({
-                                    title: "Unable to process request",
-                                    template: "Please try again."
-                                });
-                            });
-                        } else {
-                            console.log('You are not sure');
-                        }
-                    });
-                }
-            })
-        })
+               fbCircles.update({
+                   circleCancelled: true
+               }).then(function(success) {
+                   $ionicPopup.alert({
+                      title: "Success!",
+                      template: "This group which wasn't started in time is marked as completed"
+                   });
+                   $state.go('tab.wallet');
+               }).catch(function(error) {
+                   $ionicPopup.alert({
+                      title: "Unable to process request",
+                      template: "Please try again."
+                   });
+               });
+            }
+        });
     }
 
     /*
