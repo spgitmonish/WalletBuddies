@@ -1079,10 +1079,42 @@ angular.module('starter.controllers', [])
 
                 // Go to the page to select the type of circle
                 $state.go('tab.socialcircle');
-            } else {
-                $ionicPopup.alert({
-                    title: "You haven't linked your bank account yet!",
-                    template: "You can start a new group once you've linked an account for both credits and debits. Please go to settings to link an account."
+            } else if (!data.child("Debits").exists() && !data.child("Credits").exists()) {
+                $ionicPopup.confirm({
+                    title: "You haven't linked an account for credits and debits!",
+                    template: "You can start a new group once you've linked an account for both credits and debits. Do you want to link your account now?"
+                }).then(function(res) {
+                    if (res) {
+                        $state.go('tab.settings');
+                        console.log('You clicked on "OK" button', res);
+                    } else {
+                        console.log('You clicked on "Cancel" button');
+                    }
+                });
+
+            } else if (data.child("Debits").exists()){
+                $ionicPopup.confirm({
+                    title: "You haven't linked an account for credits!",
+                    template: "You can start a new group once you've linked an account for both credits and debits. Do you want to link your account now?"
+                }).then(function(res) {
+                    if (res) {
+                        $state.go('tab.settings');
+                        console.log('You clicked on "OK" button', res);
+                    } else {
+                        console.log('You clicked on "Cancel" button');
+                    }
+                });
+            } else if (data.child("Credits").exists()){
+                $ionicPopup.confirm({
+                    title: "You haven't linked an account for debits!",
+                    template: "You can start a new group once you've linked an account for both credits and debits. Do you want to link your account now?"
+                }).then(function(res) {
+                    if (res) {
+                        $state.go('tab.settings');
+                        console.log('You clicked on "OK" button', res);
+                    } else {
+                        console.log('You clicked on "Cancel" button');
+                    }
                 });
             }
         });
