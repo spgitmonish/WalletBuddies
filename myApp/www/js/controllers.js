@@ -33,6 +33,11 @@ angular.module('starter.controllers', [])
     $scope.check = {
         data: false
     };
+    
+    $scope.tosSelected = function() {
+	    window.open("http://walletbuddies.co/TOS/TOS.pdf", '_system');
+    }
+    
     $scope.TC = function(index) {
         console.log('array index is ' + index + $scope.check.data);
         var checked = index;

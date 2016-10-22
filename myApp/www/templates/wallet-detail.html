@@ -1,6 +1,6 @@
 <ion-view>
     <ion-nav-title>
-        <h1 class="title">{{circle.circleName}}</h1>
+        <h1 class="title text-wrap">{{circle.circleName}}</h1>
     </ion-nav-title>
     <ion-content class="pageBG">
         <div align="center">
@@ -10,7 +10,7 @@
             </button>
         </div>
         <div class="card">
-            <label class="item item-thumbnail-left" ng-click="selectPicture()">
+            <label class="item item-thumbnail-left item-text-wrap" ng-click="selectPicture()">
                 <img ng-src="{{circle.circlePhoto || getInitials(circle.circleName)}}">
                 <br>
                 <h2>{{circle.circleName}}</h2>
