@@ -3590,6 +3590,7 @@ angular.module('starter.controllers', [])
 .controller('KycCtrl', function($scope, $rootScope, $state, $ionicActionSheet, $cordovaCamera, $ionicLoading, $cipherFactory, $http, $ionicPopup, $ionicHistory) {
 
     $scope.data = $rootScope.data;
+    $scope.showCancelButton = false;
 
     var fbRef = firebase.database().ref().child("Users").child($rootScope.fbAuthData.uid);
 
@@ -3598,63 +3599,114 @@ $scope.$on('$ionicView.leave', function() {
 		console.log("CLEARING EFFIN CACHE")
       $ionicHistory.clearCache();
     });
-*/
+*/	
+	$scope.goBack = function(user) {
+		// Clear the form
+        user.day = "";
+        user.month = "";
+        user.year = "";
+        user.street = "";
+        user.city = "";
+        user.state = "";
+        user.zip = "";
+        user.ssn = "";
+		$state.go('tab.settings');
+	}
 
     $scope.validateUser = function(user) {
         // Check if user has uploaded a image
-        $ionicLoading.show({
-            template: 'Loading..Hold tight.'
-        });
-        // get host ip address of client
-        var json = 'http://ipv4.myexternalip.com/json';
-        $http.get(json).then(function(result) {
-            var ip = result.data.ip;
-            $http.post('https://webhook-walletbuddies2.rhcloud.com/stripe-create-connect-account', {
-                user: $rootScope.fbAuthData.uid,
-                dob_day: user.day,
-                dob_month: user.month,
-                dob_year: user.year,
-                address_line: user.street,
-                address_postal: user.zip,
-                address_city: user.city,
-                address_state: user.state,
-                ssn: user.ssn.toString(),
-                ip: ip
-            }).then(function(response) {
-                console.log("Successful POST to webhooks server", response)
-                    // Clear the form
-                user.day = "";
-                user.month = "";
-                user.year = "";
-                user.street = "";
-                user.city = "";
-                user.state = "";
-                user.zip = "";
-                user.ssn = "";
-                if (response.data === "Success") {
-                    $ionicLoading.hide();
-                    $ionicPopup.alert({
-                        title: "Thanks! You're all set.",
-                        template: "Your Bank Account can now receive credits."
-                    });
-                } else {
-                    $ionicLoading.hide();
-                    $ionicPopup.alert({
-                        title: "Error",
-                        template: "We had trouble submitting your details. Please try again later."
-                    });
-                    $state.go('tab.settings');
-                }
-                $state.go('tab.settings');
-            }).catch(function(err) {
-                console.log("Error making POST to webhooks server", err)
-                $ionicLoading.hide();
-                $ionicPopup.alert({
-                    title: "Error",
-                    template: "We had trouble submitting your details. Please try again."
-                });
-            })
-        })
+        if(user.day > 31 || user.day < 1) {
+	        $ionicPopup.alert({
+                title: "Invalid day entered for DOB",
+                template: "Please enter a valid date."
+            });
+        } else if(user.month < 1 || user.month > 12) {
+	        $ionicPopup.alert({
+                title: "Invalid month entered for DOB",
+                template: "Please enter a valid date."
+            });
+        } else if(user.year < 1800 || user.year > 2016) {
+	        $ionicPopup.alert({
+                title: "Invalid year entered for DOB",
+                template: "Please enter a valid date."
+            });
+        } else if(user.zip.length != 5) {
+	        $ionicPopup.alert({
+                title: "Invalid zipcode",
+                template: "Please enter a valid zipcode. Zipcodes have to be 5 digits."
+            });
+        } else if(user.state.length != 2) {
+	        $ionicPopup.alert({
+                title: "Invalid state code",
+                template: "Please enter a valid 2 letter code for your state."
+            });
+        } else if(user.ssn.toString().length != 4) {
+	        $ionicPopup.alert({
+                title: "Invalid SSN",
+                template: "Please enter the last 4 digits for your SSN."
+            }); 
+        } else if(!user.street || !user.city || !user.state || !user.ssn || !user.day || !user.zip || !user.year || !user.month) {
+	        $ionicPopup.alert({
+                title: "Incomplete Details",
+                template: "All fields are required. Please fill in all details."
+            });
+        } else {
+	        $ionicLoading.show({
+	            template: 'Loading..Hold tight.'
+	        });
+	        // get host ip address of client
+	        var json = 'http://ipv4.myexternalip.com/json';
+	        $http.get(json).then(function(result) {
+	            var ip = result.data.ip;
+	            $http.post('https://webhook-walletbuddies2.rhcloud.com/stripe-create-connect-account', {
+	                user: $rootScope.fbAuthData.uid,
+	                dob_day: user.day,
+	                dob_month: user.month,
+	                dob_year: user.year,
+	                address_line: user.street,
+	                address_postal: user.zip,
+	                address_city: user.city,
+	                address_state: user.state,
+	                ssn: user.ssn.toString(),
+	                ip: ip
+	            }).then(function(response) {
+	                console.log("Successful POST to webhooks server", response)
+	                if (response.data === "Success") {
+	                    $ionicLoading.hide();
+	                    $ionicPopup.alert({
+	                        title: "Thanks! You're all set.",
+	                        template: "Your Bank Account can now receive credits."
+	                    });
+	                    // Clear the form
+		                user.day = "";
+		                user.month = "";
+		                user.year = "";
+		                user.street = "";
+		                user.city = "";
+		                user.state = "";
+		                user.zip = "";
+		                user.ssn = "";
+	                    $state.go('tab.settings');
+	                } else {
+	                    $ionicLoading.hide();
+	                    $ionicPopup.alert({
+	                        title: "Error submitting form",
+	                        template: response.data
+	                    });
+	                    $scope.showCancelButton = true;
+	                }
+	            }).catch(function(err) {
+	                console.log("Error making POST to webhooks server", err)
+	                $ionicLoading.hide();
+	                $ionicPopup.alert({
+	                    title: "Error",
+	                    template: "We had trouble submitting your details. Please try again."
+	                });
+	                $scope.showCancelButton = true;
+	            })
+	        })
+	        
+        }
     }
 
 })
