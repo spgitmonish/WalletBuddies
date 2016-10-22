@@ -58,6 +58,7 @@
 	        </div>
         </div>
 		<br> 
-        <button ng-click="validateUser(user)" class="button button-block button-balanced">Verify</button>        
+        <button ng-click="validateUser(user)" class="button button-block button-balanced">Verify</button>
+        <button ng-if="showCancelButton" ng-click="goBack(user)" class="button button-block button-outline button-balanced">Cancel</button>        
     </ion-content>
 </ion-view>
