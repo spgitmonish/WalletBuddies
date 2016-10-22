@@ -94,7 +94,7 @@ angular.module('starter.controllers', [])
                                     firebase.auth().signInWithEmailAndPassword(account.email, account.password)
                                         .then(function(authData) {
                                             if (authData) {
-
+												var requestCount = 0
                                                 // Store information for easier access across controllers
                                                 $rootScope.fbAuthData = authData;
                                                 $rootScope.email = account.email;
@@ -139,6 +139,7 @@ angular.module('starter.controllers', [])
 
                                                         // To iterate the key/value pairs of the object, use angular.forEach()
                                                         angular.forEach(obj, function(value, key) {
+	                                                        requestCount = requestCount + 1
                                                             console.log(key, value);
                                                             var circleID = value.circleID;
                                                             console.log("Invites path: " + fbInvites + circleID);
@@ -161,6 +162,7 @@ angular.module('starter.controllers', [])
                                                                 });
                                                             }
                                                         })
+                                                      
                                                     })
                                                 }
 
@@ -192,7 +194,7 @@ angular.module('starter.controllers', [])
                                                 var fbNewsFeedRef = firebase.database().ref("/Users").child($rootScope.fbAuthData.uid).child("NewsFeed");
 
                                                 fbRef.child("Users").child($rootScope.fbAuthData.uid).child('Badges').update({
-                                                    walletCounter: 0,
+                                                    walletCounter: requestCount,
                                                     requestCounter: 0,
                                                     feedCounter: 1
                                                 });
