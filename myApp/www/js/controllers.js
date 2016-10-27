@@ -1229,13 +1229,90 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for wallet-detail page
-.controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $cordovaCamera, $ionicScrollDelegate, $ionicActionSheet, $ionicLoading, $cordovaContacts, $ionicModal, $rootScope, $state, $ionicPopup, $firebaseArray, fbCallback) {
+.controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $cordovaCamera, $ionicScrollDelegate, $ionicActionSheet, $ionicLoading, $cordovaContacts, $ionicModal, $rootScope, $state, $ionicPopup, $firebaseArray, fbCallback, $timeout) {
     // Get a reference to the Firebase account
     var fbRef = firebase.database().ref();
     var fbCircles = firebase.database().ref("/Circles/" + $stateParams.circleID);
 
     // Create a storage reference from firebase storage service
     var storageRef = firebase.storage().ref();
+    $scope.invitees = []
+    console.log()
+    // Countdown timer logic
+    fbCircles.once("value", function(circleSnapshot) {
+	    $scope.invitees.push({
+            name: circleSnapshot.val().invitorName,
+            Status: true 
+        }) 
+	    // This is for displaying pending and accepted members
+	    angular.forEach(circleSnapshot.val().contacts, function(value, key) {
+		    console.log("CONTACT WAL_DEET", value.name)
+		    // Use the secret key and set the id length to be 4
+            var hashids = new Hashids("SecretMonkey", 4);
+            var temp = parseInt(value.phone);
+            var id = hashids.encode(temp);
+            console.log("ID after encode: " + id);
+
+            // Get the link to the Registered User
+            var fbHash = firebase.database().ref("/RegisteredUsers/" + id);
+			
+            // Callback function to obtain user info
+            fbCallback.fetch(fbHash, function(data) {
+                // Check if invited user is registered with WalletBuddies
+                if (data != null) {
+                    console.log("Invited user is registered with uid: " + data.uid);
+                    var fbHashUser = firebase.database().ref("Users").child(data.uid).child("firstname");
+                    if(circleSnapshot.val().Members[data.uid].Status == true){
+	                	$scope.invitees.push({
+		                    name: circleSnapshot.val().AcceptedMembers[data.uid].firstName,
+		                    Status: true 
+	                    })   
+                    } else {
+	                    fbHashUser.once("value", function(name) {
+		                    $scope.invitees.push({
+			                    name: name.val(),
+			                    Status: "pending" 
+		                    }) 
+	                    })
+                    }
+                }
+                else {
+                    $scope.invitees.push({
+	                    name: value.phone,
+	                    Status: "pending" 
+                    })
+                }
+            })
+	    })
+	    
+	    // This for displaying countdown timer
+	    $scope.counter = "";
+	    var today = new Date().getTime()
+	    var kickOffTime = circleSnapshot.val().kickOffTime - today; // find the time left to kickoff
+		var seconds = Math.round(kickOffTime/1000); //convert from ms to secs
+		var mytimeout = null;
+		
+	    $scope.onTimeout = function() {
+		    var days        = Math.floor(seconds/24/60/60);
+		    var hoursLeft   = Math.floor((seconds) - (days*86400));
+		    var hours       = Math.floor(hoursLeft/3600);
+		    var minutesLeft = Math.floor((hoursLeft) - (hours*3600));
+		    var minutes     = Math.floor(minutesLeft/60);
+		    var remainingSeconds = seconds % 60;
+		    if (remainingSeconds < 10) {
+		        remainingSeconds = "0" + remainingSeconds; 
+		    }
+		    $scope.counter = days + " days : " + hours + " hours : " + minutes + " min : " + remainingSeconds + " sec";
+		    if (seconds == 0) {
+		        clearInterval(countdownTimer);
+		        $scope.counter = "Completed";
+		    } else {
+		        seconds--;
+		        mytimeout = $timeout($scope.onTimeout, 1000);
+		    }
+		}
+		var countdownTimer = $timeout($scope.onTimeout, 1000);
+	})
 
     // Display credit and debit dates
     var fbCredits = firebase.database().ref("/Circles/" + $stateParams.circleID + "/NotificationDates/");
@@ -1437,7 +1514,8 @@ angular.module('starter.controllers', [])
                             if (acceptStatus.val() == true) {
                                 // Once the user data is loaded update the information
                                 // Update the location(temporary cache)
-                                fbCircleAcceptedMembers.update({
+                                /*
+fbCircleAcceptedMembers.update({
                                     admin: false,
                                     firstName: userData.val().firstname,
                                     lastName: userData.val().lastname,
@@ -1445,6 +1523,7 @@ angular.module('starter.controllers', [])
                                     email: userData.val().email,
                                     profilePhoto: userData.val().profilePhoto
                                 });
+*/
                             }
                         });
                     });
@@ -1525,24 +1604,24 @@ angular.module('starter.controllers', [])
     };
 
     $scope.phoneSelect = function(parentObj, Obj) {
-            var parentIndex = $scope.contacts.indexOf(parentObj);
-            var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);
-            console.log("PHONE Index: ", parentIndex, index, $scope.contacts[parentIndex].phoneNumbers[index].selected);
+        var parentIndex = $scope.contacts.indexOf(parentObj);
+        var index = $scope.contacts[$scope.contacts.indexOf(parentObj)].phoneNumbers.indexOf(Obj);
+        console.log("PHONE Index: ", parentIndex, index, $scope.contacts[parentIndex].phoneNumbers[index].selected);
 
-            // Save the index values received when a user selects a contact
-            if ($scope.contacts[parentIndex].phoneNumbers[index].selected) {
-                temp.push({
-                    parent: parentIndex,
-                    child: index
-                });
-            } else if ($scope.contacts[parentIndex].phoneNumbers[index].selected == false) {
-                for (var i = 0; i < temp.length; i++) {
-                    if (parentIndex == temp[i].parent && index == temp[i].child) {
-                        temp.splice(i, 1);
-                    };
+        // Save the index values received when a user selects a contact
+        if ($scope.contacts[parentIndex].phoneNumbers[index].selected) {
+            temp.push({
+                parent: parentIndex,
+                child: index
+            });
+        } else if ($scope.contacts[parentIndex].phoneNumbers[index].selected == false) {
+            for (var i = 0; i < temp.length; i++) {
+                if (parentIndex == temp[i].parent && index == temp[i].child) {
+                    temp.splice(i, 1);
                 };
-            }
+            };
         }
+    }
         // For determining the collection-item-length while choosing contacts
     $scope.itemheight = function(length) {
         if (length == 1) {
@@ -1825,37 +1904,6 @@ angular.module('starter.controllers', [])
             }
         });
     }
-
-    /*
-// This creates a group avatar if no group photo exists
-    $scope.getInitials = function (name) {
-        var canvas = document.createElement('canvas');
-        canvas.style.display = 'none';
-        var canvasWidth = 300;
-		var canvasHeight = 300;
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        document.body.appendChild(canvas);
-        var context = canvas.getContext('2d');
-        context.textAlign = 'center';
-        context.textBaseline = 'middle';
-        context.fillStyle = "#247FFF";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.font = "150px Helvetica";
-        context.fillStyle = "#fff";
-        var first;
-        if (name) {
-            first = name[0];
-            var initials = first;
-            context.fillText(initials.toUpperCase(), canvasWidth/2, canvasHeight/2);
-            var data = canvas.toDataURL();
-            document.body.removeChild(canvas);
-            return data;
-        } else {
-            return false;
-        }
-	}
-*/
 
     // This creates a user and group avatar if no group/user photo exists
     $scope.getInitials = function(name, i) {
@@ -2191,7 +2239,7 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for requests-detail page
-.controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, $ionicPopup) {
+.controller('RequestsDetailCtrl', function($scope, $stateParams, $firebaseObject, $rootScope, $state, $ionicPopup, $timeout) {
     // Get a reference to the Firebase account
     var fbRef = firebase.database().ref();
 
@@ -2207,6 +2255,37 @@ angular.module('starter.controllers', [])
     })
 
     obj.$bindTo($scope, "circle");
+    
+    // Countdown timer logic
+    fbCircles.once("value", function(circleSnapshot) {
+	    $scope.counter = "";
+	    var today = new Date().getTime()
+	    var kickOffTime = circleSnapshot.val().kickOffTime - today; // find the time left to kickoff
+		var seconds = Math.round(kickOffTime/1000); //convert from ms to secs
+		var mytimeout = null;
+		
+	    $scope.onTimeout = function() {
+		    var days        = Math.floor(seconds/24/60/60);
+		    var hoursLeft   = Math.floor((seconds) - (days*86400));
+		    var hours       = Math.floor(hoursLeft/3600);
+		    var minutesLeft = Math.floor((hoursLeft) - (hours*3600));
+		    var minutes     = Math.floor(minutesLeft/60);
+		    var remainingSeconds = seconds % 60;
+		    if (remainingSeconds < 10) {
+		        remainingSeconds = "0" + remainingSeconds; 
+		    }
+		    console.log("remaining secs", remainingSeconds, circleSnapshot.val().kickOffTime)
+		    $scope.counter = days + " days : " + hours + " hours : " + minutes + " min : " + remainingSeconds + " sec";
+		    if (seconds == 0) {
+		        clearInterval(countdownTimer);
+		        $scope.counter = "Completed";
+		    } else {
+		        seconds--;
+		        mytimeout = $timeout($scope.onTimeout, 1000);
+		    }
+		}
+		var countdownTimer = $timeout($scope.onTimeout, 1000);
+	})
 
     // Called when user clicks "Accept"
     $scope.onAccept = function() {
@@ -2327,7 +2406,7 @@ angular.module('starter.controllers', [])
                 var fbAcceptedMembers = firebase.database().ref("/Circles/" + $stateParams.circleID + "/AcceptedMembers/" + $rootScope.fbAuthData.uid);
                 var fbUser = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid);
                 fbUser.once("value", function(userData) {
-
+					console.log("/AcceptedMembers/ uid twin", $rootScope.fbAuthData.uid)
                     // Store the user information
                     // NOTE: By default when a user accepts an invite the user is
                     //       not an admin
@@ -2402,6 +2481,7 @@ angular.module('starter.controllers', [])
                 }
 
             });
+            
             if (data.val().circleType == 'Singular') {
                 // Change Status of the circle to "false"
                 fbRef.child("Circles").child($stateParams.circleID).child("PendingMembers").child($rootScope.fbAuthData.uid).update({

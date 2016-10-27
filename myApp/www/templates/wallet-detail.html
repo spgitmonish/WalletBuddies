@@ -2,12 +2,21 @@
     <ion-nav-title>
         <h1 class="title text-wrap">{{circle.circleName}}</h1>
     </ion-nav-title>
+    <ion-nav-buttons side="secondary">
+        <button class="button button-large button-clear" ng-click="chat()">
+        	Chat<span ng-if="circle.Members[id].badgeCounter !== 0" class="badge badge-dark">{{circle.Members[id].badgeCounter}}</span>
+		</button>
+    </ion-nav-buttons>
     <ion-content class="pageBG">
-        <div align="center">
+        <!--<div align="center">
             <div class="padding-bottom"></div>
             <button class="button button-outline button-balanced" ng-click="chat()">
                 <span ng-if="circle.Members[id].badgeCounter !== 0" class="badge badge-dark">{{circle.Members[id].badgeCounter}}</span> Group Chat
             </button>
+        </div>-->
+        <div align="center" style="padding: 10px; margin: 10px 10px 10px 10px; background-color: transparent; border-radius: 5px; border: 0px solid #777777" ng-if="!circle.requestsExpired && counter">
+	        <p style="color: #555555; font-size: large;"><span style="font-size: xx-large; padding-right: 10px">📢</span>{{circle.circleName}} kicks off in</p>
+			<span style="color: #555555; font-size: 21px;">{{counter}}</span>
         </div>
         <div class="card">
             <label class="item item-thumbnail-left item-text-wrap" ng-click="selectPicture()">
@@ -17,11 +26,34 @@
                 <p ng-if="circle.circlePhoto">Edit</p>
                 <p ng-if="!circle.circlePhoto">Add Photo</p>
             </label>
+            
+            <!-- This section is for non-admins of a Singular circle -->
+            <div class="item" ng-if="!circle.requestsExpired">
+              <p><b style="padding-left: 10px; font-size: medium">Invitees</b></p>
+		      <div class="row">
+			    <div class="col" style="vertical-align: top; display: inline-block; text-align: center; width: 120px;" ng-repeat="invitee in invitees">
+					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-if="invitee.Status==true" ng-src="img/acceptedImage.png"/>
+					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-if="invitee.Status!=true" ng-src="img/pendingImage.png"/>
+					<span style="display: block">{{invitee.name}}</span>
+				</div>
+              </div>
+            </div>
+            
+            <div class="item" ng-if="circle.circleType=='Singular' && circle.requestsExpired">
+                <!--<b style="padding-left: 10px; margin-bottom: 10px">Buddies</b>-->
+                <div class="row">
+				<div class="col" style="vertical-align: top; display: inline-block; text-align: center; width: 120px;" ng-repeat="member in circle.AcceptedMembers">
+					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{member.profilePhoto || getInitials(member.firstName, $index)}}"/>
+					<span style="display: block">{{member.firstName}}</span>
+				</div>
+            	</div>
+            </div>
+            
             <!-- This section is for the admin of a Singular circle -->
             <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority==0">
                 <div class="row">
-                    <div class="col" style="padding-top: 12px" ng-if="!circle.requestsExpired">Invitees</div>
-                    <div class="col" style="padding-top: 12px" ng-if="circle.requestsExpired">Buddies</div>
+                    <div class="col" style="padding-top: 12px" ng-if="!circle.requestsExpired"><b>Invite more buddies</b></div>
+                    <div class="col" style="padding-top: 12px" ng-if="circle.requestsExpired"><b>Add more buddies</b></div>
                     <div class="col"></div>
                     <div class="col"></div>
                     <div class="col"></div>
@@ -29,34 +61,26 @@
                 </div>
             </div>
             
-            <!-- This section is for non-admins of a Singular circle -->
-            <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority!=0 && !circle.requestsExpired">
-                Invitees
-            </div>
-            <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority!=0 && circle.requestsExpired">
-                Buddies
-            </div>
+            <!-- This section is for a Regular circle
+            <div class="item" ng-if="circle.circleType!='Singular' && !circle.requestsExpired">
+              <p><b style="padding-left: 10px; font-size: medium">Invitees</b><p>
+		      <div class="row">
+				<div class="col" ng-repeat="contact in circle.contacts">
+					<span style="color: #555555; font-size: medium">{{contact.name}}</span>
+				</div>
+              </div>
+            </div>-->
             
-            <!-- This section is for a Regular circle -->
-            <div class="item item-divider item-dark" ng-if="circle.circleType!='Singular' && !circle.requestsExpired">
-                Invitees
-            </div>
-            <div class="item item-divider item-dark" ng-if="circle.circleType!='Singular' && circle.requestsExpired">
-                Buddies
-            </div>
-            
-            <div class="row" ng-if="circle.requestsExpired">
+            <div class="item" ng-if="circle.circleType!='Singular' && circle.requestsExpired">
+                <!--<b style="padding-left: 10px; margin-bottom: 10px">Buddies</b>-->
+                <div class="row">
 				<div class="col" style="vertical-align: top; display: inline-block; text-align: center; width: 120px;" ng-repeat="member in circle.AcceptedMembers">
 					<img style="width: 40px; height: 40px; border-radius: 50%; bottom: 10px;" ng-src="{{member.profilePhoto || getInitials(member.firstName, $index)}}"/>
 					<span style="display: block">{{member.firstName}}</span>
 				</div>
-            </div>
-            
-            <div class="row" ng-if="!circle.requestsExpired">
-				<div class="col" ng-repeat="contact in circle.contacts">
-					<span style="color: #555555; padding-left: 5px; font-size: medium">{{contact.name}}</span>
-				</div>
-            </div>
+            	</div>
+            </div>            
+
             <!--<div class="item"  ng-click="openModal(member)">
                 <div ng-if="member.admin==true">
                     {{member.firstName}} (Admin)
@@ -71,35 +95,53 @@
                 </div>
             </div>-->
             
-            <div class="item item-divider item-dark">
-                Plan 
-            </div>
             <div class="item item-text-wrap" ng-if="debit" ng-repeat="date in debit">
-		            <span style="color: #555555; font-size: medium"><span style="color: #30c0cb">${{circle.amount}} {{circle.plan}}</span>: Debits for current cycle will be initiated on <b>{{date.debitDate}}</b></span>
-            </div>
-            <div class="item item-text-wrap" ng-if="!circle.requestsExpired || circle.circleCancelled || circle.circleComplete">
-	            <span style="color: #555555; font-size: medium; color: #30c0cb">${{circle.amount}} {{circle.plan}}</span>
+	            <p><b style="font-size: medium">Plan</b></p>
+		        <p style="color: #555555; font-size: medium">
+			        <span style="color: #30c0cb;">
+				        ${{circle.amount}} {{circle.plan}}
+				    </span>
+				    <span>: Debits for current cycle will be initiated on <b>{{date.debitDate}}</b></span>
+				</p>
             </div>
             
-            <div class="item item-divider item-dark">
-                Pool Amount
+            <div class="item item-text-wrap" ng-if="!circle.requestsExpired || circle.circleCancelled || circle.circleComplete">
+	            <p><b style="padding-left: 10px; font-size: medium">Plan</b></p>
+	            <div style="color: #555555; font-size: medium; color: #30c0cb; margin-left: 10px">${{circle.amount}} {{circle.plan}}</div>
             </div>
+            
+            
             <div class="item item-text-wrap" ng-if="credit" ng-repeat="date in credit">
-	            <span style="color: #555555; font-size: medium"><span style="color: #30c0cb">${{circle.amount * fbMembers.length}}</span> will be credited to the group on <b>{{date.notificationDate}}</b></span>
+	            <p><b style="font-size: medium">Pool Amount</b></p>
+	            <span style="color: #555555; font-size: medium">
+	            	<span style="color: #30c0cb">
+	            		${{circle.amount * fbMembers.length}}
+	            	</span> will be credited to the group on <b>{{date.notificationDate}}</b>
+	            </span>
             </div>
             <div class="item item-text-wrap" ng-if="!circle.requestsExpired || circle.circleCancelled || circle.circleComplete">
-                <span style="color: #555555; font-size: medium"><span style="color: #30c0cb">${{circle.amount * fbMembers.length}}</span> will be credited to the group</span>
+	            <p><b style="padding-left: 10px; font-size: medium">Pool Amount</b></p>
+                <p style="padding-left: 10px; color: #555555; font-size: medium">
+                	<span style="color: #30c0cb">
+                		${{circle.amount * fbMembers.length}}
+                	</span> will be credited to the group
+                </p>
             </div>
             
-            <div class="item item-divider item-dark" ng-if="circle.circleCancelled || circle.circleComplete">
-                Group Status
-            </div>
+            <div class="item item-text-wrap" ng-if="circle.circleType=='Singular'">
+		      <p><b style="font-size: medium">Group Type &nbsp</b></p> <p style="font-size: medium"><b style="color: #333333">Captain Group</b>: {{circle.invitorName}} is the Admin for this Group. The Pooled Amount for this group will go to {{circle.invitorName}} {{circle.plan}}.</p>
+		    </div>
+		    <div class="item item-text-wrap" ng-if="circle.circleType=='Rotational'">
+		      <p><b style="font-size: medium">Group Type &nbsp</b></p> <p style="font-size: medium"><b style="color: #333333">Crew</b>: Everyone gets a shot at being the Captain. The Pooled Amount will go to a randomly chosen person in this Group {{circle.plan}}. Every member gets the Pool Amount once.</p>
+		    </div>
+            
             <div class="item item-text-wrap" ng-if="circle.circleCancelled || circle.circleComplete">
+	            <p><b style="font-size: medium">Group Status</b></p>
                 <span style="color: #555555; font-size: medium">This group has now ended. No new transactions will be initiated. Pending credits will be completed.</span>
             </div>
             
             <!-- Picking contacts -->
-            <div class="item item-divider item-dark" ng-if="data.selectedContacts.length!=0">
+            <div class="item" ng-if="data.selectedContacts.length!=0">
                 Selected Contacts
             </div>
             <div class="list">
