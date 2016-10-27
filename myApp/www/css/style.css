@@ -1,5 +1,9 @@
 /* Empty. Add your own CSS if you like */
 
+.countdown-timer {
+	padding-top: 10px;
+}
+
 .bar-footer {
   overflow: visible !important;
 }

@@ -1,6 +1,10 @@
 <ion-view view-title="New Request">
     </ion-header-bar>
     <ion-content>
+    	<div align="center" style="padding: 10px; margin: 10px 10px 10px 10px; background-color: transparent; border-radius: 5px; border: 0px solid #777777" ng-if="!circle.requestsExpired && counter">
+	        <p style="color: #555555; font-size: large;"><span style="font-size: xx-large; padding-right: 5px">💣</span>This request expires in</p>
+			<span style="color: #555555; font-size: 21px;">{{counter}}</span>
+        </div>
 		<div class="card">		
 		    <div class="item item-thumbnail-left item-text-wrap">
 			    <img src="{{circle.circlePhoto  || getInitials(circle.circleName)}}">
@@ -22,7 +26,7 @@
 		      <b>Group Type &nbsp</b> <p><b style="color: #333333">Crew</b>: Everyone gets a shot at being the Captain. The Pooled Amount will go to a randomly chosen person in this Group {{circle.plan}}. Every member gets the Pool Amount once.</p>
 		    </div>
 		    <div class="item item-text-wrap">
-		      <b>Why &nbsp</b> <p>{{circle.groupMessage}}</p>
+		      <b>Message To The Group &nbsp</b> <p>{{circle.groupMessage}}</p>
 		    </div>
 		</div>
 		<div class="row">
