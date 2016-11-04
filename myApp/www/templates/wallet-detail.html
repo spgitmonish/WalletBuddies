@@ -26,7 +26,7 @@
                 <p ng-if="circle.circlePhoto">Edit</p>
                 <p ng-if="!circle.circlePhoto">Add Photo</p>
             </label>
-            
+
             <!-- This section is for non-admins of a Singular circle -->
             <div class="item" ng-if="!circle.requestsExpired">
               <p><b style="padding-left: 10px; font-size: medium">Invitees</b></p>
@@ -38,7 +38,7 @@
 				</div>
               </div>
             </div>
-            
+
             <div class="item" ng-if="circle.circleType=='Singular' && circle.requestsExpired">
                 <!--<b style="padding-left: 10px; margin-bottom: 10px">Buddies</b>-->
                 <div class="row">
@@ -48,7 +48,7 @@
 				</div>
             	</div>
             </div>
-            
+
             <!-- This section is for the admin of a Singular circle -->
             <div class="item item-divider item-dark" ng-if="circle.circleType=='Singular' && circle.Members[id].Priority==0">
                 <div class="row">
@@ -60,7 +60,7 @@
                     <div class="col button-icon" ng-click="selectContacts()" style="text-align: right"><span class="icon ion-ios7-plus-outline"></span></div>
                 </div>
             </div>
-            
+
             <!-- This section is for a Regular circle
             <div class="item" ng-if="circle.circleType!='Singular' && !circle.requestsExpired">
               <p><b style="padding-left: 10px; font-size: medium">Invitees</b><p>
@@ -70,7 +70,7 @@
 				</div>
               </div>
             </div>-->
-            
+
             <div class="item" ng-if="circle.circleType!='Singular' && circle.requestsExpired">
                 <!--<b style="padding-left: 10px; margin-bottom: 10px">Buddies</b>-->
                 <div class="row">
@@ -79,7 +79,7 @@
 					<span style="display: block">{{member.firstName}}</span>
 				</div>
             	</div>
-            </div>            
+            </div>
 
             <!--<div class="item"  ng-click="openModal(member)">
                 <div ng-if="member.admin==true">
@@ -94,23 +94,35 @@
                     </div>
                 </div>
             </div>-->
-            
+
             <div class="item item-text-wrap" ng-if="debit" ng-repeat="date in debit">
 	            <p><b style="font-size: medium">Plan</b></p>
-		        <p style="color: #555555; font-size: medium">
+		         <p style="color: #555555; font-size: medium">
 			        <span style="color: #30c0cb;">
 				        ${{circle.amount}} {{circle.plan}}
-				    </span>
-				    <span>: Debits for current cycle will be initiated on <b>{{date.debitDate}}</b></span>
-				</p>
+				     </span>
+				     <span>: Debits for current cycle will be initiated on <b>{{date.debitDate}}</b></span>
+               </p>
+               <p style="margin-bottom:5px;"></p>
+               <p style="color: #555555; font-size: medium">
+                  <span style="color: #30c0cb;">
+				        Fees:
+				      </span>
+                  <span ng-if="circle.amount <= 5">
+                     Payments are capped at <b>$5</b>. So <b>no fee</b> incurred!
+                  </span>
+                  <span ng-if="circle.amount > 5">
+                     Each user in this group will incur a 0.8% charge, which is <b>${{circle.amount * 0.08}}</b> for each user per transaction
+                  </span>
+               </p>
             </div>
-            
+
             <div class="item item-text-wrap" ng-if="!circle.requestsExpired || circle.circleCancelled || circle.circleComplete">
 	            <p><b style="padding-left: 10px; font-size: medium">Plan</b></p>
 	            <div style="color: #555555; font-size: medium; color: #30c0cb; margin-left: 10px">${{circle.amount}} {{circle.plan}}</div>
             </div>
-            
-            
+
+
             <div class="item item-text-wrap" ng-if="credit" ng-repeat="date in credit">
 	            <p><b style="font-size: medium">Pool Amount</b></p>
 	            <span style="color: #555555; font-size: medium">
@@ -127,19 +139,19 @@
                 	</span> will be credited to the group
                 </p>
             </div>
-            
+
             <div class="item item-text-wrap" ng-if="circle.circleType=='Singular'">
 		      <p><b style="font-size: medium">Group Type &nbsp</b></p> <p style="font-size: medium"><b style="color: #333333">Captain Group</b>: {{circle.invitorName}} is the Admin for this Group. The Pooled Amount for this group will go to {{circle.invitorName}} {{circle.plan}}.</p>
 		    </div>
 		    <div class="item item-text-wrap" ng-if="circle.circleType=='Rotational'">
 		      <p><b style="font-size: medium">Group Type &nbsp</b></p> <p style="font-size: medium"><b style="color: #333333">Crew</b>: Everyone gets a shot at being the Captain. The Pooled Amount will go to a randomly chosen person in this Group {{circle.plan}}. Every member gets the Pool Amount once.</p>
 		    </div>
-            
+
             <div class="item item-text-wrap" ng-if="circle.circleCancelled || circle.circleComplete">
 	            <p><b style="font-size: medium">Group Status</b></p>
                 <span style="color: #555555; font-size: medium">This group has now ended. No new transactions will be initiated. Pending credits will be completed.</span>
             </div>
-            
+
             <!-- Picking contacts -->
             <div class="item" ng-if="data.selectedContacts.length!=0">
                 Selected Contacts
@@ -162,7 +174,7 @@
                 <button class="button button-block button-dark" ng-click="selectContacts()">Add More</button>
             </div>
             <!-- Picking contacts ends here -->
-            
+
             <div ng-if="data.selectedContacts.length!=0" style="padding-left: 20px; padding-right: 20px">
                 <p style="background-color: #d5eef7; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 20px"><b>Here's how your group will change:</b> WalletBuddies will debit <b>${{circle.amount}}</b> from everyone <b>{{circle.plan}}</b> and the pooled amount of <b>${{circle.amount * (fbMembers.length+data.selectedContacts.length)}}</b> will be credited to <b>you</b>.</p>
             </div>
