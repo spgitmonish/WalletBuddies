@@ -17,6 +17,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
       //         $cordovaStatusbar.style(1);
 
       document.addEventListener("resume", onResume, false);
+      document.addEventListener('deviceready', onDeviceReady, false);
 
       function onResume() {
          console.log("APP IS RESUMED")
@@ -29,6 +30,68 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
             // An error occurred. Show a message to the user
             console.log("Badge Not Cleared", err)
          });
+      }
+
+      function onDeviceReady () {
+          /**
+          * This callback will be executed every time a geolocation is recorded in the background.
+          */
+          var callbackFn = function(location) {
+              console.log('[js] BackgroundGeolocation callback:  ' + location.latitude + ',' + location.longitude);
+
+              // Do your HTTP request here to POST location to your server.
+              // jQuery.post(url, JSON.stringify(location));
+              var onComplete = function(error) {
+                if (error) {
+                  console.log('Location Synchronization failed');
+                } else {
+                  console.log('Location Synchronization succeeded');
+                }
+              };
+
+              firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Location/").update({
+                latitude: location.latitude,
+                longitude: location.longitude
+              }, onComplete);
+
+              /*
+              IMPORTANT:  You must execute the finish method here to inform the native plugin that you're finished,
+              and the background-task may be completed.  You must do this regardless if your HTTP request is successful or not.
+              IF YOU DON'T, ios will CRASH YOUR APP for spending too much time in the background.
+              */
+              backgroundGeolocation.finish();
+          };
+
+          var failureFn = function(error) {
+              console.log('BackgroundGeolocation error');
+          };
+
+          // BackgroundGeolocation is highly configurable. See platform specific configuration options
+          backgroundGeolocation.configure(callbackFn, failureFn, {
+              desiredAccuracy: 0,
+              maxLocations: 100,
+              debug: true,
+              pauseLocationUpdates: false,
+              locationProvider: 1,
+              distanceFilterCalculationAlgorithm: 1,
+              notificationText: '',
+              stopOnStillActivity: false,
+              startForeground: true,
+              notificationTitle: 'GPS is active',
+              stationaryRadius: 40,
+              distanceFilter: 10,
+              interval: 1000,
+              fastestInterval: 1000,
+              activitiesInterval: 500,
+              saveBatteryOnBackground: true,
+              acitivyType: 'AutomotiveNavigation'
+          });
+
+          // Turn ON the background-geolocation system.  The user will be tracked whenever they suspend the app.
+          backgroundGeolocation.start();
+
+          // If you wish to turn OFF background-tracking, call the #stop method.
+          // backgroundGeolocation.stop();
       }
 
       // Set up Google Analytics(with the ID)

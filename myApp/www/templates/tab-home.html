@@ -1,5 +1,25 @@
 <ion-view hide-back-button="true" view-title="Feed">
     <ion-content class="pageBG">
+    	<div class="card" ng-repeat="meetup in meetups | reverse">
+    		<div class="item item-text-wrap">
+			    <div class="row">
+				    <div class="col">
+		        		🚌
+				    </div>
+				    <div class="col col-60">{{meetup.GroupObj.MeetupLocation.name}}</div>
+				    <div class="col col-20">
+				    	<button class="button button-clear button-balanced" ng-click="refreshLocation($index)">Refresh</button>
+				    </div>
+		    	</div>
+		    	<div class="row">
+			    	<div class="col">
+			    		<div ng-repeat="member in meetup.Members">
+			    			{{member.name}} is {{member.time}} away
+			    		</div>
+				    </div>
+              	</div>
+	    	</div>
+    	</div>
         <div class="card" ng-repeat="message in newsfeed | reverse">
 		    <div class="item item-text-wrap">
 			    <div class="row">

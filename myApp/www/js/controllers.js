@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
 
 // Controller for Launch page
-.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory, fbCallback, $ionicLoading, $cordovaPushV5) {
+.controller('LaunchCtrl', function($scope, $state, $rootScope, $http, $ionicHistory, fbCallback, $ionicLoading, $cordovaPushV5, $ionicSlideBoxDelegate) {
     $scope.$on('$ionicView.beforeEnter', function() {
         var ref = firebase.auth();
         var authData = ref.onAuthStateChanged;
@@ -25,6 +25,38 @@ angular.module('starter.controllers', [])
             }
         });
     });
+
+    $scope.next = function() {
+        $ionicSlideBoxDelegate.next();
+    };
+
+    $scope.previous = function() {
+        $ionicSlideBoxDelegate.previous();
+    };
+    var slideIndex = 0;
+
+    setInterval(function() {
+        if(slideIndex == 3) {
+            slideIndex = 0; Reset
+        }
+        $ionicSlideBoxDelegate.slide(slideIndex);
+        slideIndex+=1;
+    }, 4000)
+
+    $scope.slides = [{
+        name: "1"
+    }, {
+        name: "2"
+    }, {
+        name: "3"
+    }, {
+        name: "4"
+    }];
+
+    // Called each time the slide changes
+    $scope.slideChanged = function(index) {
+        $scope.slideIndex = index;
+    };
 })
 
 // Controller for Account Creation and Sign Up
@@ -1229,7 +1261,63 @@ angular.module('starter.controllers', [])
 })
 
 // Controller for wallet-detail page
-.controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $cordovaCamera, $ionicScrollDelegate, $ionicActionSheet, $ionicLoading, $cordovaContacts, $ionicModal, $rootScope, $state, $ionicPopup, $firebaseArray, fbCallback, $timeout) {
+.controller('WalletDetailCtrl', function($scope, $stateParams, $firebaseObject, $cordovaCamera, $ionicScrollDelegate, $ionicActionSheet, $ionicLoading, $cordovaContacts, $ionicModal, $rootScope, $state, $ionicPopup, $firebaseArray, fbCallback, $timeout, $cordovaGeolocation) {
+    //Geolocation
+    var posOptions = {timeout: 10000, enableHighAccuracy: false};
+    $cordovaGeolocation
+        .getCurrentPosition(posOptions)
+        .then(function (position) {
+          var lat  = position.coords.latitude
+          var long = position.coords.longitude
+          console.log("latitude and longitude", lat, long)
+          firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Location/").update({
+            latitude: lat,
+            longitude: long
+          });
+        }, function(err) {
+          // error
+          console.log("error in latitude and longitude", err)
+        });
+
+    var options = {
+        componentRestrictions: {country: "us"}
+    };
+    var inputFrom = document.getElementById('locationText');
+    var autocompleteFrom = new google.maps.places.Autocomplete(inputFrom, options);
+    google.maps.event.addListener(autocompleteFrom, 'place_changed', function() {
+        var place = autocompleteFrom.getPlace();
+        $scope.meetupLocation= place.formatted_address;
+        console.log("Google place.formatted_address", place.geometry.location.lat(), place.geometry.location.lng());
+        $scope.$apply();
+        firebase.database().ref("/Circles/" + $stateParams.circleID + "/MeetupLocation").update({
+            latitude: place.geometry.location.lat(),
+            longitude: place.geometry.location.lng(),
+            name: place.name,
+            address: place.formatted_address
+        });
+    });
+
+    $scope.meetNow = function() {
+        firebase.database().ref("/Circles/" + $stateParams.circleID + "/MeetupLocation").update({
+            meetNow: true
+        });
+    }
+
+    $("#locationText").focus(function(event){
+        console.log("Loc text inside")
+        $timeout(function(){
+            jQuery(".pac-container").css("z-index", 10000);
+            jQuery('.pac-container').css('pointer-events', "auto");
+            jQuery('.pac-container').attr('data-tap-disabled', true);
+            if (true) {
+                jQuery('.pac-container').mouseover(function(){
+                    var focusedElement = jQuery(':focus');
+                focusedElement.blur();
+            });
+        }
+        },500);
+    });
+
     // Get a reference to the Firebase account
     var fbRef = firebase.database().ref();
     var fbCircles = firebase.database().ref("/Circles/" + $stateParams.circleID);
@@ -4181,7 +4269,7 @@ $scope.$on('$ionicView.leave', function() {
     $scope.friend = Friends.get($stateParams.friendId);
 })
 
-.controller('HomeCtrl', function($scope, $rootScope, $firebaseArray, $sce) {
+.controller('HomeCtrl', function($scope, $rootScope, $firebaseArray, $sce, fbCallback, $q) {
     // Get a reference to the NewsFeed of the user
     var badgeRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + '/Badges/');
     var fbNewsFeedRef = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + '/NewsFeed/');
@@ -4203,4 +4291,83 @@ $scope.$on('$ionicView.leave', function() {
     $scope.renderHTML = function(html_code) {
         return $sce.trustAsHtml(html_code);
     };
+
+    /**
+    * This section is for displaying meetup cards
+    */
+
+    // Get a reference to where the User's circle IDs are stored
+    var fbUserCircle = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + "/Circles/");
+    var fbRefUserLocation = firebase.database().ref("/Users/" + $rootScope.fbAuthData.uid + '/Location/');
+
+    var loadLocationData = function() {
+        $scope.meetups = []
+        // Obtain list of circle IDs with a "true" status
+        // NOTE: This callback gets called on a 'child_added' event.
+        fbCallback.childAdded(fbUserCircle, true, function(data) {
+            var fbCircles = firebase.database().ref("/Circles/" + data.key);
+            // Obtain circle data for the accepted circles
+            fbCallback.fetch(fbCircles, function(output) {
+                // Get the information within the circle
+                var meetupCircleObj = output;
+                if(meetupCircleObj.MeetupLocation.meetNow === true) {
+                    var meetupObj = {}
+                    var meetupMembers = []
+                    meetupObj["GroupObj"] = meetupCircleObj
+                    angular.forEach(meetupCircleObj.Members, function(value, key) {
+                        var fbMembers = firebase.database().ref("/Users/" + key + '/Location/');
+                        var meetupMember = {}
+                        fbCallback.fetch(fbMembers, function(userLocation) {
+                            console.log("userLocation", key, userLocation.latitude, userLocation.longitude);
+                            meetupMember["name"] = meetupCircleObj.AcceptedMembers[key].firstName;
+                            meetupMember["latitude"] = userLocation.latitude;
+                            meetupMember["longitude"] = userLocation.longitude;
+                            meetupMembers.push(meetupMember);
+                            calculateTimeToTravel(userLocation.latitude, userLocation.longitude, meetupCircleObj.MeetupLocation.latitude, meetupCircleObj.MeetupLocation.longitude).then(function(res) {
+                                console.log("calculateTimeToTravel meetup", res.rows[0].elements[0].duration.text);
+                                meetupMember["time"] = res.rows[0].elements[0].duration.text
+                            });
+                            $scope.$apply();
+                        })
+                    })
+                    meetupObj["Members"] = meetupMembers
+                    $scope.meetups.push(meetupObj);
+                    console.log("MEETUPOBJ", $scope.meetups);
+                }
+            })
+        })
+    }
+
+    loadLocationData();
+
+    var calculateTimeToTravel = function(originLat, originLong, destinationLat, destinationLong) {
+        console.log("calculateTimeToTravel called")
+        var origin1 = new google.maps.LatLng(originLat, originLong);
+        var destinationA = new google.maps.LatLng(destinationLat, destinationLong);
+
+        var service = new google.maps.DistanceMatrixService();
+
+        var deferred = new $q.defer();
+
+        service.getDistanceMatrix(
+          {
+            origins: [origin1],
+            destinations: [destinationA],
+            travelMode: 'DRIVING',
+            unitSystem: google.maps.UnitSystem.METRIC,
+            avoidHighways: false,
+            avoidTolls: false,
+          }, function (response, status) {
+          // See Parsing the Results for
+          // the basics of a callback function.
+          console.log("mapsCallback response", response.rows[0].elements[0].duration.text);
+          console.log("mapsCallback status", status);
+          deferred.resolve(response, status);
+        });
+        return deferred.promise;  
+    }
+
+    $scope.refreshLocation = function() {
+        loadLocationData();
+    }
 })

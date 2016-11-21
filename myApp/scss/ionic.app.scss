@@ -22,7 +22,8 @@ $balanced:                        #30c0cb !default;
 $big-bg: '../img/Slider-2.png';
 $help-1: '../img/Help-1.png';
 $help-2: '../img/Help-2.png';
-$help-3: '../img/Help-3.png';  
+$help-3: '../img/Help-3.png';
+$help-4: '../img/Help-4.png';
 
 .countdown-timer {
 	padding-top: 10px;
@@ -33,7 +34,27 @@ $help-3: '../img/Help-3.png';
 }
 
 .scroll-bg {
-  background: url($big-bg) no-repeat center center fixed;
+  background: url($help-1) no-repeat center center fixed;
+  background-size: cover;
+}
+
+.scroll-help1 {
+  background: url($help-1) no-repeat center center fixed;
+  background-size: cover;
+}
+
+.scroll-help2 {
+  background: url($help-2) no-repeat center center fixed;
+  background-size: cover;
+}
+
+.scroll-help3 {
+  background: url($help-3) no-repeat center center fixed;
+  background-size: cover;
+}
+
+.scroll-help4 {
+  background: url($help-4) no-repeat center center fixed;
   background-size: cover;
 }
 
@@ -55,6 +76,15 @@ $help-3: '../img/Help-3.png';
 
 .help3-bg {
   background: url($help-3) no-repeat;
+  background-size: cover;
+  background-position: center; 
+  margin: auto; 
+  z-index: 2;
+  text-align: center;
+}
+
+.help4-bg {
+  background: url($help-4) no-repeat;
   background-size: cover;
   background-position: center; 
   margin: auto; 

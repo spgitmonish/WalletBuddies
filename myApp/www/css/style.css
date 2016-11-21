@@ -4,6 +4,26 @@
 	padding-top: 10px;
 }
 
+.scroll-help1 {
+  background: url(../img/Help-1.png) no-repeat center center fixed;
+  background-size: cover;
+}
+
+.scroll-help2 {
+  background: url("../img/Help-2.png") no-repeat center center fixed;
+  background-size: cover;
+}
+
+.scroll-help3 {
+  background: url(../img/Help-3.png) no-repeat center center fixed;
+  background-size: cover;
+}
+
+.scroll-help4 {
+  background: url(../img/Help-4.png) no-repeat center center fixed;
+  background-size: cover;
+}
+
 .bar-footer {
   overflow: visible !important;
 }
